@@ -1,0 +1,65 @@
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<div class="ur-wrapper">
+  <div class="ur-toolbar">
+    <div class="toolbar-left">
+      <i class="pi pi-link toolbar-icon"></i>
+      <span class="toolbar-title">User Roles</span>
+      <span class="record-badge">{{ filtered.length }}</span>
+    </div>
+    <div class="toolbar-actions">
+      <button pButton type="button" icon="pi pi-plus" label="Assign" class="toolbar-btn btn-add" (click)="openAssignDialog()"></button>
+      <button pButton type="button" icon="pi pi-pencil" label="Edit" class="toolbar-btn btn-edit"
+        [disabled]="!selected" (click)="selected && openEditDialog(selected)"></button>
+    </div>
+  </div>
+
+  <div class="search-bar">
+    <input pInputText type="text" [(ngModel)]="searchTerm" (ngModelChange)="applyFilter()" placeholder="Search user or role..." />
+  </div>
+
+  <div class="table-container">
+    <p-table [value]="filtered" selectionMode="single" [(selection)]="selected" dataKey="rowKey"
+      [scrollable]="true" scrollHeight="flex" [loading]="isLoading" [paginator]="true" [rows]="20">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>User</th>
+          <th>Display Name</th>
+          <th>Role</th>
+          <th>Actions</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-row>
+        <tr [pSelectableRow]="row" (dblclick)="openEditDialog(row)">
+          <td>{{ row.userName }}</td>
+          <td>{{ row.displayName || '—' }}</td>
+          <td>{{ row.roleName }}</td>
+          <td>
+            <button class="icon-btn edit-icon" (click)="openEditDialog(row); $event.stopPropagation()"><i class="pi pi-pencil"></i></button>
+            <button class="icon-btn delete-icon" (click)="confirmDelete(row, $event)"><i class="pi pi-trash"></i></button>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<p-dialog header="Assign User Roles" [(visible)]="dialogVisible" [modal]="true" [style]="{ width: '480px' }">
+  <div class="form-grid">
+    <div class="form-field">
+      <label>User</label>
+      <p-select [options]="userOptions" optionLabel="label" optionValue="value"
+        [(ngModel)]="selectedUserId" placeholder="Select user" appendTo="body" />
+    </div>
+    <div class="form-field">
+      <label>Roles</label>
+      <p-multiSelect [options]="roleOptions" optionLabel="label" optionValue="value"
+        [(ngModel)]="selectedRoleIds" placeholder="Select roles" appendTo="body" />
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-outlined" (click)="dialogVisible=false"></button>
+    <button pButton type="button" label="Save" [loading]="isSaving" (click)="onSave()"></button>
+  </ng-template>
+</p-dialog>

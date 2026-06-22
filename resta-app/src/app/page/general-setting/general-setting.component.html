@@ -1,0 +1,162 @@
+<p-toast position="top-right" />
+
+<div class="gs-wrapper">
+  <div class="gs-toolbar">
+    <div class="toolbar-left">
+      <i class="pi pi-cog toolbar-icon"></i>
+      <span class="toolbar-title">General Setting</span>
+    </div>
+  </div>
+
+  <div class="settings-body">
+    @if (isLoading) {
+      <div class="loading-state">
+        <i class="pi pi-spin pi-spinner loading-icon"></i>
+        <span>Loading general settings…</span>
+      </div>
+    } @else {
+      <div class="settings-card">
+        <p class="form-hint">
+          The field labels marked with <span class="required">*</span> are required input fields.
+        </p>
+
+        <div class="settings-form">
+          <div class="form-section">
+            <div class="section-title">
+              <i class="pi pi-globe"></i>
+              Site
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-field full-span" [class.has-error]="formErrors.siteTitle">
+                <label>Site Title <span class="required">*</span></label>
+                <input pInputText type="text"
+                  [(ngModel)]="formData.siteTitle"
+                  (ngModelChange)="formErrors.siteTitle = undefined"
+                  placeholder="Site title" />
+                @if (formErrors.siteTitle) {
+                  <span class="field-error"><i class="pi pi-exclamation-circle"></i> {{ formErrors.siteTitle }}</span>
+                }
+              </div>
+
+              <div class="form-field full-span">
+                <label>Site Logo</label>
+                <input pInputText type="text"
+                  [(ngModel)]="formData.siteLogo"
+                  placeholder="Logo URL or path" />
+              </div>
+
+              <div class="form-field full-span">
+                <label>Developed By</label>
+                <input pInputText type="text"
+                  [(ngModel)]="formData.developedBy"
+                  placeholder="Developer or company name" />
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="section-title">
+              <i class="pi pi-language"></i>
+              Localization
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-field" [class.has-error]="formErrors.currency">
+                <label>Currency <span class="required">*</span></label>
+                <input pInputText type="text"
+                  [(ngModel)]="formData.currency"
+                  (ngModelChange)="formErrors.currency = undefined"
+                  placeholder="e.g. USD" />
+                @if (formErrors.currency) {
+                  <span class="field-error"><i class="pi pi-exclamation-circle"></i> {{ formErrors.currency }}</span>
+                }
+              </div>
+
+              <div class="form-field" [class.has-error]="formErrors.currencyPosition">
+                <label>Currency Position <span class="required">*</span></label>
+                <input pInputText type="text"
+                  [(ngModel)]="formData.currencyPosition"
+                  (ngModelChange)="formErrors.currencyPosition = undefined"
+                  placeholder="e.g. left, right" />
+                @if (formErrors.currencyPosition) {
+                  <span class="field-error"><i class="pi pi-exclamation-circle"></i> {{ formErrors.currencyPosition }}</span>
+                }
+              </div>
+
+              <div class="form-field" [class.has-error]="formErrors.dateFormat">
+                <label>Date Format <span class="required">*</span></label>
+                <input pInputText type="text"
+                  [(ngModel)]="formData.dateFormat"
+                  (ngModelChange)="formErrors.dateFormat = undefined"
+                  placeholder="e.g. dd/MM/yyyy" />
+                @if (formErrors.dateFormat) {
+                  <span class="field-error"><i class="pi pi-exclamation-circle"></i> {{ formErrors.dateFormat }}</span>
+                }
+              </div>
+
+              <div class="form-field" [class.has-error]="formErrors.theme">
+                <label>Theme <span class="required">*</span></label>
+                <input pInputText type="text"
+                  [(ngModel)]="formData.theme"
+                  (ngModelChange)="formErrors.theme = undefined"
+                  placeholder="Theme name" />
+                @if (formErrors.theme) {
+                  <span class="field-error"><i class="pi pi-exclamation-circle"></i> {{ formErrors.theme }}</span>
+                }
+              </div>
+
+              <div class="form-field full-span checkbox-field">
+                <p-checkbox [(ngModel)]="formData.isRtl" [binary]="true" inputId="gs-is-rtl" />
+                <label for="gs-is-rtl">Right-to-left (RTL)</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="section-title">
+              <i class="pi pi-sliders-h"></i>
+              Other
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-field" [class.has-error]="formErrors.staffAccess">
+                <label>Staff Access <span class="required">*</span></label>
+                <input pInputText type="text"
+                  [(ngModel)]="formData.staffAccess"
+                  (ngModelChange)="formErrors.staffAccess = undefined"
+                  placeholder="Staff access level" />
+                @if (formErrors.staffAccess) {
+                  <span class="field-error"><i class="pi pi-exclamation-circle"></i> {{ formErrors.staffAccess }}</span>
+                }
+              </div>
+
+              <div class="form-field">
+                <label>Invoice Format</label>
+                <input pInputText type="text"
+                  [(ngModel)]="formData.invoiceFormat"
+                  placeholder="Invoice format" />
+              </div>
+
+              <div class="form-field">
+                <label>State</label>
+                <input pInputText type="number"
+                  [(ngModel)]="formData.state"
+                  placeholder="State code (optional)" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button pButton type="button" label="Submit"
+            icon="pi pi-check"
+            class="btn-submit"
+            [loading]="isSaving"
+            (click)="onSubmit()">
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+</div>

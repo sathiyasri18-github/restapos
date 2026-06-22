@@ -1,0 +1,225 @@
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<div class="pr-wrapper">
+
+  <div class="pr-toolbar">
+    <div class="toolbar-left">
+      <i class="pi pi-bell toolbar-icon"></i>
+      <span class="toolbar-title">Payment Reminder</span>
+      <span class="record-badge" [class.has-filter]="hasActiveSearch">
+        {{ reminders.length }}
+        @if (hasActiveSearch) { / {{ totalRecords }} }
+      </span>
+    </div>
+    <div class="toolbar-actions">
+      <button pButton type="button" icon="pi pi-plus" label="Add"
+        class="toolbar-btn btn-add" (click)="openAddDialog()"></button>
+      <button pButton type="button" icon="pi pi-pencil" label="Edit"
+        class="toolbar-btn btn-edit" [disabled]="!selectedReminder" (click)="onEditSelected()"></button>
+      <button pButton type="button" icon="pi pi-trash" label="Delete"
+        class="toolbar-btn btn-delete" [disabled]="!selectedReminder" (click)="onDeleteSelected($event)"></button>
+      <div class="toolbar-sep"></div>
+      <app-grid-report-toolbar [config]="reminderReportConfig" [disabled]="isLoading" />
+    </div>
+  </div>
+
+  <div class="search-bar">
+    <span class="search-label"><i class="pi pi-search"></i> Search</span>
+    <div class="search-fields">
+      <div class="search-field">
+        <label for="pr-search">Customer / Type / Remarks</label>
+        <input id="pr-search" pInputText type="text"
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="onSearchChange()"
+          placeholder="Search reminders…" />
+      </div>
+      @if (hasActiveSearch) {
+        <button class="clear-btn" (click)="onClearSearch()">
+          <i class="pi pi-filter-slash"></i> Clear
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="table-container">
+    <p-table
+      [value]="reminders"
+      selectionMode="single"
+      [(selection)]="selectedReminder"
+      dataKey="paymentReminderId"
+      [scrollable]="true"
+      scrollHeight="flex"
+      [loading]="isLoading || lookupsLoading"
+      [sortField]="'reminderDate'"
+      [sortOrder]="-1"
+      [paginator]="true"
+      [rows]="20"
+      [rowsPerPageOptions]="[10, 20, 50, 100]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Showing {first}–{last} of {totalRecords}"
+      styleClass="pr-table"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th class="col-index">#</th>
+          <th pSortableColumn="reminderDate">Reminder Date <p-sortIcon field="reminderDate" /></th>
+          <th>Customer</th>
+          <th>Reminder Type</th>
+          <th pSortableColumn="dueDate">Due Date <p-sortIcon field="dueDate" /></th>
+          <th pSortableColumn="amount">Amount <p-sortIcon field="amount" /></th>
+          <th>Sent</th>
+          <th class="col-actions">Actions</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-pr let-rowIndex="rowIndex">
+        <tr
+          [pSelectableRow]="pr"
+          [class.row-selected]="selectedReminder?.paymentReminderId === pr.paymentReminderId"
+          (dblclick)="openEditDialog(pr)"
+        >
+          <td class="col-index">
+            @if (selectedReminder?.paymentReminderId === pr.paymentReminderId) {
+              <i class="pi pi-caret-right row-indicator"></i>
+            } @else {
+              <span class="row-number">{{ rowIndex + 1 }}</span>
+            }
+          </td>
+          <td class="muted-cell">{{ formatDate(pr.reminderDate) }}</td>
+          <td>{{ pr.customerName || getCustomerName(pr.customerId) }}</td>
+          <td class="muted-cell">{{ pr.reminderTypeName || getReminderTypeName(pr.reminderTypeId) }}</td>
+          <td class="muted-cell">{{ formatDate(pr.dueDate) }}</td>
+          <td class="amount-cell">{{ formatAmount(pr.amount) }}</td>
+          <td>
+            <span class="sent-badge" [class.sent-yes]="pr.isSent" [class.sent-no]="!pr.isSent">
+              {{ pr.isSent ? 'Yes' : 'No' }}
+            </span>
+          </td>
+          <td class="col-actions">
+            <div class="action-btns">
+              <button class="icon-btn edit-icon" (click)="openEditDialog(pr); $event.stopPropagation()">
+                <i class="pi pi-pencil"></i>
+              </button>
+              <button class="icon-btn delete-icon" (click)="confirmDelete(pr, $event)">
+                <i class="pi pi-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="8">
+            <div class="empty-state">
+              <i class="pi pi-bell empty-icon"></i>
+              <p class="empty-title">No payment reminders yet</p>
+              <button pButton type="button" icon="pi pi-plus" label="Add Reminder"
+                class="p-button-sm btn-add" (click)="openAddDialog()"></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <div class="status-bar">
+    <span class="record-count"><strong>{{ reminders.length }}</strong> reminders loaded</span>
+    @if (selectedReminder) {
+      <span class="selected-info">
+        <i class="pi pi-check-circle"></i>
+        Selected: #<strong>{{ selectedReminder.paymentReminderId }}</strong>
+      </span>
+    }
+  </div>
+</div>
+
+<p-dialog
+  [header]="dialogTitle"
+  [(visible)]="dialogVisible"
+  [modal]="true"
+  [style]="{ width: '640px', maxHeight: '90vh' }"
+  [contentStyle]="{ overflowY: 'auto' }"
+  styleClass="pr-dialog"
+  (onHide)="onDialogHide()"
+>
+  @if (isLoadingDetail) {
+    <div class="dialog-loading"><i class="pi pi-spin pi-spinner"></i> Loading…</div>
+  } @else {
+    <div class="dialog-form">
+      <div class="form-section">
+        <div class="section-title"><i class="pi pi-user"></i> Reminder Details</div>
+        <div class="form-grid-2">
+          <div class="form-field" [class.has-error]="formErrors.customerId">
+            <label>Customer <span class="required">*</span></label>
+            <p-select
+              [options]="customerOptions"
+              optionLabel="label"
+              optionValue="value"
+              [(ngModel)]="formData.customerId"
+              (ngModelChange)="formErrors.customerId = undefined"
+              placeholder="Select customer"
+              [filter]="true"
+              appendTo="body" />
+            @if (formErrors.customerId) {
+              <span class="field-error"><i class="pi pi-exclamation-circle"></i> {{ formErrors.customerId }}</span>
+            }
+          </div>
+          <div class="form-field" [class.has-error]="formErrors.reminderTypeId">
+            <label>Reminder Type <span class="required">*</span></label>
+            <p-select
+              [options]="reminderTypeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [(ngModel)]="formData.reminderTypeId"
+              (ngModelChange)="formErrors.reminderTypeId = undefined"
+              placeholder="Select type"
+              appendTo="body" />
+            @if (formErrors.reminderTypeId) {
+              <span class="field-error"><i class="pi pi-exclamation-circle"></i> {{ formErrors.reminderTypeId }}</span>
+            }
+          </div>
+          <div class="form-field" [class.has-error]="formErrors.reminderDate">
+            <label>Reminder Date <span class="required">*</span></label>
+            <p-datepicker
+              [(ngModel)]="formData.reminderDate"
+              (ngModelChange)="formErrors.reminderDate = undefined"
+              dateFormat="dd/mm/yy"
+              appendTo="body" />
+            @if (formErrors.reminderDate) {
+              <span class="field-error"><i class="pi pi-exclamation-circle"></i> {{ formErrors.reminderDate }}</span>
+            }
+          </div>
+          <div class="form-field">
+            <label>Due Date</label>
+            <p-datepicker [(ngModel)]="formData.dueDate" dateFormat="dd/mm/yy" appendTo="body" />
+          </div>
+          <div class="form-field">
+            <label>Amount</label>
+            <input pInputText type="number" [(ngModel)]="formData.amount" placeholder="0.00" />
+          </div>
+          <div class="form-field sent-field">
+            <label>Sent</label>
+            <div class="sent-row">
+              <p-checkbox [(ngModel)]="formData.isSent" [binary]="true" (ngModelChange)="onIsSentChange()" />
+              @if (formData.isSent) {
+                <p-datepicker [(ngModel)]="formData.sentDate" dateFormat="dd/mm/yy" appendTo="body" placeholder="Sent date" />
+              }
+            </div>
+          </div>
+          <div class="form-field full-span">
+            <label>Remarks</label>
+            <textarea pInputTextarea [(ngModel)]="formData.remarks" rows="2" placeholder="Notes…"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button pButton type="button" icon="pi pi-times" label="Cancel"
+        class="p-button-outlined btn-cancel" (click)="dialogVisible = false"></button>
+      <button pButton type="button" icon="pi pi-check" label="Save"
+        class="btn-ok" [loading]="isSaving" [disabled]="isLoadingDetail" (click)="onSave()"></button>
+    </div>
+  </ng-template>
+</p-dialog>

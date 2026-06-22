@@ -1,0 +1,120 @@
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<div class="rol-wrapper">
+  <div class="rol-toolbar">
+    <div class="toolbar-left">
+      <i class="pi pi-shield toolbar-icon"></i>
+      <span class="toolbar-title">Roles</span>
+      <span class="record-badge">{{ roles.length }}</span>
+    </div>
+    <div class="toolbar-actions">
+      <button pButton icon="pi pi-plus" label="Add" class="toolbar-btn btn-add" (click)="openAddDialog()"></button>
+      <button pButton icon="pi pi-pencil" label="Edit" class="toolbar-btn btn-edit"
+        [disabled]="!selectedRole" (click)="onEditSelected()"></button>
+      <button pButton icon="pi pi-key" label="Permissions" class="toolbar-btn btn-edit"
+        [disabled]="!selectedRole" (click)="onPermissionsSelected()"></button>
+      <button pButton icon="pi pi-trash" label="Delete" class="toolbar-btn btn-delete"
+        [disabled]="!selectedRole" (click)="onDeleteSelected($event)"></button>
+      <div class="toolbar-sep"></div>
+      <app-grid-report-toolbar [config]="roleReportConfig" [disabled]="isLoading" />
+    </div>
+  </div>
+
+  <div class="search-bar">
+    <span class="search-label"><i class="pi pi-search"></i> Search</span>
+    <div class="search-fields">
+      <input pInputText [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange()" placeholder="Search roles…" />
+      <p-select [options]="statusFilterOptions" optionLabel="label" optionValue="value"
+        [(ngModel)]="activeFilter" (ngModelChange)="onFilterChange()" placeholder="All" appendTo="body" />
+      @if (hasActiveFilters) {
+        <button class="clear-btn" (click)="onClearSearch()"><i class="pi pi-filter-slash"></i> Clear</button>
+      }
+    </div>
+  </div>
+
+  <div class="table-container">
+    <p-table [value]="roles" selectionMode="single" [(selection)]="selectedRole" dataKey="roleId"
+      [scrollable]="true" scrollHeight="flex" [loading]="isLoading" styleClass="rol-table">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>#</th>
+          <th>Role Name</th>
+          <th>Description</th>
+          <th>Active</th>
+          <th>Actions</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-r let-rowIndex="rowIndex">
+        <tr [pSelectableRow]="r" (dblclick)="openEditDialog(r)">
+          <td>{{ rowIndex + 1 }}</td>
+          <td class="name-cell">{{ r.roleName }}</td>
+          <td class="muted-cell">{{ r.description || '—' }}</td>
+          <td>{{ r.isActive ? 'Yes' : 'No' }}</td>
+          <td>
+            <div class="action-btns">
+              <button class="icon-btn edit-icon" (click)="openEditDialog(r); $event.stopPropagation()"><i class="pi pi-pencil"></i></button>
+              <button class="icon-btn edit-icon" (click)="openPermissions(r); $event.stopPropagation()" pTooltip="Menu permissions"><i class="pi pi-key"></i></button>
+              <button class="icon-btn delete-icon" (click)="confirmDelete(r, $event)"><i class="pi pi-trash"></i></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<p-dialog [(visible)]="dialogVisible" [header]="dialogTitle" [modal]="true" [style]="{ width: '440px' }" styleClass="rol-dialog">
+  <div class="dialog-form">
+    <div class="form-field" [class.has-error]="formErrors.roleName">
+      <label>Role Name *</label>
+      <input pInputText [(ngModel)]="formData.roleName" />
+      @if (formErrors.roleName) { <span class="field-error">{{ formErrors.roleName }}</span> }
+    </div>
+    <div class="form-field">
+      <label>Description</label>
+      <textarea pTextarea [(ngModel)]="formData.description" rows="3"></textarea>
+    </div>
+    <div class="form-field checkbox-field">
+      <p-checkbox [(ngModel)]="formData.isActive" [binary]="true" inputId="rol-active" />
+      <label for="rol-active">Active</label>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancel" class="p-button-outlined p-button-sm" (click)="dialogVisible = false"></button>
+    <button pButton label="Save" [loading]="isSaving" (click)="onSave()"></button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog [(visible)]="permDialogVisible" header="Menu Permissions" [modal]="true"
+  [style]="{ width: '720px' }" styleClass="rol-dialog">
+  @if (permRole) {
+    <p class="perm-role-label">Role: <strong>{{ permRole.roleName }}</strong></p>
+  }
+  <p-table [value]="menuPermissions" [loading]="permLoading" styleClass="rol-table">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Menu</th>
+        <th>Code</th>
+        <th>View</th>
+        <th>Add</th>
+        <th>Edit</th>
+        <th>Delete</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-m>
+      <tr>
+        <td>{{ m.menuName }}</td>
+        <td class="muted-cell">{{ m.menuCode }}</td>
+        <td><p-checkbox [(ngModel)]="m.canView" [binary]="true" /></td>
+        <td><p-checkbox [(ngModel)]="m.canAdd" [binary]="true" /></td>
+        <td><p-checkbox [(ngModel)]="m.canEdit" [binary]="true" /></td>
+        <td><p-checkbox [(ngModel)]="m.canDelete" [binary]="true" /></td>
+      </tr>
+    </ng-template>
+  </p-table>
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancel" class="p-button-outlined p-button-sm" (click)="permDialogVisible = false"></button>
+    <button pButton label="Save Permissions" [loading]="permSaving" (click)="savePermissions()"></button>
+  </ng-template>
+</p-dialog>

@@ -1,0 +1,124 @@
+<p-toast position="top-right" />
+
+<div class="pos-wrapper">
+  <div class="pos-toolbar">
+    <div class="toolbar-left">
+      <i class="pi pi-desktop toolbar-icon"></i>
+      <span class="toolbar-title">POS Setting</span>
+    </div>
+  </div>
+
+  <div class="settings-body">
+    @if (isLoading) {
+      <div class="loading-state">
+        <i class="pi pi-spin pi-spinner loading-icon"></i>
+        <span>Loading POS settings…</span>
+      </div>
+    } @else {
+      <div class="settings-card">
+        <p class="form-hint">
+          The field labels marked with <span class="required">*</span> are required input fields.
+        </p>
+
+        <div class="settings-form">
+          <div class="form-section">
+            <div class="section-title">
+              <i class="pi pi-cog"></i>
+              General
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-field" [class.has-error]="formErrors.customerId">
+                <label>Default Customer <span class="required">*</span></label>
+                <p-select [options]="customerOptions" optionLabel="label" optionValue="value"
+                  [(ngModel)]="formData.customerId"
+                  (ngModelChange)="formErrors.customerId = undefined"
+                  placeholder="Select customer" appendTo="body"
+                  [disabled]="!lookupsLoaded" />
+                @if (formErrors.customerId) {
+                  <span class="field-error"><i class="pi pi-exclamation-circle"></i> {{ formErrors.customerId }}</span>
+                }
+              </div>
+
+              <div class="form-field" [class.has-error]="formErrors.billerId">
+                <label>Default Biller <span class="required">*</span></label>
+                <p-select [options]="billerOptions" optionLabel="label" optionValue="value"
+                  [(ngModel)]="formData.billerId"
+                  (ngModelChange)="formErrors.billerId = undefined"
+                  placeholder="Select biller" appendTo="body"
+                  [disabled]="!lookupsLoaded" />
+                @if (formErrors.billerId) {
+                  <span class="field-error"><i class="pi pi-exclamation-circle"></i> {{ formErrors.billerId }}</span>
+                }
+              </div>
+
+              <div class="form-field" [class.has-error]="formErrors.warehouseId">
+                <label>Default Warehouse <span class="required">*</span></label>
+                <p-select [options]="warehouseOptions" optionLabel="label" optionValue="value"
+                  [(ngModel)]="formData.warehouseId"
+                  (ngModelChange)="formErrors.warehouseId = undefined"
+                  placeholder="Select warehouse" appendTo="body"
+                  [disabled]="!lookupsLoaded" />
+                @if (formErrors.warehouseId) {
+                  <span class="field-error"><i class="pi pi-exclamation-circle"></i> {{ formErrors.warehouseId }}</span>
+                }
+              </div>
+
+              <div class="form-field" [class.has-error]="formErrors.productNumber">
+                <label>Displayed Number of Product Row <span class="required">*</span></label>
+                <input pInputText type="number" min="0"
+                  [(ngModel)]="formData.productNumber"
+                  (ngModelChange)="formErrors.productNumber = undefined"
+                  placeholder="e.g. 3" />
+                @if (formErrors.productNumber) {
+                  <span class="field-error"><i class="pi pi-exclamation-circle"></i> {{ formErrors.productNumber }}</span>
+                }
+              </div>
+
+              <div class="form-field full-span checkbox-field">
+                <p-checkbox [(ngModel)]="formData.keybordActive" [binary]="true" inputId="pos-keyboard" />
+                <label for="pos-keyboard">Touchscreen keyboard</label>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-section">
+            <div class="section-title">
+              <i class="pi pi-credit-card"></i>
+              Stripe
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-field full-span">
+                <label>Stripe Public Key</label>
+                <input pInputText type="text"
+                  [(ngModel)]="formData.stripePublicKey"
+                  placeholder="pk_live_…" />
+              </div>
+
+              <div class="form-field full-span" [class.has-error]="formErrors.stripeSecretKey">
+                <label>Stripe Secret Key @if (!isEditMode) { <span class="required">*</span> }</label>
+                <input pInputText type="password"
+                  [(ngModel)]="formData.stripeSecretKey"
+                  (ngModelChange)="formErrors.stripeSecretKey = undefined"
+                  [placeholder]="isEditMode ? 'Leave blank to keep current key' : 'sk_live_…'" />
+                @if (formErrors.stripeSecretKey) {
+                  <span class="field-error"><i class="pi pi-exclamation-circle"></i> {{ formErrors.stripeSecretKey }}</span>
+                }
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button pButton type="button" label="Submit"
+            icon="pi pi-check"
+            class="btn-submit"
+            [loading]="isSaving"
+            (click)="onSubmit()">
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+</div>

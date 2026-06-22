@@ -1,0 +1,11 @@
+.env
+dist/
+/resta-api/src/CustomerApi.API/bin
+/resta-api/src/CustomerApi.API/obj
+/resta-api/src/CustomerApi.Application/obj
+/resta-api/src/CustomerApi.Application/bin
+/resta-api/src/CustomerApi.Domain/obj
+/resta-api/src/CustomerApi.Domain/bin
+/resta-api/src/CustomerApi.Infrastructure/obj
+/resta-api/src/CustomerApi.Infrastructure/bin
+/restapos-images.tar

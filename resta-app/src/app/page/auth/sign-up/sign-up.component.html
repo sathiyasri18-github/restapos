@@ -1,0 +1,49 @@
+<div class="auth-page">
+  <div class="auth-card">
+    <h1>Sign up</h1>
+    <p class="subtitle">Create a new account</p>
+
+    <form (ngSubmit)="submit()">
+      <div class="auth-field">
+        <label for="userName">User name</label>
+        <input pInputText id="userName" [(ngModel)]="userName" name="userName" class="w-full" />
+        @if (errors['userName']) { <span class="error">{{ errors['userName'] }}</span> }
+      </div>
+
+      <div class="auth-field">
+        <label for="displayName">Display name</label>
+        <input pInputText id="displayName" [(ngModel)]="displayName" name="displayName" class="w-full" />
+        @if (errors['displayName']) { <span class="error">{{ errors['displayName'] }}</span> }
+      </div>
+
+      <div class="auth-field">
+        <label for="email">Email (optional)</label>
+        <input pInputText id="email" type="email" [(ngModel)]="email" name="email" class="w-full" />
+        @if (errors['email']) { <span class="error">{{ errors['email'] }}</span> }
+      </div>
+
+      <div class="auth-field">
+        <label for="password">Password</label>
+        <p-password id="password" [(ngModel)]="password" name="password" [feedback]="true" [toggleMask]="true"
+          styleClass="w-full" inputStyleClass="w-full" />
+        @if (errors['password']) { <span class="error">{{ errors['password'] }}</span> }
+      </div>
+
+      <div class="auth-field">
+        <label for="confirmPassword">Confirm password</label>
+        <p-password id="confirmPassword" [(ngModel)]="confirmPassword" name="confirmPassword" [feedback]="false"
+          [toggleMask]="true" styleClass="w-full" inputStyleClass="w-full" />
+        @if (errors['confirmPassword']) { <span class="error">{{ errors['confirmPassword'] }}</span> }
+      </div>
+
+      <div class="auth-actions">
+        <p-button type="submit" label="Create account" [loading]="isLoading" />
+      </div>
+    </form>
+
+    <div class="auth-links">
+      Already have an account? <a routerLink="/sign-in">Sign in</a>
+    </div>
+  </div>
+</div>
+<p-toast />

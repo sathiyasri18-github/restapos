@@ -1,0 +1,278 @@
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<div class="cf-wrapper">
+  <div class="split-container">
+
+    <div class="split-panel panel-fields">
+      <div class="panel-toolbar">
+        <div class="toolbar-left">
+          <i class="pi pi-sliders-h toolbar-icon"></i>
+          <span class="toolbar-title">Custom Fields</span>
+          <span class="record-badge" [class.has-filter]="hasFieldSearch">{{ customFields.length }}</span>
+        </div>
+        <div class="toolbar-actions">
+          <button pButton icon="pi pi-plus" label="Add" class="toolbar-btn btn-add" (click)="openFieldAddDialog()"></button>
+          <button pButton icon="pi pi-pencil" label="Edit" class="toolbar-btn btn-edit"
+            [disabled]="!selectedField" (click)="onFieldEditSelected()"></button>
+          <button pButton icon="pi pi-trash" label="Delete" class="toolbar-btn btn-delete"
+            [disabled]="!selectedField" (click)="onFieldDeleteSelected($event)"></button>
+          <div class="toolbar-sep"></div>
+          <app-grid-report-toolbar [config]="customFieldsReportConfig" [disabled]="fieldLoading" />
+        </div>
+      </div>
+
+      <div class="search-bar">
+        <span class="search-label"><i class="pi pi-search"></i> Filter</span>
+        <div class="search-fields">
+          <div class="search-field">
+            <label>Entity Type</label>
+            <p-select [options]="entityTypeOptions" optionLabel="label" optionValue="value"
+              [(ngModel)]="filterEntityTypeId" (ngModelChange)="onEntityTypeFilterChange()"
+              placeholder="All types" [showClear]="true" appendTo="body" />
+          </div>
+          <div class="search-field">
+            <label>Key / Label</label>
+            <input pInputText [(ngModel)]="fieldSearchTerm" (ngModelChange)="onFieldSearchChange()" placeholder="Search…" />
+          </div>
+          @if (hasFieldSearch) {
+            <button class="clear-btn" (click)="onClearFieldSearch()"><i class="pi pi-filter-slash"></i> Clear</button>
+          }
+        </div>
+      </div>
+
+      <div class="table-container">
+        <p-table [value]="customFields" selectionMode="single" [(selection)]="selectedField"
+          (selectionChange)="onFieldSelect()" dataKey="customFieldId" [scrollable]="true" scrollHeight="flex"
+          [loading]="fieldLoading" [paginator]="true" [rows]="15" styleClass="cf-table fields-table">
+          <ng-template pTemplate="header">
+            <tr>
+              <th class="col-index">#</th>
+              <th class="col-key">Key</th>
+              <th class="col-name">Label</th>
+              <th class="col-entity">Entity</th>
+              <th class="col-type">Type</th>
+              <th class="col-active">Active</th>
+              <th class="col-actions">Actions</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-item let-rowIndex="rowIndex">
+            <tr [pSelectableRow]="item" [class.row-selected]="selectedField?.customFieldId === item.customFieldId"
+              (dblclick)="openFieldEditDialog(item)">
+              <td class="col-index">
+                @if (selectedField?.customFieldId === item.customFieldId) {
+                  <i class="pi pi-caret-right row-indicator"></i>
+                } @else {
+                  <span class="row-number">{{ rowIndex + 1 }}</span>
+                }
+              </td>
+              <td class="col-key"><span class="code-cell">{{ item.fieldKey }}</span></td>
+              <td class="col-name name-cell">{{ item.label }}</td>
+              <td class="col-entity muted-cell">{{ item.entityTypeName || '—' }}</td>
+              <td class="col-type muted-cell">{{ item.fieldTypeName || '—' }}</td>
+              <td class="col-active">{{ item.isActive ? 'Yes' : 'No' }}</td>
+              <td class="col-actions">
+                <div class="action-btns">
+                  <button class="icon-btn edit-icon" (click)="openFieldEditDialog(item); $event.stopPropagation()">
+                    <i class="pi pi-pencil"></i>
+                  </button>
+                  <button class="icon-btn delete-icon" (click)="confirmFieldDelete(item, $event)">
+                    <i class="pi pi-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr><td colspan="7">
+              <div class="empty-state compact">
+                <p class="empty-title">No custom fields</p>
+                <button pButton icon="pi pi-plus" label="Add" class="p-button-sm btn-add" (click)="openFieldAddDialog()"></button>
+              </div>
+            </td></tr>
+          </ng-template>
+        </p-table>
+      </div>
+
+      <div class="status-bar">
+        <span class="record-count"><strong>{{ customFields.length }}</strong> fields</span>
+        <span class="hint-text">Select a field to manage values</span>
+      </div>
+    </div>
+
+    <div class="split-divider" aria-hidden="true"></div>
+
+    <div class="split-panel panel-values" [class.panel-disabled]="!hasSelectedField">
+      <div class="panel-toolbar">
+        <div class="toolbar-left">
+          <i class="pi pi-database toolbar-icon"></i>
+          <span class="toolbar-title">Field Values</span>
+          @if (hasSelectedField) {
+            <span class="type-context-badge">{{ selectedField!.label }}</span>
+          }
+          <span class="record-badge">{{ values.length }}</span>
+        </div>
+        <div class="toolbar-actions">
+          <button pButton icon="pi pi-plus" label="Add" class="toolbar-btn btn-add"
+            [disabled]="!hasSelectedField" (click)="openValueAddDialog()"></button>
+          <button pButton icon="pi pi-pencil" label="Edit" class="toolbar-btn btn-edit"
+            [disabled]="!selectedValue" (click)="onValueEditSelected()"></button>
+          <button pButton icon="pi pi-trash" label="Delete" class="toolbar-btn btn-delete"
+            [disabled]="!selectedValue" (click)="onValueDeleteSelected($event)"></button>
+          <div class="toolbar-sep"></div>
+          <app-grid-report-toolbar [config]="customFieldValuesReportConfig" [disabled]="!hasSelectedField || valueLoading" />
+        </div>
+      </div>
+
+      <div class="search-bar">
+        <span class="search-label"><i class="pi pi-search"></i> Search</span>
+        <div class="search-fields">
+          <div class="search-field">
+            <label>Entity ID / Value</label>
+            <input pInputText [(ngModel)]="valueSearchTerm" (ngModelChange)="onValueSearchChange()"
+              [disabled]="!hasSelectedField" placeholder="Search…" />
+          </div>
+          @if (hasValueSearch) {
+            <button class="clear-btn" (click)="onClearValueSearch()" [disabled]="!hasSelectedField">
+              <i class="pi pi-filter-slash"></i> Clear
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="table-container">
+        @if (!hasSelectedField) {
+          <div class="panel-placeholder">
+            <i class="pi pi-arrow-left placeholder-icon"></i>
+            <p class="placeholder-title">Select a custom field</p>
+            <p class="placeholder-sub">Choose a field on the left to view and manage stored values.</p>
+          </div>
+        } @else {
+          <p-table [value]="values" selectionMode="single" [(selection)]="selectedValue"
+            dataKey="customFieldValueId" [scrollable]="true" scrollHeight="flex" [loading]="valueLoading"
+            [paginator]="true" [rows]="15" styleClass="cf-table values-table">
+            <ng-template pTemplate="header">
+              <tr>
+                <th class="col-index">#</th>
+                <th class="col-entity-id">Entity ID</th>
+                <th class="col-value">Value</th>
+                <th class="col-actions">Actions</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-item let-rowIndex="rowIndex">
+              <tr [pSelectableRow]="item" (dblclick)="openValueEditDialog(item)">
+                <td class="col-index"><span class="row-number">{{ rowIndex + 1 }}</span></td>
+                <td class="col-entity-id">{{ item.entityId }}</td>
+                <td class="col-value name-cell">{{ item.valueText || '—' }}</td>
+                <td class="col-actions">
+                  <div class="action-btns">
+                    <button class="icon-btn edit-icon" (click)="openValueEditDialog(item); $event.stopPropagation()">
+                      <i class="pi pi-pencil"></i>
+                    </button>
+                    <button class="icon-btn delete-icon" (click)="confirmValueDelete(item, $event)">
+                      <i class="pi pi-trash"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr><td colspan="4">
+                <div class="empty-state compact">
+                  <p class="empty-title">No values</p>
+                  <button pButton icon="pi pi-plus" label="Add Value" class="p-button-sm btn-add" (click)="openValueAddDialog()"></button>
+                </div>
+              </td></tr>
+            </ng-template>
+          </p-table>
+        }
+      </div>
+    </div>
+  </div>
+</div>
+
+<p-dialog [header]="fieldDialogTitle" [(visible)]="fieldDialogVisible" [modal]="true"
+  [style]="{ width: '560px' }" styleClass="cf-dialog" (onHide)="onFieldDialogHide()">
+  <div class="dialog-form">
+    <div class="form-grid-2">
+      <div class="form-field" [class.has-error]="fieldFormErrors.entityTypeId">
+        <label>Entity Type <span class="required">*</span></label>
+        <p-select [options]="entityTypeOptions" optionLabel="label" optionValue="value"
+          [(ngModel)]="fieldFormData.entityTypeId" (ngModelChange)="fieldFormErrors.entityTypeId = undefined"
+          placeholder="Select entity type" [filter]="true" appendTo="body" />
+        @if (fieldFormErrors.entityTypeId) { <span class="field-error">{{ fieldFormErrors.entityTypeId }}</span> }
+      </div>
+      <div class="form-field" [class.has-error]="fieldFormErrors.fieldTypeId">
+        <label>Field Type <span class="required">*</span></label>
+        <p-select [options]="fieldTypeOptions" optionLabel="label" optionValue="value"
+          [(ngModel)]="fieldFormData.fieldTypeId" (ngModelChange)="fieldFormErrors.fieldTypeId = undefined"
+          placeholder="Select field type" [filter]="true" appendTo="body" />
+        @if (fieldFormErrors.fieldTypeId) { <span class="field-error">{{ fieldFormErrors.fieldTypeId }}</span> }
+      </div>
+      <div class="form-field" [class.has-error]="fieldFormErrors.fieldKey">
+        <label>Field Key <span class="required">*</span></label>
+        <input pInputText [(ngModel)]="fieldFormData.fieldKey" (ngModelChange)="fieldFormErrors.fieldKey = undefined"
+          placeholder="e.g. loyalty_tier" />
+        @if (fieldFormErrors.fieldKey) { <span class="field-error">{{ fieldFormErrors.fieldKey }}</span> }
+      </div>
+      <div class="form-field" [class.has-error]="fieldFormErrors.label">
+        <label>Label <span class="required">*</span></label>
+        <input pInputText [(ngModel)]="fieldFormData.label" (ngModelChange)="fieldFormErrors.label = undefined" />
+        @if (fieldFormErrors.label) { <span class="field-error">{{ fieldFormErrors.label }}</span> }
+      </div>
+      <div class="form-field">
+        <label>Sort Order</label>
+        <input pInputText type="number" [(ngModel)]="fieldFormData.sortOrder" />
+      </div>
+      <div class="form-field">
+        <p-checkbox [(ngModel)]="fieldFormData.isRequired" [binary]="true" label="Required" />
+      </div>
+      <div class="form-field">
+        <p-checkbox [(ngModel)]="fieldFormData.isActive" [binary]="true" label="Active" />
+      </div>
+      @if (showOptionsJson) {
+        <div class="form-field full-span">
+          <label>Options JSON</label>
+          <textarea pInputTextarea [(ngModel)]="fieldFormData.optionsJson" rows="3"
+            placeholder='["Gold","Silver"]'></textarea>
+        </div>
+      }
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button pButton label="Cancel" class="p-button-outlined btn-cancel" (click)="fieldDialogVisible = false"></button>
+      <button pButton label="Save" class="btn-ok" [loading]="fieldSaving" (click)="onFieldSave()"></button>
+    </div>
+  </ng-template>
+</p-dialog>
+
+<p-dialog [header]="valueDialogTitle" [(visible)]="valueDialogVisible" [modal]="true"
+  [style]="{ width: '440px' }" styleClass="cf-dialog" (onHide)="onValueDialogHide()">
+  <div class="dialog-form">
+    @if (selectedField) {
+      <div class="context-field">
+        <label>Field</label>
+        <span class="context-value">{{ selectedField.label }} ({{ selectedField.fieldKey }})</span>
+      </div>
+    }
+    <div class="form-grid-2">
+      <div class="form-field" [class.has-error]="valueFormErrors.entityId">
+        <label>Entity ID <span class="required">*</span></label>
+        <input pInputText type="number" [(ngModel)]="valueFormData.entityId"
+          (ngModelChange)="valueFormErrors.entityId = undefined" placeholder="CustomerId, ProductId, …" />
+        @if (valueFormErrors.entityId) { <span class="field-error">{{ valueFormErrors.entityId }}</span> }
+      </div>
+      <div class="form-field full-span">
+        <label>Value</label>
+        <input pInputText [(ngModel)]="valueFormData.valueText" placeholder="Stored value" />
+      </div>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button pButton label="Cancel" class="p-button-outlined btn-cancel" (click)="valueDialogVisible = false"></button>
+      <button pButton label="Save" class="btn-ok" [loading]="valueSaving" (click)="onValueSave()"></button>
+    </div>
+  </ng-template>
+</p-dialog>

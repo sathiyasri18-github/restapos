@@ -1,0 +1,273 @@
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<div class="cur-wrapper">
+
+  <div class="cur-toolbar">
+    <div class="toolbar-left">
+      <i class="pi pi-dollar toolbar-icon"></i>
+      <span class="toolbar-title">Currency</span>
+      <span class="record-badge" [class.has-filter]="hasActiveFilters">
+        {{ filteredCurrencies.length }}
+        @if (hasActiveFilters) { / {{ currencies.length }} }
+      </span>
+    </div>
+
+    <div class="toolbar-actions">
+      <button pButton type="button" icon="pi pi-plus" label="Add"
+        class="toolbar-btn btn-add"
+        pTooltip="Add new currency" tooltipPosition="bottom"
+        (click)="openAddDialog()">
+      </button>
+
+      <button pButton type="button" icon="pi pi-pencil" label="Edit"
+        class="toolbar-btn btn-edit"
+        pTooltip="Edit selected currency" tooltipPosition="bottom"
+        [disabled]="!selectedCurrency"
+        (click)="onEditSelected()">
+      </button>
+
+      <button pButton type="button" icon="pi pi-trash" label="Delete"
+        class="toolbar-btn btn-delete"
+        pTooltip="Delete selected currency" tooltipPosition="bottom"
+        [disabled]="!selectedCurrency"
+        (click)="onDeleteSelected($event)">
+      </button>
+
+      <div class="toolbar-sep"></div>
+
+      <app-grid-report-toolbar [config]="currencyReportConfig" [disabled]="isLoading" />
+    </div>
+  </div>
+
+  <div class="search-bar">
+    <span class="search-label">
+      <i class="pi pi-search"></i>
+      Search
+    </span>
+    <div class="search-fields">
+      <div class="search-field">
+        <label for="cur-search">Name / Code</label>
+        <input id="cur-search" pInputText type="text"
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="onSearchChange()"
+          placeholder="Search currencies…" />
+      </div>
+
+      @if (hasActiveFilters) {
+        <button class="clear-btn" (click)="onClearSearch()">
+          <i class="pi pi-filter-slash"></i>
+          Clear
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="table-container">
+    <p-table
+      [value]="filteredCurrencies"
+      selectionMode="single"
+      [(selection)]="selectedCurrency"
+      dataKey="currencyId"
+      [scrollable]="true"
+      scrollHeight="flex"
+      [loading]="isLoading"
+      [sortField]="'name'"
+      [sortOrder]="1"
+      [paginator]="true"
+      [rows]="20"
+      [rowsPerPageOptions]="[10, 20, 50, 100]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Showing {first}–{last} of {totalRecords}"
+      styleClass="cur-table"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th class="col-index">#</th>
+          <th class="col-name" pSortableColumn="name">
+            Name <p-sortIcon field="name" />
+          </th>
+          <th class="col-code" pSortableColumn="code">
+            Code <p-sortIcon field="code" />
+          </th>
+          <th class="col-rate" pSortableColumn="exchangeRate">
+            Exchange Rate <p-sortIcon field="exchangeRate" />
+          </th>
+          <th class="col-actions" pFrozenColumn alignFrozen="right">Actions</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-cur let-rowIndex="rowIndex">
+        <tr
+          [pSelectableRow]="cur"
+          [class.row-selected]="selectedCurrency?.currencyId === cur.currencyId"
+          (dblclick)="openEditDialog(cur)"
+        >
+          <td class="col-index">
+            @if (selectedCurrency?.currencyId === cur.currencyId) {
+              <i class="pi pi-caret-right row-indicator"></i>
+            } @else {
+              <span class="row-number">{{ rowIndex + 1 }}</span>
+            }
+          </td>
+          <td class="col-name">
+            <span class="name-cell">{{ cur.name }}</span>
+          </td>
+          <td class="col-code">
+            <span class="code-badge">{{ cur.code }}</span>
+          </td>
+          <td class="col-rate rate-cell">{{ formatRate(cur.exchangeRate) }}</td>
+          <td class="col-actions" pFrozenColumn alignFrozen="right">
+            <div class="action-btns">
+              <button class="icon-btn edit-icon"
+                (click)="openEditDialog(cur); $event.stopPropagation()"
+                pTooltip="Edit" tooltipPosition="left">
+                <i class="pi pi-pencil"></i>
+              </button>
+              <button class="icon-btn delete-icon"
+                (click)="confirmDelete(cur, $event)"
+                pTooltip="Delete" tooltipPosition="left">
+                <i class="pi pi-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="5">
+            <div class="empty-state">
+              <i class="pi pi-dollar empty-icon"></i>
+              @if (hasActiveFilters) {
+                <p class="empty-title">No currencies found</p>
+                <p class="empty-sub">No currencies match your search criteria.</p>
+                <button pButton type="button" icon="pi pi-filter-slash"
+                  label="Clear Search" class="p-button-outlined p-button-sm"
+                  (click)="onClearSearch()">
+                </button>
+              } @else {
+                <p class="empty-title">No currencies yet</p>
+                <p class="empty-sub">Get started by adding your first currency.</p>
+                <button pButton type="button" icon="pi pi-plus"
+                  label="Add Currency" class="p-button-sm btn-add"
+                  (click)="openAddDialog()">
+                </button>
+              }
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="loadingbody">
+        @for (i of [1,2,3,4,5,6,7]; track i) {
+          <tr>
+            <td class="col-index"><p-skeleton width="24px" height="14px" /></td>
+            <td class="col-name"><p-skeleton height="14px" /></td>
+            <td class="col-code"><p-skeleton width="48px" height="20px" borderRadius="10px" /></td>
+            <td class="col-rate"><p-skeleton height="14px" /></td>
+            <td class="col-actions"><p-skeleton width="60px" height="14px" /></td>
+          </tr>
+        }
+      </ng-template>
+    </p-table>
+  </div>
+
+  <div class="status-bar">
+    <span class="record-count">
+      Showing <strong>{{ filteredCurrencies.length }}</strong> of <strong>{{ currencies.length }}</strong> currencies
+    </span>
+    @if (selectedCurrency) {
+      <span class="selected-info">
+        <i class="pi pi-check-circle"></i>
+        Selected: <strong>{{ selectedCurrency.name }}</strong>
+      </span>
+    }
+    <span class="hint-text">Double-click a row to edit</span>
+  </div>
+
+</div>
+
+<p-dialog
+  [header]="dialogTitle"
+  [(visible)]="dialogVisible"
+  [modal]="true"
+  [style]="{ width: '480px' }"
+  [closable]="true"
+  [draggable]="true"
+  styleClass="cur-dialog"
+  (onHide)="onDialogHide()"
+>
+  <div class="dialog-form">
+
+    <div class="form-section">
+      <div class="section-title">
+        <i class="pi pi-dollar"></i>
+        Currency Information
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-field full-span" [class.has-error]="formErrors.name">
+          <label>Name <span class="required">*</span></label>
+          <input pInputText type="text"
+            [(ngModel)]="formData.name"
+            (ngModelChange)="formErrors.name = undefined"
+            placeholder="e.g. US Dollar"
+            [class.input-error]="formErrors.name" />
+          @if (formErrors.name) {
+            <span class="field-error">
+              <i class="pi pi-exclamation-circle"></i> {{ formErrors.name }}
+            </span>
+          }
+        </div>
+
+        <div class="form-field" [class.has-error]="formErrors.code">
+          <label>Code <span class="required">*</span></label>
+          <input pInputText type="text"
+            [(ngModel)]="formData.code"
+            (ngModelChange)="formErrors.code = undefined"
+            placeholder="USD"
+            maxlength="3"
+            style="text-transform: uppercase"
+            [class.input-error]="formErrors.code" />
+          @if (formErrors.code) {
+            <span class="field-error">
+              <i class="pi pi-exclamation-circle"></i> {{ formErrors.code }}
+            </span>
+          }
+        </div>
+
+        <div class="form-field" [class.has-error]="formErrors.exchangeRate">
+          <label>Exchange Rate <span class="required">*</span></label>
+          <input pInputText type="number"
+            [(ngModel)]="formData.exchangeRate"
+            (ngModelChange)="formErrors.exchangeRate = undefined"
+            placeholder="1.00"
+            step="0.000001"
+            min="0"
+            [class.input-error]="formErrors.exchangeRate" />
+          @if (formErrors.exchangeRate) {
+            <span class="field-error">
+              <i class="pi pi-exclamation-circle"></i> {{ formErrors.exchangeRate }}
+            </span>
+          }
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button pButton type="button" icon="pi pi-times" label="Cancel"
+        class="p-button-outlined btn-cancel"
+        (click)="dialogVisible = false">
+      </button>
+      <button pButton type="button" icon="pi pi-check" label="Save"
+        class="btn-ok"
+        [loading]="isSaving"
+        (click)="onSave()">
+      </button>
+    </div>
+  </ng-template>
+</p-dialog>

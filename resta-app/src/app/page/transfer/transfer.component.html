@@ -1,0 +1,395 @@
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<div class="trf-wrapper">
+
+  <div class="trf-toolbar">
+    <div class="toolbar-left">
+      <i class="pi pi-arrow-right-arrow-left toolbar-icon"></i>
+      <span class="toolbar-title">Transfer</span>
+      <span class="record-badge" [class.has-filter]="hasActiveFilters">
+        {{ filteredTransfers.length }}
+        @if (hasActiveFilters) { / {{ transfers.length }} }
+      </span>
+    </div>
+
+    <div class="toolbar-actions">
+      <button pButton type="button" icon="pi pi-plus" label="Add"
+        class="toolbar-btn btn-add"
+        pTooltip="Add new transfer" tooltipPosition="bottom"
+        (click)="openAddDialog()">
+      </button>
+
+      <button pButton type="button" icon="pi pi-pencil" label="Edit"
+        class="toolbar-btn btn-edit"
+        pTooltip="Edit selected transfer" tooltipPosition="bottom"
+        [disabled]="!selectedTransfer"
+        (click)="onEditSelected()">
+      </button>
+
+      <button pButton type="button" icon="pi pi-trash" label="Delete"
+        class="toolbar-btn btn-delete"
+        pTooltip="Delete selected transfer" tooltipPosition="bottom"
+        [disabled]="!selectedTransfer"
+        (click)="onDeleteSelected($event)">
+      </button>
+
+      <div class="toolbar-sep"></div>
+
+      <app-grid-report-toolbar [config]="transferReportConfig" [disabled]="isLoading" />
+    </div>
+  </div>
+
+  <div class="search-bar">
+    <span class="search-label">
+      <i class="pi pi-search"></i>
+      Search
+    </span>
+    <div class="search-fields">
+      <div class="search-field">
+        <label for="trf-search">Reference / Warehouses / Status</label>
+        <input id="trf-search" pInputText type="text"
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="onSearchChange()"
+          placeholder="Search transfers…" />
+      </div>
+
+      @if (hasActiveFilters) {
+        <button class="clear-btn" (click)="onClearSearch()">
+          <i class="pi pi-filter-slash"></i>
+          Clear
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="table-container">
+    <p-table
+      [value]="filteredTransfers"
+      selectionMode="single"
+      [(selection)]="selectedTransfer"
+      dataKey="transferId"
+      [scrollable]="true"
+      scrollHeight="flex"
+      [loading]="isLoading"
+      [sortField]="'referenceNo'"
+      [sortOrder]="1"
+      [paginator]="true"
+      [rows]="20"
+      [rowsPerPageOptions]="[10, 20, 50, 100]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Showing {first}–{last} of {totalRecords}"
+      styleClass="trf-table"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th class="col-index">#</th>
+          <th class="col-ref" pSortableColumn="referenceNo">
+            Reference No <p-sortIcon field="referenceNo" />
+          </th>
+          <th class="col-from" pSortableColumn="fromWarehouseId">
+            From Warehouse <p-sortIcon field="fromWarehouseId" />
+          </th>
+          <th class="col-to" pSortableColumn="toWarehouseId">
+            To Warehouse <p-sortIcon field="toWarehouseId" />
+          </th>
+          <th class="col-status" pSortableColumn="status">
+            Status <p-sortIcon field="status" />
+          </th>
+          <th class="col-total" pSortableColumn="grandTotal">
+            Grand Total <p-sortIcon field="grandTotal" />
+          </th>
+          <th class="col-actions" pFrozenColumn alignFrozen="right">Actions</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-trf let-rowIndex="rowIndex">
+        <tr
+          [pSelectableRow]="trf"
+          [class.row-selected]="selectedTransfer?.transferId === trf.transferId"
+          (dblclick)="openEditDialog(trf)"
+        >
+          <td class="col-index">
+            @if (selectedTransfer?.transferId === trf.transferId) {
+              <i class="pi pi-caret-right row-indicator"></i>
+            } @else {
+              <span class="row-number">{{ rowIndex + 1 }}</span>
+            }
+          </td>
+          <td class="col-ref">
+            <span class="name-cell">{{ trf.referenceNo }}</span>
+          </td>
+          <td class="col-from muted-cell">{{ trf.fromWarehouseId }}</td>
+          <td class="col-to muted-cell">{{ trf.toWarehouseId }}</td>
+          <td class="col-status">
+            <span class="status-badge" [class]="'status-' + trf.status">
+              {{ getStatusLabel(trf.status) }}
+            </span>
+          </td>
+          <td class="col-total amount-cell">{{ formatAmount(trf.grandTotal) }}</td>
+          <td class="col-actions" pFrozenColumn alignFrozen="right">
+            <div class="action-btns">
+              <button class="icon-btn edit-icon"
+                (click)="openEditDialog(trf); $event.stopPropagation()"
+                pTooltip="Edit" tooltipPosition="left">
+                <i class="pi pi-pencil"></i>
+              </button>
+              <button class="icon-btn delete-icon"
+                (click)="confirmDelete(trf, $event)"
+                pTooltip="Delete" tooltipPosition="left">
+                <i class="pi pi-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7">
+            <div class="empty-state">
+              <i class="pi pi-arrow-right-arrow-left empty-icon"></i>
+              @if (hasActiveFilters) {
+                <p class="empty-title">No transfers found</p>
+                <p class="empty-sub">No transfers match your filter criteria.</p>
+                <button pButton type="button" icon="pi pi-filter-slash"
+                  label="Clear Filters" class="p-button-outlined p-button-sm"
+                  (click)="onClearSearch()">
+                </button>
+              } @else {
+                <p class="empty-title">No transfers yet</p>
+                <p class="empty-sub">Get started by adding your first transfer.</p>
+                <button pButton type="button" icon="pi pi-plus"
+                  label="Add Transfer" class="p-button-sm btn-add"
+                  (click)="openAddDialog()">
+                </button>
+              }
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="loadingbody">
+        @for (i of [1,2,3,4,5,6,7]; track i) {
+          <tr>
+            <td class="col-index"><p-skeleton width="24px" height="14px" /></td>
+            <td class="col-ref"><p-skeleton height="14px" /></td>
+            <td class="col-from"><p-skeleton height="14px" /></td>
+            <td class="col-to"><p-skeleton height="14px" /></td>
+            <td class="col-status"><p-skeleton width="64px" height="20px" borderRadius="10px" /></td>
+            <td class="col-total"><p-skeleton height="14px" /></td>
+            <td class="col-actions"><p-skeleton width="60px" height="14px" /></td>
+          </tr>
+        }
+      </ng-template>
+    </p-table>
+  </div>
+
+  <div class="status-bar">
+    <span class="record-count">
+      Showing <strong>{{ filteredTransfers.length }}</strong> of <strong>{{ transfers.length }}</strong> transfers
+    </span>
+    @if (selectedTransfer) {
+      <span class="selected-info">
+        <i class="pi pi-check-circle"></i>
+        Selected: <strong>{{ selectedTransfer.referenceNo }}</strong>
+      </span>
+    }
+    <span class="hint-text">Double-click a row to edit</span>
+  </div>
+
+</div>
+
+<p-dialog
+  [header]="dialogTitle"
+  [(visible)]="dialogVisible"
+  [modal]="true"
+  [style]="{ width: '720px', maxHeight: '90vh' }"
+  [contentStyle]="{ overflowY: 'auto' }"
+  [closable]="true"
+  [draggable]="true"
+  styleClass="trf-dialog"
+  (onHide)="onDialogHide()"
+>
+  <div class="dialog-form">
+
+    <div class="form-section">
+      <div class="section-title">
+        <i class="pi pi-arrow-right-arrow-left"></i>
+        Transfer Information
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-field full-span" [class.has-error]="formErrors.referenceNo">
+          <label>Reference No <span class="required">*</span></label>
+          <input pInputText type="text"
+            [(ngModel)]="formData.referenceNo"
+            (ngModelChange)="formErrors.referenceNo = undefined"
+            placeholder="Reference number"
+            [class.input-error]="formErrors.referenceNo" />
+          @if (formErrors.referenceNo) {
+            <span class="field-error">
+              <i class="pi pi-exclamation-circle"></i> {{ formErrors.referenceNo }}
+            </span>
+          }
+        </div>
+
+        <div class="form-field" [class.has-error]="formErrors.userId">
+          <label>User ID <span class="required">*</span></label>
+          <p-inputNumber
+            [(ngModel)]="formData.userId"
+            (ngModelChange)="formErrors.userId = undefined"
+            [min]="1"
+            [useGrouping]="false"
+            placeholder="User ID"
+            [class.input-error]="formErrors.userId" />
+          @if (formErrors.userId) {
+            <span class="field-error">
+              <i class="pi pi-exclamation-circle"></i> {{ formErrors.userId }}
+            </span>
+          }
+        </div>
+
+        <div class="form-field">
+          <label>Status</label>
+          <p-select
+            [options]="statusOptions"
+            optionLabel="label"
+            optionValue="value"
+            [(ngModel)]="formData.status"
+            placeholder="Select status"
+            appendTo="body" />
+        </div>
+
+        <div class="form-field" [class.has-error]="formErrors.fromWarehouseId">
+          <label>From Warehouse ID <span class="required">*</span></label>
+          <p-inputNumber
+            [(ngModel)]="formData.fromWarehouseId"
+            (ngModelChange)="formErrors.fromWarehouseId = undefined"
+            [min]="1"
+            [useGrouping]="false"
+            placeholder="From warehouse ID"
+            [class.input-error]="formErrors.fromWarehouseId" />
+          @if (formErrors.fromWarehouseId) {
+            <span class="field-error">
+              <i class="pi pi-exclamation-circle"></i> {{ formErrors.fromWarehouseId }}
+            </span>
+          }
+        </div>
+
+        <div class="form-field" [class.has-error]="formErrors.toWarehouseId">
+          <label>To Warehouse ID <span class="required">*</span></label>
+          <p-inputNumber
+            [(ngModel)]="formData.toWarehouseId"
+            (ngModelChange)="formErrors.toWarehouseId = undefined"
+            [min]="1"
+            [useGrouping]="false"
+            placeholder="To warehouse ID"
+            [class.input-error]="formErrors.toWarehouseId" />
+          @if (formErrors.toWarehouseId) {
+            <span class="field-error">
+              <i class="pi pi-exclamation-circle"></i> {{ formErrors.toWarehouseId }}
+            </span>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="section-title">
+        <i class="pi pi-calculator"></i>
+        Totals
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-field">
+          <label>Item Count</label>
+          <p-inputNumber
+            [(ngModel)]="formData.item"
+            [min]="0"
+            [useGrouping]="false" />
+        </div>
+
+        <div class="form-field">
+          <label>Total Qty</label>
+          <p-inputNumber
+            [(ngModel)]="formData.totalQty"
+            [minFractionDigits]="0"
+            [maxFractionDigits]="2" />
+        </div>
+
+        <div class="form-field">
+          <label>Total Tax</label>
+          <p-inputNumber
+            [(ngModel)]="formData.totalTax"
+            [minFractionDigits]="0"
+            [maxFractionDigits]="2" />
+        </div>
+
+        <div class="form-field">
+          <label>Total Cost</label>
+          <p-inputNumber
+            [(ngModel)]="formData.totalCost"
+            [minFractionDigits]="0"
+            [maxFractionDigits]="2" />
+        </div>
+
+        <div class="form-field">
+          <label>Shipping Cost</label>
+          <p-inputNumber
+            [(ngModel)]="formData.shippingCost"
+            [minFractionDigits]="0"
+            [maxFractionDigits]="2" />
+        </div>
+
+        <div class="form-field">
+          <label>Grand Total</label>
+          <p-inputNumber
+            [(ngModel)]="formData.grandTotal"
+            [minFractionDigits]="0"
+            [maxFractionDigits]="2" />
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="section-title">
+        <i class="pi pi-file"></i>
+        Document &amp; Notes
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-field full-span">
+          <label>Document</label>
+          <input pInputText type="text"
+            [(ngModel)]="formData.document"
+            placeholder="Document path or reference" />
+        </div>
+
+        <div class="form-field full-span">
+          <label>Note</label>
+          <textarea pInputTextarea
+            [(ngModel)]="formData.note"
+            rows="2"
+            placeholder="Optional note…">
+          </textarea>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button pButton type="button" icon="pi pi-times" label="Cancel"
+        class="p-button-outlined btn-cancel"
+        (click)="dialogVisible = false">
+      </button>
+      <button pButton type="button" icon="pi pi-check" label="Save"
+        class="btn-ok"
+        [loading]="isSaving"
+        (click)="onSave()">
+      </button>
+    </div>
+  </ng-template>
+</p-dialog>

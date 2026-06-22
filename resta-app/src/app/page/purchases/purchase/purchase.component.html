@@ -1,0 +1,356 @@
+<!-- purchase.component.html -->
+
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<div class="pur-wrapper">
+  <div class="split-container">
+
+    <!-- LEFT: Purchase -->
+    <div class="split-panel panel-purchase">
+      <div class="panel-toolbar">
+        <div class="toolbar-left">
+          <i class="pi pi-shopping-cart toolbar-icon"></i>
+          <span class="toolbar-title">Purchase</span>
+          <span class="record-badge" [class.has-filter]="hasPurSearch">
+            {{ purchases.length }}
+            @if (hasPurSearch) { / {{ purTotalRecords }} }
+          </span>
+        </div>
+        <div class="toolbar-actions">
+          <button pButton type="button" icon="pi pi-plus" label="Add"
+            class="toolbar-btn btn-add" (click)="openPurAddDialog()"></button>
+          <button pButton type="button" icon="pi pi-pencil" label="Edit"
+            class="toolbar-btn btn-edit" [disabled]="!selectedPurchase" (click)="onPurEditSelected()"></button>
+          <button pButton type="button" icon="pi pi-trash" label="Delete"
+            class="toolbar-btn btn-delete" [disabled]="!selectedPurchase" (click)="onPurDeleteSelected($event)"></button>
+          <div class="toolbar-sep"></div>
+          <app-grid-report-toolbar [config]="purchasesReportConfig" [disabled]="purLoading" />
+        </div>
+      </div>
+
+      <div class="search-bar">
+        <span class="search-label"><i class="pi pi-search"></i> Search</span>
+        <div class="search-fields">
+          <div class="search-field">
+            <label for="pur-search">Code / Order</label>
+            <input id="pur-search" pInputText type="text"
+              [(ngModel)]="purSearchTerm"
+              (ngModelChange)="onPurSearchChange()"
+              placeholder="Search…" />
+          </div>
+          <div class="search-field">
+            <label>From</label>
+            <p-datepicker [(ngModel)]="purFromDate" (ngModelChange)="onPurDateFilterChange()"
+              dateFormat="dd/mm/yy" appendTo="body" placeholder="From" [showClear]="true" />
+          </div>
+          <div class="search-field">
+            <label>To</label>
+            <p-datepicker [(ngModel)]="purToDate" (ngModelChange)="onPurDateFilterChange()"
+              dateFormat="dd/mm/yy" appendTo="body" placeholder="To" [showClear]="true" />
+          </div>
+          @if (hasPurSearch) {
+            <button class="clear-btn" (click)="onClearPurSearch()"><i class="pi pi-filter-slash"></i> Clear</button>
+          }
+        </div>
+      </div>
+
+      <div class="table-container">
+        <p-table
+          [value]="purchases"
+          selectionMode="single"
+          [(selection)]="selectedPurchase"
+          (selectionChange)="onPurchaseSelect()"
+          dataKey="purchaseId"
+          [scrollable]="true"
+          scrollHeight="flex"
+          [loading]="purLoading"
+          [sortField]="'date'"
+          [sortOrder]="-1"
+          [paginator]="true"
+          [rows]="12"
+          styleClass="pur-table purchase-table"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th class="col-index">#</th>
+              <th class="col-code" pSortableColumn="purchaseCode">Code <p-sortIcon field="purchaseCode" /></th>
+              <th class="col-date" pSortableColumn="date">Date <p-sortIcon field="date" /></th>
+              <th class="col-supplier">Supplier</th>
+              <th class="col-amount" pSortableColumn="totalAmount">Total <p-sortIcon field="totalAmount" /></th>
+              <th class="col-actions">Actions</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-item let-rowIndex="rowIndex">
+            <tr [pSelectableRow]="item"
+              [class.row-selected]="selectedPurchase?.purchaseId === item.purchaseId"
+              (dblclick)="openPurEditDialog(item)">
+              <td class="col-index">
+                @if (selectedPurchase?.purchaseId === item.purchaseId) {
+                  <i class="pi pi-caret-right row-indicator"></i>
+                } @else {
+                  <span class="row-number">{{ rowIndex + 1 }}</span>
+                }
+              </td>
+              <td class="col-code"><span class="code-cell">{{ item.purchaseCode || '—' }}</span></td>
+              <td class="col-date muted-cell">{{ formatDate(item.date) }}</td>
+              <td class="col-supplier name-cell">{{ item.supplierName || getSupplierName(item.supplierId) }}</td>
+              <td class="col-amount amount-cell">{{ formatMoney(item.totalAmount) }}</td>
+              <td class="col-actions">
+                <div class="action-btns">
+                  <button class="icon-btn edit-icon" (click)="openPurEditDialog(item); $event.stopPropagation()">
+                    <i class="pi pi-pencil"></i>
+                  </button>
+                  <button class="icon-btn delete-icon" (click)="confirmPurDelete(item, $event)">
+                    <i class="pi pi-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr><td colspan="6">
+              <div class="empty-state compact">
+                <p class="empty-title">No purchases</p>
+                <button pButton icon="pi pi-plus" label="Add" class="p-button-sm btn-add" (click)="openPurAddDialog()"></button>
+              </div>
+            </td></tr>
+          </ng-template>
+        </p-table>
+      </div>
+
+      <div class="status-bar">
+        <span class="record-count"><strong>{{ purchases.length }}</strong> purchases</span>
+        @if (selectedPurchase) {
+          <span class="selected-info"><strong>{{ selectedPurchase.purchaseCode || '#' + selectedPurchase.purchaseId }}</strong></span>
+        }
+        <span class="hint-text">Select to view lines</span>
+      </div>
+    </div>
+
+    <div class="split-divider" aria-hidden="true"></div>
+
+    <!-- RIGHT: Purchase Lines -->
+    <div class="split-panel panel-lines" [class.panel-disabled]="!hasSelectedPurchase">
+      <div class="panel-toolbar">
+        <div class="toolbar-left">
+          <i class="pi pi-list toolbar-icon"></i>
+          <span class="toolbar-title">Purchase Lines</span>
+          @if (hasSelectedPurchase) {
+            <span class="type-context-badge">{{ selectedPurchase!.purchaseCode || '#' + selectedPurchase!.purchaseId }}</span>
+          }
+          <span class="record-badge">{{ lines.length }}</span>
+        </div>
+        <div class="toolbar-actions">
+          <button pButton icon="pi pi-plus" label="Add" class="toolbar-btn btn-add"
+            [disabled]="!hasSelectedPurchase" (click)="openLineAddDialog()"></button>
+          <button pButton icon="pi pi-pencil" label="Edit" class="toolbar-btn btn-edit"
+            [disabled]="!selectedLine" (click)="onLineEditSelected()"></button>
+          <button pButton icon="pi pi-trash" label="Delete" class="toolbar-btn btn-delete"
+            [disabled]="!selectedLine" (click)="onLineDeleteSelected($event)"></button>
+          <div class="toolbar-sep"></div>
+          <app-grid-report-toolbar [config]="purchaseLinesReportConfig" [disabled]="!hasSelectedPurchase || lineLoading" />
+        </div>
+      </div>
+
+      @if (hasSelectedPurchase) {
+        <div class="lines-summary">
+          <span>Lines total: <strong>{{ formatMoney(linesSubtotal) }}</strong></span>
+          <span>Purchase amount: <strong>{{ formatMoney(selectedPurchase!.totalAmount ?? linesSubtotal) }}</strong></span>
+        </div>
+      }
+
+      <div class="table-container">
+        @if (!hasSelectedPurchase) {
+          <div class="panel-placeholder">
+            <i class="pi pi-arrow-left placeholder-icon"></i>
+            <p class="placeholder-title">Select a purchase</p>
+            <p class="placeholder-sub">Choose a purchase on the left to manage its line items.</p>
+          </div>
+        } @else {
+          <p-table
+            [value]="lines"
+            selectionMode="single"
+            [(selection)]="selectedLine"
+            dataKey="purchaseLineId"
+            [scrollable]="true"
+            scrollHeight="flex"
+            [loading]="lineLoading"
+            [paginator]="true"
+            [rows]="12"
+            styleClass="pur-table lines-table"
+          >
+            <ng-template pTemplate="header">
+              <tr>
+                <th class="col-index">#</th>
+                <th class="col-product">Product</th>
+                <th class="col-qty">Qty</th>
+                <th class="col-price">Price</th>
+                <th class="col-gst">GST</th>
+                <th class="col-amount">Amount</th>
+                <th class="col-actions">Actions</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-line let-rowIndex="rowIndex">
+              <tr [pSelectableRow]="line"
+                [class.row-selected]="selectedLine?.purchaseLineId === line.purchaseLineId"
+                (dblclick)="openLineEditDialog(line)">
+                <td class="col-index"><span class="row-number">{{ rowIndex + 1 }}</span></td>
+                <td class="col-product name-cell">{{ getProductName(line.productId) }}</td>
+                <td class="col-qty">{{ line.quantity ?? '—' }}</td>
+                <td class="col-price muted-cell">{{ formatMoney(line.price) }}</td>
+                <td class="col-gst muted-cell">{{ formatMoney(line.gst) }}</td>
+                <td class="col-amount amount-cell">{{ formatMoney(calcLineTotal(line)) }}</td>
+                <td class="col-actions">
+                  <div class="action-btns">
+                    <button class="icon-btn edit-icon" (click)="openLineEditDialog(line); $event.stopPropagation()">
+                      <i class="pi pi-pencil"></i>
+                    </button>
+                    <button class="icon-btn delete-icon" (click)="confirmLineDelete(line, $event)">
+                      <i class="pi pi-trash"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr><td colspan="7">
+                <div class="empty-state compact">
+                  <p class="empty-title">No line items</p>
+                  <button pButton icon="pi pi-plus" label="Add Line" class="p-button-sm btn-add" (click)="openLineAddDialog()"></button>
+                </div>
+              </td></tr>
+            </ng-template>
+          </p-table>
+        }
+      </div>
+
+      <div class="status-bar">
+        @if (hasSelectedPurchase) {
+          <span class="record-count"><strong>{{ lines.length }}</strong> lines</span>
+          <span class="hint-text">Double-click to edit</span>
+        }
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Purchase dialog -->
+<p-dialog [header]="purDialogTitle" [(visible)]="purDialogVisible" [modal]="true"
+  [style]="{ width: '520px' }" styleClass="pur-dialog" (onHide)="onPurDialogHide()">
+  <div class="dialog-form">
+    <div class="form-section">
+      <div class="section-title"><i class="pi pi-shopping-cart"></i> Purchase Header</div>
+      <div class="form-grid-2">
+        <div class="form-field" [class.has-error]="purFormErrors.supplierId">
+          <label>Supplier <span class="required">*</span></label>
+          <p-select [options]="supplierOptions" optionLabel="label" optionValue="value"
+            [(ngModel)]="purFormData.supplierId" (ngModelChange)="purFormErrors.supplierId = undefined"
+            placeholder="Select supplier" [filter]="true" appendTo="body" />
+          @if (purFormErrors.supplierId) {
+            <span class="field-error">{{ purFormErrors.supplierId }}</span>
+          }
+        </div>
+        <div class="form-field" [class.has-error]="purFormErrors.date">
+          <label>Date <span class="required">*</span></label>
+          <p-datepicker [(ngModel)]="purFormData.date" (ngModelChange)="purFormErrors.date = undefined"
+            dateFormat="dd/mm/yy" appendTo="body" />
+          @if (purFormErrors.date) {
+            <span class="field-error">{{ purFormErrors.date }}</span>
+          }
+        </div>
+        <div class="form-field">
+          <label>Purchase Code</label>
+          <input pInputText [(ngModel)]="purFormData.purchaseCode" placeholder="Auto / manual code" />
+        </div>
+        <div class="form-field">
+          <label>Order No.</label>
+          <input pInputText [(ngModel)]="purFormData.orderNo" placeholder="Order number" />
+        </div>
+        <div class="form-field">
+          <label>Type</label>
+          <input pInputText type="number" [(ngModel)]="purFormData.type" placeholder="Type code" />
+        </div>
+        <div class="form-field">
+          <label>Total Amount</label>
+          <input pInputText type="number" [(ngModel)]="purFormData.totalAmount" placeholder="0.00"
+            [readonly]="hasSelectedPurchase && lines.length > 0" class="readonly-field" />
+          @if (hasSelectedPurchase && lines.length > 0 && purDialogMode === 'edit' && purFormData.purchaseId === selectedPurchase?.purchaseId) {
+            <span class="field-hint">Updated from line items ({{ formatMoney(linesSubtotal) }})</span>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button pButton label="Cancel" class="p-button-outlined btn-cancel" (click)="purDialogVisible = false"></button>
+      <button pButton label="Save" class="btn-ok" [loading]="purSaving" (click)="onPurSave()"></button>
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Line dialog -->
+<p-dialog [header]="lineDialogTitle" [(visible)]="lineDialogVisible" [modal]="true"
+  [style]="{ width: '480px' }" styleClass="pur-dialog" (onHide)="onLineDialogHide()">
+  <div class="dialog-form">
+    <div class="form-section">
+      <div class="section-title"><i class="pi pi-box"></i> Line Item</div>
+      @if (selectedPurchase) {
+        <div class="context-field">
+          <label>Purchase</label>
+          <span class="context-value">{{ selectedPurchase.purchaseCode || '#' + selectedPurchase.purchaseId }}</span>
+        </div>
+      }
+      <div class="form-grid-2">
+        <div class="form-field full-span" [class.has-error]="lineFormErrors.productId">
+          <label>Product <span class="required">*</span></label>
+          <p-select [options]="productOptions" optionLabel="label" optionValue="value"
+            [(ngModel)]="lineFormData.productId"
+            (ngModelChange)="lineFormErrors.productId = undefined; onProductSelect($event)"
+            placeholder="Select product" [filter]="true" appendTo="body" />
+          @if (lineFormErrors.productId) {
+            <span class="field-error">{{ lineFormErrors.productId }}</span>
+          }
+        </div>
+        <div class="form-field full-span">
+          <p-checkbox [(ngModel)]="lineFormIncludeGst" [binary]="true"
+            label="Price includes GST"
+            (ngModelChange)="onIncludeGstChange()" />
+        </div>
+        <div class="form-field" [class.has-error]="lineFormErrors.quantity">
+          <label>Quantity <span class="required">*</span></label>
+          <input pInputText type="number" [(ngModel)]="lineFormData.quantity"
+            (ngModelChange)="lineFormErrors.quantity = undefined; onLineQtyPriceChange()" />
+          @if (lineFormErrors.quantity) {
+            <span class="field-error">{{ lineFormErrors.quantity }}</span>
+          }
+        </div>
+        <div class="form-field" [class.has-error]="lineFormErrors.price">
+          <label>Price <span class="required">*</span></label>
+          <input pInputText type="number" [(ngModel)]="lineFormData.price"
+            (ngModelChange)="lineFormErrors.price = undefined; onLineQtyPriceChange()" />
+          @if (lineFormErrors.price) {
+            <span class="field-error">{{ lineFormErrors.price }}</span>
+          }
+        </div>
+        <div class="form-field">
+          <label>GST {{ lineFormIncludeGst ? '(incl.)' : '(add-on)' }}</label>
+          <input pInputText type="number" [(ngModel)]="lineFormData.gst"
+            (ngModelChange)="onLineQtyPriceChange()" />
+        </div>
+        <div class="form-field">
+          <label>Amount</label>
+          <input pInputText [value]="formatMoney(lineFormAmount)" readonly class="readonly-field" />
+        </div>
+      </div>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button pButton label="Cancel" class="p-button-outlined btn-cancel" (click)="lineDialogVisible = false"></button>
+      <button pButton label="Save" class="btn-ok" [loading]="lineSaving" (click)="onLineSave()"></button>
+    </div>
+  </ng-template>
+</p-dialog>

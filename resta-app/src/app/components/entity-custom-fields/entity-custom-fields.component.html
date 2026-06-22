@@ -1,0 +1,42 @@
+@if (loading) {
+  <div class="ecf-loading">
+    <i class="pi pi-spin pi-spinner"></i>
+    <span>Loading custom fields…</span>
+  </div>
+} @else if (hasFields) {
+  <div class="form-section ecf-section">
+    <div class="section-title">
+      <i class="pi pi-sliders-h"></i>
+      Additional Fields
+    </div>
+    <div class="form-grid-2">
+      @for (f of fields; track f.customFieldId) {
+        <div class="form-field" [class.full-span]="isDropdown(f)"
+          [class.has-error]="fieldErrors[f.customFieldId]">
+          <label>
+            {{ f.label }}
+            @if (f.isRequired) { <span class="required">*</span> }
+          </label>
+
+          @if (isDropdown(f) && f.dropdownOptions?.length) {
+            <p-select [options]="f.dropdownOptions!" optionLabel="label" optionValue="value"
+              [(ngModel)]="f.valueText" (ngModelChange)="clearFieldError(f.customFieldId)"
+              placeholder="Select…" [showClear]="!f.isRequired" appendTo="body" />
+          } @else if (isNumber(f)) {
+            <input pInputText type="number" [(ngModel)]="f.valueText"
+              (ngModelChange)="clearFieldError(f.customFieldId)" />
+          } @else {
+            <input pInputText type="text" [(ngModel)]="f.valueText"
+              (ngModelChange)="clearFieldError(f.customFieldId)" [placeholder]="f.fieldKey" />
+          }
+
+          @if (fieldErrors[f.customFieldId]) {
+            <span class="field-error">
+              <i class="pi pi-exclamation-circle"></i> {{ fieldErrors[f.customFieldId] }}
+            </span>
+          }
+        </div>
+      }
+    </div>
+  </div>
+}

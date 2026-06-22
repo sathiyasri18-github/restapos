@@ -1,0 +1,14 @@
+<div class="grid-report-actions">
+  <button pButton type="button" icon="pi pi-print" label="Print"
+    class="toolbar-btn btn-report"
+    pTooltip="Print grid" tooltipPosition="bottom"
+    [disabled]="disabled"
+    (click)="onPrint()">
+  </button>
+  <button pButton type="button" icon="pi pi-file-pdf" label="PDF"
+    class="toolbar-btn btn-report"
+    pTooltip="Download PDF" tooltipPosition="bottom"
+    [disabled]="disabled"
+    (click)="onPdf()">
+  </button>
+</div>

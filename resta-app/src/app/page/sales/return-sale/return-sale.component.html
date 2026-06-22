@@ -1,0 +1,197 @@
+<p-toast position="top-right" />
+
+<div class="rs-wrapper">
+  <div class="rs-toolbar">
+    <div class="toolbar-left">
+      <button pButton type="button" icon="pi pi-arrow-left" label="Back"
+        class="toolbar-btn btn-back" (click)="onBack()"></button>
+      <i class="pi pi-undo toolbar-icon"></i>
+      <span class="toolbar-title">{{ pageTitle }}</span>
+      @if (isEditMode && header.saleReturnId) {
+        <span class="rs-ref-badge">#{{ header.saleReturnId }}</span>
+      }
+    </div>
+    <div class="toolbar-actions">
+      <button pButton type="button" icon="pi pi-check" label="Save"
+        class="toolbar-btn btn-save" [loading]="isSaving" [disabled]="isLoading" (click)="onSave()"></button>
+    </div>
+  </div>
+
+  <div class="rs-content" [class.rs-loading]="isLoading">
+    @if (isLoading) {
+      <div class="rs-loading-overlay">
+        <i class="pi pi-spin pi-spinner"></i>
+        <span>Loading return sale…</span>
+      </div>
+    }
+
+    <div class="form-section">
+      <div class="section-title"><i class="pi pi-file-edit"></i> Return Sale Header</div>
+      <div class="form-grid-2">
+        <div class="form-field" [class.has-error]="formErrors.referenceNo">
+          <label>Reference No <span class="required">*</span></label>
+          <input pInputText [(ngModel)]="header.referenceNo" placeholder="Reference number" />
+          @if (formErrors.referenceNo) {
+            <span class="field-error">{{ formErrors.referenceNo }}</span>
+          }
+        </div>
+        <div class="form-field" [class.has-error]="formErrors.customerId">
+          <label>Customer <span class="required">*</span></label>
+          <p-select [options]="customerOptions" optionLabel="label" optionValue="value"
+            [(ngModel)]="header.customerId" placeholder="Select customer" [filter]="true"
+            appendTo="body" [disabled]="!lookupsLoaded" />
+          @if (formErrors.customerId) {
+            <span class="field-error">{{ formErrors.customerId }}</span>
+          }
+        </div>
+        <div class="form-field" [class.has-error]="formErrors.warehouseId">
+          <label>Warehouse <span class="required">*</span></label>
+          <p-select [options]="warehouseOptions" optionLabel="label" optionValue="value"
+            [(ngModel)]="header.warehouseId" placeholder="Select warehouse" [filter]="true"
+            appendTo="body" [disabled]="!lookupsLoaded" />
+          @if (formErrors.warehouseId) {
+            <span class="field-error">{{ formErrors.warehouseId }}</span>
+          }
+        </div>
+        <div class="form-field" [class.has-error]="formErrors.userId">
+          <label>User ID <span class="required">*</span></label>
+          <input pInputText type="number" [(ngModel)]="header.userId" placeholder="User ID" />
+          @if (formErrors.userId) {
+            <span class="field-error">{{ formErrors.userId }}</span>
+          }
+        </div>
+        <div class="form-field" [class.has-error]="formErrors.billerId">
+          <label>Biller ID <span class="required">*</span></label>
+          <input pInputText type="number" [(ngModel)]="header.billerId" placeholder="Biller ID" />
+          @if (formErrors.billerId) {
+            <span class="field-error">{{ formErrors.billerId }}</span>
+          }
+        </div>
+        <div class="form-field" [class.has-error]="formErrors.accountId">
+          <label>Account ID <span class="required">*</span></label>
+          <input pInputText type="number" [(ngModel)]="header.accountId" placeholder="Account ID" />
+          @if (formErrors.accountId) {
+            <span class="field-error">{{ formErrors.accountId }}</span>
+          }
+        </div>
+        <div class="form-field">
+          <label>Cash Register ID</label>
+          <input pInputText type="number" [(ngModel)]="header.cashRegisterId" placeholder="Optional" />
+        </div>
+        <div class="form-field">
+          <label>Order Tax Rate (%)</label>
+          <input pInputText type="number" [(ngModel)]="header.orderTaxRate"
+            (ngModelChange)="onOrderTaxRateChange()" placeholder="0" />
+        </div>
+        <div class="form-field">
+          <label>Order Tax</label>
+          <input pInputText type="number" [(ngModel)]="header.orderTax" placeholder="0.00" />
+        </div>
+        <div class="form-field">
+          <label>Document</label>
+          <input pInputText [(ngModel)]="header.document" placeholder="Document reference" />
+        </div>
+        <div class="form-field full-span">
+          <label>Return Note</label>
+          <textarea pInputTextarea [(ngModel)]="header.returnNote" rows="2" placeholder="Return note"></textarea>
+        </div>
+        <div class="form-field full-span">
+          <label>Staff Note</label>
+          <textarea pInputTextarea [(ngModel)]="header.staffNote" rows="2" placeholder="Staff note"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="rs-lines-header">
+        <div class="section-title rs-lines-title"><i class="pi pi-list"></i> Product Return Lines</div>
+        <div class="rs-lines-actions">
+          <button pButton type="button" icon="pi pi-plus" label="Add Line"
+            class="p-button-sm btn-add-line" (click)="addLine()"></button>
+          <button pButton type="button" icon="pi pi-trash" label="Remove Selected"
+            class="p-button-sm btn-remove-lines" [disabled]="!selectedLines.length"
+            (click)="removeSelectedLines()"></button>
+        </div>
+      </div>
+      @if (formErrors.lines) {
+        <div class="rs-lines-error">{{ formErrors.lines }}</div>
+      }
+      <div class="rs-line-table-wrap">
+        <p-table [value]="lines" [(selection)]="selectedLines" dataKey="rowKey"
+          selectionMode="multiple" [scrollable]="true" scrollHeight="320px" styleClass="rs-table">
+          <ng-template pTemplate="header">
+            <tr>
+              <th class="col-check"><p-tableHeaderCheckbox /></th>
+              <th class="col-index">#</th>
+              <th class="col-product">Product</th>
+              <th class="col-qty">Qty</th>
+              <th class="col-unit">Unit ID</th>
+              <th class="col-price">Net Unit Price</th>
+              <th class="col-disc">Discount</th>
+              <th class="col-rate">Tax Rate</th>
+              <th class="col-tax">Tax</th>
+              <th class="col-total">Total</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-line let-rowIndex="rowIndex">
+            <tr [pSelectableRow]="line">
+              <td class="col-check"><p-tableCheckbox [value]="line" /></td>
+              <td class="col-index">{{ rowIndex + 1 }}</td>
+              <td class="col-product">
+                <p-select [options]="productOptions" optionLabel="label" optionValue="value"
+                  [(ngModel)]="line.productId" placeholder="Product" [filter]="true"
+                  appendTo="body" [disabled]="!lookupsLoaded"
+                  (ngModelChange)="onProductChange(line)" styleClass="rs-cell-select" />
+              </td>
+              <td class="col-qty">
+                <input pInputText type="number" [(ngModel)]="line.qty"
+                  (ngModelChange)="onLineFieldChange(line)" class="rs-cell-input" />
+              </td>
+              <td class="col-unit">
+                <input pInputText type="number" [(ngModel)]="line.saleUnitId"
+                  (ngModelChange)="onLineFieldChange(line)" class="rs-cell-input" />
+              </td>
+              <td class="col-price">
+                <input pInputText type="number" [(ngModel)]="line.netUnitPrice"
+                  (ngModelChange)="onLineFieldChange(line)" class="rs-cell-input" />
+              </td>
+              <td class="col-disc">
+                <input pInputText type="number" [(ngModel)]="line.discount"
+                  (ngModelChange)="onLineFieldChange(line)" class="rs-cell-input" />
+              </td>
+              <td class="col-rate">
+                <input pInputText type="number" [(ngModel)]="line.taxRate"
+                  (ngModelChange)="onLineFieldChange(line)" class="rs-cell-input" />
+              </td>
+              <td class="col-tax amount-cell">{{ formatMoney(line.tax) }}</td>
+              <td class="col-total amount-cell">{{ formatMoney(line.total) }}</td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="10">
+                <div class="empty-state compact">
+                  <p class="empty-title">No lines</p>
+                  <button pButton icon="pi pi-plus" label="Add Line" class="p-button-sm btn-add-line"
+                    (click)="addLine()"></button>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </div>
+
+    <div class="form-section rs-totals-section">
+      <div class="section-title"><i class="pi pi-calculator"></i> Totals</div>
+      <div class="rs-totals-grid">
+        <div class="rs-total-item"><span class="rs-total-label">Items</span><span class="rs-total-value">{{ itemCount }}</span></div>
+        <div class="rs-total-item"><span class="rs-total-label">Total Qty</span><span class="rs-total-value">{{ totalQty }}</span></div>
+        <div class="rs-total-item"><span class="rs-total-label">Total Price</span><span class="rs-total-value">{{ formatMoney(totalPrice) }}</span></div>
+        <div class="rs-total-item"><span class="rs-total-label">Total Discount</span><span class="rs-total-value">{{ formatMoney(totalDiscount) }}</span></div>
+        <div class="rs-total-item"><span class="rs-total-label">Line Tax</span><span class="rs-total-value">{{ formatMoney(lineTaxTotal) }}</span></div>
+        <div class="rs-total-item rs-grand-total"><span class="rs-total-label">Grand Total</span><span class="rs-total-value">{{ formatMoney(grandTotal) }}</span></div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,388 @@
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<div class="pos-root">
+
+  <!-- LEFT: Cart panel -->
+  <div class="pos-left">
+    <div class="pos-left-header">
+      <div class="pos-header-icons">
+        <button type="button" class="icon-chip" pTooltip="Today"><i class="pi pi-calendar"></i></button>
+        <button type="button" class="icon-chip" pTooltip="Currency"><i class="pi pi-dollar"></i></button>
+      </div>
+      <div class="customer-row">
+        <p-select
+          [options]="customerOptions"
+          optionLabel="label"
+          optionValue="value"
+          [(ngModel)]="selectedCustomerId"
+          (ngModelChange)="onCustomerChange()"
+          placeholder="Walk in Customer"
+          [filter]="true"
+          appendTo="body"
+          styleClass="customer-select" />
+        <button type="button" class="btn-icon-add" (click)="openAddCustomer()" pTooltip="Add customer">
+          <i class="pi pi-plus"></i>
+        </button>
+      </div>
+      <div class="price-row">
+        <p-select
+          [options]="priceTierOptions"
+          optionLabel="label"
+          optionValue="value"
+          [(ngModel)]="priceTier"
+          (ngModelChange)="onPriceTierChange()"
+          appendTo="body"
+          styleClass="price-select" />
+        <button type="button" class="btn-more" (click)="moreMenuVisible = !moreMenuVisible">
+          <i class="pi pi-ellipsis-h"></i>
+        </button>
+        @if (moreMenuVisible) {
+          <div class="more-menu">
+            <button type="button" (click)="openRecentTransactions(); moreMenuVisible = false">Recent Transactions</button>
+            <button type="button" (click)="openDrafts(); moreMenuVisible = false">Load Draft</button>
+            <button type="button" (click)="saveDraft(); moreMenuVisible = false">Save Draft</button>
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="search-row">
+      <span class="p-input-icon-left search-wrap">
+        <i class="pi pi-search"></i>
+        <input id="pos-product-search" pInputText type="text"
+          [(ngModel)]="productSearch"
+          (ngModelChange)="onSearchChange()"
+          (keydown.enter)="onSearchEnter(); $event.preventDefault()"
+          placeholder="Scan/Search product by name/code/IMEI" />
+      </span>
+      <button type="button" class="btn-scan" pTooltip="Barcode scan"><i class="pi pi-list"></i></button>
+    </div>
+
+    <div class="cart-table-wrap">
+      <table class="cart-table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th class="col-price">Price</th>
+            <th class="col-qty">Quantity</th>
+            <th class="col-sub">SubTotal</th>
+            <th class="col-x"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (!cart.length) {
+            <tr>
+              <td colspan="5" class="empty-cart">No items in cart — select products from the right panel</td>
+            </tr>
+          }
+          @for (line of cart; track line.lineKey) {
+            <tr>
+              <td class="col-product">
+                <div class="product-name">{{ line.name }}</div>
+                <div class="product-meta">[{{ line.code }}] Stock: {{ line.stockQty }}</div>
+              </td>
+              <td class="col-price">{{ formatMoney(line.price) }}</td>
+              <td class="col-qty">
+                <div class="qty-control">
+                  <button type="button" (click)="changeQty(line, -1)">−</button>
+                  <input type="number" [ngModel]="line.qty" (ngModelChange)="setQty(line, $event)" min="0" step="any" />
+                  <button type="button" (click)="changeQty(line, 1)">+</button>
+                </div>
+              </td>
+              <td class="col-sub">{{ formatMoney(lineSubtotal(line)) }}</td>
+              <td class="col-x">
+                <button type="button" class="btn-remove" (click)="removeLine(line)"><i class="pi pi-times"></i></button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <div class="summary-row">
+      <div class="summary-left">
+        <button type="button" class="summary-edit" (click)="openEditField('discount')">
+          <i class="pi pi-pencil"></i> Discount
+          <strong>{{ formatMoney(orderDiscount) }}</strong>
+          @if (orderDiscountMode === 'percent' && orderDiscountInput > 0) {
+            <span class="discount-meta">({{ orderDiscountInput }}%)</span>
+          }
+        </button>
+        <button type="button" class="summary-edit" (click)="openEditField('coupon')">
+          <i class="pi pi-pencil"></i> Coupon <strong>{{ formatMoney(couponDiscount) }}</strong>
+        </button>
+      </div>
+      <div class="summary-right">
+        <span>Items <strong>{{ itemCount }}({{ totalUnits }})</strong></span>
+        <button type="button" class="summary-edit" (click)="openEditField('tax')">
+          Tax <i class="pi pi-pencil"></i> <strong>{{ formatMoney(totalTax) }}</strong>
+          @if (orderTaxPercent > 0) {
+            <span class="discount-meta">({{ orderTaxPercent }}%)</span>
+          }
+        </button>
+        <span>Total <strong>{{ formatMoney(subtotal) }}</strong></span>
+        <button type="button" class="summary-edit" (click)="openEditField('shipping')">
+          Shipping <i class="pi pi-pencil"></i> <strong>{{ formatMoney(shippingCost) }}</strong>
+        </button>
+      </div>
+    </div>
+
+    <div class="grand-total-bar">
+      Grand Total <strong>{{ formatMoney(grandTotal) }}</strong>
+    </div>
+  </div>
+
+  <!-- RIGHT: Products panel -->
+  <div class="pos-right">
+    <div class="pos-right-toolbar">
+      <button type="button" class="tool-btn home" (click)="goHome()" pTooltip="Home"><i class="pi pi-home"></i></button>
+      <div class="tool-group">
+        <button type="button" class="tool-btn" pTooltip="Calculator" (click)="openCalculator()"><i class="pi pi-calculator"></i></button>
+        <button type="button" class="tool-btn" pTooltip="Mobile"><i class="pi pi-mobile"></i></button>
+        <button type="button" class="tool-btn" pTooltip="Undo" (click)="cancelSale()"><i class="pi pi-undo"></i></button>
+        <button type="button" class="tool-btn" (click)="togglePosFullscreen()" pTooltip="Fullscreen">
+          <i class="pi" [ngClass]="isFullscreen ? 'pi-window-minimize' : 'pi-expand'"></i>
+        </button>
+        <button type="button" class="tool-btn" pTooltip="Barcode"><i class="pi pi-barcode"></i></button>
+        <button type="button" class="tool-btn" pTooltip="Print" (click)="printBill()"><i class="pi pi-print"></i></button>
+        <button type="button" class="tool-btn" pTooltip="Calendar"><i class="pi pi-calendar"></i></button>
+        <button type="button" class="tool-btn notify" pTooltip="Notifications">
+          <i class="pi pi-bell"></i><span class="badge">2</span>
+        </button>
+        <button type="button" class="tool-btn" pTooltip="Sync"><i class="pi pi-cloud"></i></button>
+        <button type="button" class="tool-btn" pTooltip="Profile"><i class="pi pi-user"></i></button>
+      </div>
+    </div>
+
+    <div class="filter-tabs">
+      <button type="button" class="tab category" [class.active]="activeFilterTab === 'category'"
+        (click)="setFilterTab('category')">Category</button>
+      <button type="button" class="tab brand" [class.active]="activeFilterTab === 'brand'"
+        (click)="setFilterTab('brand')">Brand</button>
+      <button type="button" class="tab featured" [class.active]="activeFilterTab === 'featured'"
+        (click)="setFilterTab('featured')">Featured</button>
+    </div>
+
+    @if (activeFilterTab === 'category' && categories.length) {
+      <div class="filter-chips">
+        @for (cat of categories; track cat.id) {
+          <button type="button" class="chip" [class.active]="selectedCategoryId === cat.id"
+            (click)="selectCategory(cat.id)">{{ cat.name }}</button>
+        }
+      </div>
+    }
+    @if (activeFilterTab === 'brand' && brands.length) {
+      <div class="filter-chips">
+        @for (b of brands; track b.id) {
+          <button type="button" class="chip" [class.active]="selectedBrandId === b.id"
+            (click)="selectBrand(b.id)">{{ b.name }}</button>
+        }
+      </div>
+    }
+
+    <div class="product-grid" [class.loading]="isLoading">
+      @if (isLoading) {
+        @for (i of [1,2,3,4,5,6,7,8]; track i) {
+          <div class="product-card skeleton"><p-skeleton height="100px" /><p-skeleton height="14px" styleClass="mt-2" /></div>
+        }
+      } @else {
+        @for (p of filteredProducts; track p.productId) {
+          <button type="button" class="product-card" (click)="addToCart(p)">
+            <div class="product-img">
+              <img [src]="productImage(p)" [alt]="p.name" (error)="onImageError($event)" />
+            </div>
+            <div class="product-info">
+              <div class="p-name">{{ p.name }}</div>
+              <div class="p-code">[{{ p.code }}]</div>
+              <div class="p-qty">Qty: {{ p.stockQty }}</div>
+              <div class="p-price">{{ formatMoney(getEffectivePrice(p)) }}</div>
+            </div>
+          </button>
+        }
+        @if (!filteredProducts.length) {
+          <div class="no-products">No products match your search or filter.</div>
+        }
+      }
+    </div>
+  </div>
+</div>
+
+<!-- Footer payment bar -->
+<div class="pos-footer">
+  <button type="button" class="pay card" [disabled]="isSubmitting" (click)="onPayment('card')">Card</button>
+  <button type="button" class="pay cash" [disabled]="isSubmitting" (click)="onPayment('cash')">Cash</button>
+  <button type="button" class="pay razorpay" [disabled]="isSubmitting" (click)="onPayment('razorpay')">Razorpay</button>
+  <button type="button" class="pay credit" [disabled]="isSubmitting" (click)="onPayment('credit')">Credit Sale</button>
+  <button type="button" class="pay multiple" [disabled]="isSubmitting" (click)="onPayment('multiple')">Multiple Payment</button>
+  <button type="button" class="pay instalment" [disabled]="isSubmitting" (click)="onPayment('installment')">Instalment</button>
+  <button type="button" class="pay deposit" [disabled]="isSubmitting" (click)="onPayment('deposit')">Deposit</button>
+  <button type="button" class="pay points" [disabled]="isSubmitting" (click)="onPayment('points')">Points</button>
+  <button type="button" class="pay more" (click)="moreMenuVisible = !moreMenuVisible">More <i class="pi pi-chevron-down"></i></button>
+  <button type="button" class="pay draft" (click)="saveDraft()">Draft</button>
+  <button type="button" class="pay cancel" (click)="cancelSale()">Cancel</button>
+  <button type="button" class="pay recent" (click)="openRecentTransactions()">Recent Transaction</button>
+</div>
+
+<!-- Dialogs -->
+<p-dialog header="Calculator" [(visible)]="calculatorDialogVisible" [modal]="true" [style]="{ width: '320px' }" [draggable]="true">
+  <app-pos-calculator />
+</p-dialog>
+
+<p-dialog header="Add Customer" [(visible)]="customerDialogVisible" [modal]="true" [style]="{ width: '400px' }">
+  <div class="dialog-field">
+    <label>Customer Name</label>
+    <input pInputText [(ngModel)]="newCustomerName" placeholder="Customer name" class="w-full" />
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancel" class="p-button-outlined" (click)="customerDialogVisible = false"></button>
+    <button pButton label="Save" (click)="saveNewCustomer()"></button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog [header]="editField | titlecase" [(visible)]="editDialogVisible" [modal]="true" [style]="{ width: '360px' }">
+  @if (editField === 'discount') {
+    <div class="dialog-field">
+      <label>Discount type</label>
+      <div class="discount-mode-toggle">
+        <button
+          type="button"
+          [class.active]="editDiscountMode === 'percent'"
+          (click)="editDiscountMode = 'percent'"
+        >%</button>
+        <button
+          type="button"
+          [class.active]="editDiscountMode === 'amount'"
+          (click)="editDiscountMode = 'amount'"
+        >Amount</button>
+      </div>
+    </div>
+    <div class="dialog-field">
+      <label>{{ editDiscountMode === 'percent' ? 'Percentage' : 'Amount' }}</label>
+      <p-inputNumber
+        [(ngModel)]="editFieldValue"
+        [min]="0"
+        [max]="editDiscountMode === 'percent' ? 100 : null"
+        [minFractionDigits]="editDiscountMode === 'percent' ? 0 : 2"
+        [maxFractionDigits]="2"
+        class="w-full"
+      />
+      @if (editDiscountMode === 'percent' && subtotal > 0 && editFieldValue > 0) {
+        <p class="hint">Discount amount: {{ formatMoney(previewEditDiscount()) }}</p>
+      }
+    </div>
+  } @else if (editField === 'tax') {
+    <div class="dialog-field">
+      <label>Percentage</label>
+      <p-inputNumber
+        [(ngModel)]="editFieldValue"
+        [min]="0"
+        [max]="100"
+        [minFractionDigits]="0"
+        [maxFractionDigits]="2"
+        class="w-full"
+      />
+      @if (taxableSubtotal > 0 && editFieldValue > 0) {
+        <p class="hint">Tax amount: {{ formatMoney(previewEditTax()) }} on {{ formatMoney(taxableSubtotal) }}</p>
+      }
+    </div>
+  } @else {
+    <div class="dialog-field">
+      <label>Amount</label>
+      <p-inputNumber [(ngModel)]="editFieldValue" [minFractionDigits]="2" [maxFractionDigits]="2" class="w-full" />
+    </div>
+  }
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancel" class="p-button-outlined" (click)="editDialogVisible = false"></button>
+    <button pButton label="Apply" (click)="applyEditField()"></button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog
+  [header]="paymentMethod === 'installment' ? 'Instalment Payment' : 'Multiple Payment'"
+  [(visible)]="paymentDialogVisible"
+  [modal]="true"
+  [style]="{ width: '420px' }">
+  @if (paymentMethod === 'installment') {
+    <div class="dialog-field">
+      <label>Number of instalments</label>
+      <p-inputNumber [(ngModel)]="installmentCount" [min]="2" [max]="24" />
+      <p class="hint">Each instalment: {{ formatMoney(grandTotal / (installmentCount || 1)) }}</p>
+    </div>
+  } @else {
+    @for (split of paymentSplits; track split.method) {
+      <div class="dialog-field">
+        <label>{{ split.method }}</label>
+        <p-inputNumber [(ngModel)]="split.amount" [minFractionDigits]="2" [maxFractionDigits]="2" />
+      </div>
+    }
+    <p class="hint">Total must equal {{ formatMoney(grandTotal) }}</p>
+  }
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancel" class="p-button-outlined" (click)="paymentDialogVisible = false"></button>
+    <button pButton label="Complete Sale" (click)="confirmMultiplePayment()" [loading]="isSubmitting"></button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog header="Saved Drafts" [(visible)]="draftsDialogVisible" [modal]="true" [style]="{ width: '480px' }">
+  @if (!drafts.length) {
+    <p>No saved drafts.</p>
+  }
+  @for (d of drafts; track d.id) {
+    <div class="draft-row" (click)="loadDraft(d)">
+      <div>
+        <strong>{{ d.label }}</strong>
+        <div class="muted">{{ formatDraftDate(d.savedAt) }}</div>
+      </div>
+      <button type="button" class="btn-remove" (click)="deleteDraft(d, $event)"><i class="pi pi-trash"></i></button>
+    </div>
+  }
+</p-dialog>
+
+<p-dialog header="Recent Transactions" [(visible)]="recentDialogVisible" [modal]="true"
+  [style]="{ width: '720px' }" [closable]="!recentBinding">
+  @if (recentLoading) {
+    <div class="recent-loading"><i class="pi pi-spin pi-spinner"></i> Loading…</div>
+  } @else if (!recentSales.length) {
+    <p class="recent-empty">No recent transactions found.</p>
+  } @else {
+    <div class="recent-table-wrap">
+      <table class="recent-table">
+        <thead>
+          <tr>
+            <th>Reference</th>
+            <th>Sales Date</th>
+            <th>Customer</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th>Payment</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (s of recentSales; track s.saleId) {
+            <tr
+              [class.row-selected]="selectedRecentSale?.saleId === s.saleId"
+              (click)="selectRecentSale(s)"
+              (dblclick)="bindRecentSaleToPos(s)"
+            >
+              <td>{{ s.referenceNo || '—' }}</td>
+              <td>{{ formatSaleDate(s.createdDate) }}</td>
+              <td>{{ getCustomerName(s.customerId) }}</td>
+              <td class="amount">{{ formatMoney(s.grandTotal) }}</td>
+              <td>{{ getSaleStatusLabel(s.saleStatus) }}</td>
+              <td>{{ getPaymentStatusLabel(s.paymentStatus) }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <p class="recent-hint">Click to select, double-click or Load to open in POS.</p>
+  }
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Close" class="p-button-outlined"
+      [disabled]="recentBinding" (click)="recentDialogVisible = false"></button>
+    <button pButton type="button" label="Load Selected" icon="pi pi-download"
+      [loading]="recentBinding" [disabled]="!selectedRecentSale || recentLoading"
+      (click)="loadSelectedRecentSale()"></button>
+  </ng-template>
+</p-dialog>

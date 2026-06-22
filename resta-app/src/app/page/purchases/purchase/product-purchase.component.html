@@ -1,0 +1,237 @@
+<!-- product-purchase.component.html -->
+<div class="pp-wrapper">
+
+  <!-- ══ TOP TITLE BAR ══════════════════════════════════════════════════ -->
+  <div class="pp-titlebar">
+    <span>Product Purchase</span>
+  </div>
+
+  <!-- ══ MAIN SPLIT LAYOUT ══════════════════════════════════════════════ -->
+  <div class="pp-body">
+
+    <!-- ── LEFT PANEL ──────────────────────────────────────────────────── -->
+    <div class="pp-left">
+
+      <!-- Header Fields -->
+      <div class="pp-header-fields">
+        <div class="field-row">
+          <div class="field-group">
+            <label>Purchase No :</label>
+            <input pInputText [(ngModel)]="purchaseNo" class="field-input" />
+          </div>
+          <div class="field-group">
+            <label>Purchase Date :</label>
+            <p-datepicker [(ngModel)]="date" [showIcon]="true">
+            </p-datepicker>
+          </div>
+        </div>
+        <div class="field-row">
+          <div class="field-group">
+            <label>Order No :</label>
+            <input pInputText [(ngModel)]="orderNo" class="field-input field-sm" />
+          </div>
+          <div class="field-group">
+            <label>Supplier :</label>
+            <p-select [(ngModel)]="supplier" [options]="supplierOptions" styleClass="pp-dropdown" appendTo="body">
+            </p-select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Purchase Lines Table -->
+      <div class="pp-line-table-wrap">
+        <p-table [value]="purchaseLines" selectionMode="single" [(selection)]="selectedLine" dataKey="rowNo"
+          [scrollable]="true" scrollHeight="340px" styleClass="pp-table">
+          <ng-template pTemplate="header">
+            <tr>
+              <th class="th-rowno">RowNo</th>
+              <th class="th-product">Product</th>
+              <th class="th-unit">Unit</th>
+              <th class="th-qty">Quantity</th>
+              <th class="th-price">Price</th>
+              <th class="th-gst">GST</th>
+              <th class="th-amount">Amount</th>
+              <th class="th-acts"></th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-line>
+            <tr [pSelectableRow]="line" [class.row-sel]="selectedLine?.rowNo === line.rowNo">
+              <td class="td-center">{{ line.rowNo }}</td>
+              <td>{{ line.product }}</td>
+              <td>{{ line.unit }}</td>
+              <td class="td-right">{{ line.quantity }}</td>
+              <td class="td-right">{{ line.price | number:'1.2-2' }}</td>
+              <td class="td-right">{{ line.gst | number:'1.2-2' }}</td>
+              <td class="td-right">{{ line.amount | number:'1.2-2' }}</td>
+              <td class="td-acts">
+                <button class="icon-btn add-btn" title="Add Product"
+                  (click)="openSearchProduct(); $event.stopPropagation()">
+                  <i class="pi pi-plus-circle"></i>
+                </button>
+                <button class="icon-btn del-btn" title="Delete Row" (click)="deleteLine(); $event.stopPropagation()">
+                  <i class="pi pi-times"></i>
+                </button>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+
+      <!-- Totals Footer -->
+      <div class="pp-totals">
+        <span class="total-item">
+          T.Quantity : <strong>{{ formatCurrency(totalQuantity) }}</strong>
+        </span>
+        <span class="total-item tax">
+          Tax Amount : <strong>{{ formatCurrency(taxAmount) }}</strong>
+        </span>
+        <span class="total-item sub">
+          Sub.Total : <strong>{{ formatCurrency(subTotal) }}</strong>
+        </span>
+        <span class="total-item net">
+          Net Amount : <strong>{{ formatCurrency(netAmount) }}</strong>
+        </span>
+      </div>
+
+      <!-- Bottom Action Bar -->
+      <div class="pp-actions">
+        <button pButton type="button" label="Save" icon="pi pi-save" class="p-button-sm act-btn btn-save"
+          (click)="onSave()"></button>
+        <button pButton type="button" label="Add" icon="pi pi-plus" class="p-button-sm act-btn btn-add"
+          (click)="addLine()"></button>
+        <button pButton type="button" label="Delete" icon="pi pi-times" class="p-button-sm act-btn btn-delete"
+          (click)="onDelete()"></button>
+        <button pButton type="button" label="Excel" icon="pi pi-file-excel" class="p-button-sm act-btn btn-excel"
+          (click)="onExcel()"></button>
+      </div>
+    </div>
+
+    <!-- ── DIVIDER ──────────────────────────────────────────────────────── -->
+    <div class="pp-divider"></div>
+
+    <!-- ── RIGHT PANEL ─────────────────────────────────────────────────── -->
+    <div class="pp-right">
+
+      <!-- Search Bar -->
+      <div class="pp-search-bar">
+        <span class="search-label">Search</span>
+        <div class="search-fields">
+          <div class="search-field">
+            <label>Customer :</label>
+            <input pInputText [(ngModel)]="searchCustomer" class="s-input" />
+          </div>
+          <div class="search-field">
+            <label>Code :</label>
+            <input pInputText [(ngModel)]="searchCode" class="s-input s-input-sm" />
+          </div>
+        </div>
+        <div class="search-fields search-dates">
+          <div class="search-field">
+            <label>From Date :</label>
+            <p-datepicker appendTo="body" dateFormat="dd/mm/yy">
+                </p-datepicker>
+            
+          </div>
+          <div class="search-field">
+            <label>To Date :</label>
+            <p-datepicker appendTo="body" dateFormat="dd/mm/yy">
+                </p-datepicker>
+          </div>
+        </div>
+      </div>
+
+      <!-- Purchase Order Table -->
+      <div class="pp-order-table-wrap">
+        <p-table [value]="purchaseOrders" selectionMode="single" [(selection)]="selectedOrder" dataKey="id"
+          [scrollable]="true" scrollHeight="calc(100vh - 260px)" styleClass="pp-table po-table">
+          <ng-template pTemplate="header">
+            <tr>
+              <th class="th-rowno">#</th>
+              <th class="th-code">Code</th>
+              <th class="th-date">Date</th>
+              <th class="th-orderno">Order No.</th>
+              <th class="th-supplier">Supplier</th>
+              <th class="th-totqty">Tot.Quantity</th>
+              <th class="th-totamt">Tot.Amount</th>
+              <th class="th-acts"></th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-order>
+            <tr [pSelectableRow]="order" [class.row-sel]="selectedOrder?.id === order.id">
+              <td class="td-center">{{ order.id }}</td>
+              <td>{{ order.code }}</td>
+              <td>{{ order.date }}</td>
+              <td>{{ order.orderNo }}</td>
+              <td>{{ order.supplier }}</td>
+              <td class="td-right">{{ order.totQuantity }}</td>
+              <td class="td-right">{{ formatCurrency(order.totAmount) }}</td>
+              <td class="td-acts">
+                <button class="icon-btn view-btn" title="View Order"
+                  (click)="onViewPurchaseOrder(); $event.stopPropagation()">
+                  <i class="pi pi-arrow-down"></i>
+                </button>
+                <button class="icon-btn del-btn" title="Delete Order" (click)="$event.stopPropagation()">
+                  <i class="pi pi-times"></i>
+                </button>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══ SEARCH PRODUCT DIALOG ═════════════════════════════════════════════ -->
+<p-dialog header="Search Product" [(visible)]="displaySearchProduct" [modal]="true" [style]="{width:'560px'}"
+  [closable]="true" styleClass="search-product-dialog">
+
+  <div class="sp-search-row">
+    <div class="sp-field">
+      <label>Description</label>
+      <input pInputText [(ngModel)]="searchDescription" (ngModelChange)="onSearchProduct()" class="sp-input sp-desc" />
+    </div>
+    <div class="sp-field">
+      <label>Tamil Name</label>
+      <input pInputText [(ngModel)]="searchTamilName" (ngModelChange)="onSearchProduct()"
+        placeholder="&lt;Search By TamilName&gt;" class="sp-input sp-tamil" />
+    </div>
+  </div>
+
+  <div class="sp-table-wrap">
+    <p-table [value]="searchProductResults" selectionMode="single" [(selection)]="selectedSearchProduct" dataKey="id"
+      styleClass="pp-table sp-table">
+      <ng-template pTemplate="header">
+        <tr>
+          <th class="sp-th-no">#</th>
+          <th class="sp-th-name">Name</th>
+          <th class="sp-th-desc">Description</th>
+          <th class="sp-th-qty">Quantity</th>
+          <th class="sp-th-gst">GST</th>
+          <th class="sp-th-unit">Unit</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-product>
+        <tr [pSelectableRow]="product" [class.row-sel]="selectedSearchProduct?.id === product.id"
+          (dblclick)="confirmProductSelection()">
+          <td class="td-center">{{ product.id }}</td>
+          <td>{{ product.name }}</td>
+          <td>{{ product.description }}</td>
+          <td class="td-right">{{ product.quantity }}</td>
+          <td class="td-right">{{ product.gst }}</td>
+          <td>{{ product.unit }}</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="sp-footer">
+      <button pButton type="button" label="Select" icon="pi pi-check" class="p-button-sm btn-ok"
+        (click)="confirmProductSelection()"></button>
+      <button pButton type="button" label="Cancel" icon="pi pi-times" class="p-button-sm btn-cancel p-button-secondary"
+        (click)="displaySearchProduct = false"></button>
+    </div>
+  </ng-template>
+</p-dialog>

@@ -1,0 +1,12 @@
+:host { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+.rm-wrapper { display: flex; flex-direction: column; height: 100%; background: var(--bg-page); overflow: hidden; }
+.rm-toolbar { background: var(--toolbar-bg); color: var(--toolbar-text); display: flex; align-items: center; justify-content: space-between; padding: 0 14px; height: 44px; }
+.toolbar-left, .toolbar-actions { display: flex; align-items: center; gap: 8px; }
+.toolbar-title { font-size: 14px; font-weight: 700; }
+.record-badge { background: rgba(255,255,255,0.18); padding: 2px 8px; border-radius: 20px; font-size: 11px; }
+.search-bar { padding: 10px 14px; background: var(--bg-white); border-bottom: 1px solid var(--border-color); }
+.table-container { flex: 1; overflow: hidden; padding: 0 14px 14px; }
+.form-grid { display: grid; gap: 12px; }
+.form-field { display: flex; flex-direction: column; gap: 4px; label { font-size: 12px; font-weight: 600; } }
+.checkbox-field { flex-direction: row; align-items: center; gap: 8px; label { margin: 0; } }
+.icon-btn { border: none; background: transparent; cursor: pointer; padding: 4px 6px; }

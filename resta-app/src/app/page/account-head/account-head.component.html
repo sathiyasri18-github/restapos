@@ -1,0 +1,349 @@
+<!-- account-head.component.html -->
+
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<div class="ah-wrapper">
+
+  <!-- ── Toolbar ─────────────────────────────────────────────────────────── -->
+  <div class="ah-toolbar">
+    <div class="toolbar-left">
+      <i class="pi pi-book toolbar-icon"></i>
+      <span class="toolbar-title">Account Head</span>
+      <span class="record-badge" [class.has-filter]="hasActiveSearch">
+        {{ accountHeads.length }}
+        @if (hasActiveSearch) { / {{ totalRecords }} }
+      </span>
+    </div>
+
+    <div class="toolbar-actions">
+      <button pButton type="button" icon="pi pi-plus" label="Add"
+        class="toolbar-btn btn-add"
+        pTooltip="Add new account head" tooltipPosition="bottom"
+        (click)="openAddDialog()">
+      </button>
+
+      <button pButton type="button" icon="pi pi-pencil" label="Edit"
+        class="toolbar-btn btn-edit"
+        pTooltip="Edit selected account head" tooltipPosition="bottom"
+        [disabled]="!selectedAccountHead"
+        (click)="onEditSelected()">
+      </button>
+
+      <button pButton type="button" icon="pi pi-trash" label="Delete"
+        class="toolbar-btn btn-delete"
+        pTooltip="Delete selected account head" tooltipPosition="bottom"
+        [disabled]="!selectedAccountHead"
+        (click)="onDeleteSelected($event)">
+      </button>
+
+      <div class="toolbar-sep"></div>
+
+      <app-grid-report-toolbar [config]="accountHeadReportConfig" [disabled]="isLoading" />
+    </div>
+  </div>
+
+  <!-- ── Search Bar ──────────────────────────────────────────────────────── -->
+  <div class="search-bar">
+    <span class="search-label">
+      <i class="pi pi-search"></i>
+      Search
+    </span>
+    <div class="search-fields">
+      <div class="search-field">
+        <label for="ah-search">Name / Phone</label>
+        <input id="ah-search" pInputText type="text"
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="onSearchChange()"
+          placeholder="Search account heads…" />
+      </div>
+
+      @if (hasActiveSearch) {
+        <button class="clear-btn" (click)="onClearSearch()">
+          <i class="pi pi-filter-slash"></i>
+          Clear
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- ── Data Grid ───────────────────────────────────────────────────────── -->
+  <div class="table-container">
+    <p-table
+      [value]="accountHeads"
+      selectionMode="single"
+      [(selection)]="selectedAccountHead"
+      dataKey="accountHeadId"
+      [scrollable]="true"
+      scrollHeight="flex"
+      [loading]="isLoading"
+      [sortField]="'name'"
+      [sortOrder]="1"
+      [paginator]="true"
+      [rows]="20"
+      [rowsPerPageOptions]="[10, 20, 50, 100]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Showing {first}–{last} of {totalRecords}"
+      styleClass="ah-table"
+    >
+      <!-- Header -->
+      <ng-template pTemplate="header">
+        <tr>
+          <th class="col-index">#</th>
+          <th class="col-name"  pSortableColumn="name">
+            Name <p-sortIcon field="name" />
+          </th>
+          <th class="col-phone">Phone No.</th>
+          <th class="col-cell">Mobile</th>
+          <th class="col-city"  pSortableColumn="city">
+            City <p-sortIcon field="city" />
+          </th>
+          <th class="col-state" pSortableColumn="state">
+            State <p-sortIcon field="state" />
+          </th>
+          <th class="col-email">Email</th>
+          <th class="col-actions">Actions</th>
+        </tr>
+      </ng-template>
+
+      <!-- Body -->
+      <ng-template pTemplate="body" let-ah let-rowIndex="rowIndex">
+        <tr
+          [pSelectableRow]="ah"
+          [class.row-selected]="selectedAccountHead?.accountHeadId === ah.accountHeadId"
+          (dblclick)="openEditDialog(ah)"
+        >
+          <td class="col-index">
+            @if (selectedAccountHead?.accountHeadId === ah.accountHeadId) {
+              <i class="pi pi-caret-right row-indicator"></i>
+            } @else {
+              <span class="row-number">{{ rowIndex + 1 }}</span>
+            }
+          </td>
+          <td class="col-name">
+            <span class="name-cell">{{ ah.name }}</span>
+          </td>
+          <td class="col-phone muted-cell">{{ ah.phoneNo || '—' }}</td>
+          <td class="col-cell  muted-cell">{{ ah.cellNo  || '—' }}</td>
+          <td class="col-city  muted-cell">{{ ah.city    || '—' }}</td>
+          <td class="col-state muted-cell">{{ ah.state   || '—' }}</td>
+          <td class="col-email muted-cell">{{ ah.email   || '—' }}</td>
+          <td class="col-actions">
+            <div class="action-btns">
+              <button class="icon-btn edit-icon"
+                (click)="openEditDialog(ah); $event.stopPropagation()"
+                pTooltip="Edit" tooltipPosition="left">
+                <i class="pi pi-pencil"></i>
+              </button>
+              <button class="icon-btn delete-icon"
+                (click)="confirmDelete(ah, $event)"
+                pTooltip="Delete" tooltipPosition="left">
+                <i class="pi pi-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <!-- Empty State -->
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="8">
+            <div class="empty-state">
+              <i class="pi pi-book empty-icon"></i>
+              @if (hasActiveSearch) {
+                <p class="empty-title">No account heads found</p>
+                <p class="empty-sub">No account heads match "<strong>{{ searchTerm }}</strong>"</p>
+                <button pButton type="button" icon="pi pi-filter-slash"
+                  label="Clear Search" class="p-button-outlined p-button-sm"
+                  (click)="onClearSearch()">
+                </button>
+              } @else {
+                <p class="empty-title">No account heads yet</p>
+                <p class="empty-sub">Get started by adding your first account head.</p>
+                <button pButton type="button" icon="pi pi-plus"
+                  label="Add Account Head" class="p-button-sm btn-add"
+                  (click)="openAddDialog()">
+                </button>
+              }
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <!-- Loading Skeleton -->
+      <ng-template pTemplate="loadingbody">
+        @for (i of [1,2,3,4,5,6,7]; track i) {
+          <tr>
+            <td class="col-index"><p-skeleton width="24px"  height="14px" /></td>
+            <td class="col-name" ><p-skeleton height="14px" /></td>
+            <td class="col-phone"><p-skeleton height="14px" /></td>
+            <td class="col-cell" ><p-skeleton height="14px" /></td>
+            <td class="col-city" ><p-skeleton height="14px" /></td>
+            <td class="col-state"><p-skeleton height="14px" /></td>
+            <td class="col-email"><p-skeleton height="14px" /></td>
+            <td class="col-actions"><p-skeleton width="60px" height="14px" /></td>
+          </tr>
+        }
+      </ng-template>
+    </p-table>
+  </div>
+
+  <!-- ── Status Bar ──────────────────────────────────────────────────────── -->
+  <div class="status-bar">
+    <span class="record-count">
+      <strong>{{ accountHeads.length }}</strong> account heads loaded
+    </span>
+    @if (selectedAccountHead) {
+      <span class="selected-info">
+        <i class="pi pi-check-circle"></i>
+        Selected: <strong>{{ selectedAccountHead.name }}</strong>
+      </span>
+    }
+    <span class="hint-text">Double-click a row to edit</span>
+  </div>
+
+</div>
+
+<!-- ── Add / Edit Dialog ─────────────────────────────────────────────────── -->
+<p-dialog
+  [header]="dialogTitle"
+  [(visible)]="dialogVisible"
+  [modal]="true"
+  [style]="{ width: '700px', maxHeight: '90vh' }"
+  [contentStyle]="{ overflowY: 'auto' }"
+  [closable]="true"
+  [draggable]="true"
+  styleClass="ah-dialog"
+  (onHide)="onDialogHide()"
+>
+  <div class="dialog-form">
+
+    <!-- ── Section: Basic Info ──────────────────────────────────────────── -->
+    <div class="form-section">
+      <div class="section-title">
+        <i class="pi pi-user"></i>
+        Basic Information
+      </div>
+
+      <div class="form-grid-2">
+
+        <div class="form-field full-span" [class.has-error]="formErrors.name">
+          <label>Account Head Name <span class="required">*</span></label>
+          <input pInputText type="text"
+            [(ngModel)]="formData.name"
+            (ngModelChange)="formErrors.name = undefined"
+            placeholder="Account head name"
+            [class.input-error]="formErrors.name" />
+          @if (formErrors.name) {
+            <span class="field-error">
+              <i class="pi pi-exclamation-circle"></i> {{ formErrors.name }}
+            </span>
+          }
+        </div>
+
+        <div class="form-field" [class.has-error]="formErrors.phoneNo">
+          <label>Phone No.</label>
+          <input pInputText type="text"
+            [(ngModel)]="formData.phoneNo"
+            (ngModelChange)="formErrors.phoneNo = undefined"
+            placeholder="Office phone"
+            [class.input-error]="formErrors.phoneNo" />
+          @if (formErrors.phoneNo) {
+            <span class="field-error">
+              <i class="pi pi-exclamation-circle"></i> {{ formErrors.phoneNo }}
+            </span>
+          }
+        </div>
+
+        <div class="form-field">
+          <label>Mobile / Cell No.</label>
+          <input pInputText type="text"
+            [(ngModel)]="formData.cellNo"
+            placeholder="Mobile number" />
+        </div>
+
+        <div class="form-field" [class.has-error]="formErrors.email">
+          <label>Email</label>
+          <input pInputText type="email"
+            [(ngModel)]="formData.email"
+            (ngModelChange)="formErrors.email = undefined"
+            placeholder="email@example.com"
+            [class.input-error]="formErrors.email" />
+          @if (formErrors.email) {
+            <span class="field-error">
+              <i class="pi pi-exclamation-circle"></i> {{ formErrors.email }}
+            </span>
+          }
+        </div>
+
+        <div class="form-field">
+          <label>Fax No.</label>
+          <input pInputText type="text"
+            [(ngModel)]="formData.faxNo"
+            placeholder="Fax number" />
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ── Section: Address ─────────────────────────────────────────────── -->
+    <div class="form-section">
+      <div class="section-title">
+        <i class="pi pi-map-marker"></i>
+        Address
+      </div>
+
+      <div class="form-grid-2">
+
+        <div class="form-field full-span">
+          <label>Address</label>
+          <textarea pInputTextarea
+            [(ngModel)]="formData.address"
+            rows="2"
+            placeholder="Street address…">
+          </textarea>
+        </div>
+
+        <div class="form-field">
+          <label>City</label>
+          <input pInputText type="text"
+            [(ngModel)]="formData.city"
+            placeholder="City" />
+        </div>
+
+        <div class="form-field">
+          <label>State</label>
+          <input pInputText type="text"
+            [(ngModel)]="formData.state"
+            placeholder="State" />
+        </div>
+
+        <div class="form-field full-span">
+          <label>Remarks</label>
+          <textarea pInputTextarea
+            [(ngModel)]="formData.remarks"
+            rows="2"
+            placeholder="Additional notes…">
+          </textarea>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button pButton type="button" icon="pi pi-times" label="Cancel"
+        class="p-button-outlined btn-cancel"
+        (click)="dialogVisible = false">
+      </button>
+      <button pButton type="button" icon="pi pi-check" label="Save"
+        class="btn-ok"
+        [loading]="isSaving"
+        (click)="onSave()">
+      </button>
+    </div>
+  </ng-template>
+</p-dialog>

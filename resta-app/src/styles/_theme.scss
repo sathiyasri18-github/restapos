@@ -1,0 +1,71 @@
+// ─── SalePro-inspired light theme (default) ───────────────────────────────────
+
+:root {
+  --sidebar-width:           240px;
+  --sidebar-collapsed-width: 72px;
+  --header-height:           58px;
+
+  // ── Primary Brand ──────────────────────────────────────────────────────────
+  --color-primary:        #6941c6;
+  --color-primary-dark:   #5534a8;
+  --color-primary-light:  #7c3aed;
+  --color-primary-muted:  rgba(105, 65, 198, 0.12);
+
+  // ── Sidebar ────────────────────────────────────────────────────────────────
+  --sidebar-bg:           #ffffff;
+  --sidebar-text:         #475569;
+  --sidebar-hover-bg:     #f1f5f9;
+  --sidebar-active-bg:    #ede9fe;
+  --sidebar-active-text:  #6941c6;
+  --sidebar-border:       #e2e8f0;
+
+  // ── Header ─────────────────────────────────────────────────────────────────
+  --header-bg:            #ffffff;
+  --header-text:          #334155;
+  --header-border:        #e2e8f0;
+  --header-icon-bg:       #ffffff;
+  --header-icon-hover-bg: #f8fafc;
+  --header-search-bg:     #f8fafc;
+  --header-search-placeholder: #94a3b8;
+
+  // ── Page / Content ─────────────────────────────────────────────────────────
+  --bg-page:              #f4f6f9;
+  --bg-card:              #ffffff;
+  --bg-white:             #ffffff;
+  --border-color:         #e2e8f0;
+  --border-light:         #eef2f7;
+  --text-dark:            #0f172a;
+  --text-primary:         #1e293b;
+  --text-secondary:       #64748b;
+  --text-label:           #6941c6;
+  --text-muted:           #94a3b8;
+  --hover-bg:             #f1f5f9;
+  --row-alt:              #f8fafc;
+  --row-hover:            #f1f5f9;
+  --row-selected:         #ede9fe;
+  --scrollbar-thumb:      #cbd5e1;
+
+  // ── Toolbar / Table Header ──────────────────────────────────────────────────
+  --toolbar-bg:           #6941c6;
+  --toolbar-text:         #ffffff;
+  --table-header-bg:      #6941c6;
+  --table-header-text:    #ffffff;
+
+  // ── Action Button Colors ───────────────────────────────────────────────────
+  --color-success:        #16a34a;
+  --color-primary-action: #6941c6;
+  --color-danger:         #dc2626;
+  --accent-green:         #16a34a;
+  --accent-yellow:        #d97706;
+  --accent-red:           #dc2626;
+  --accent-blue:          #2563eb;
+  --accent-teal:          #0d9488;
+  --accent-orange:        #f97316;
+  --accent-purple:        #6941c6;
+  --accent-gray:          #64748b;
+
+  // ── Form Inputs ────────────────────────────────────────────────────────────
+  --input-border:         #e2e8f0;
+  --input-focus-border:   var(--color-primary);
+  --input-focus-shadow:   var(--color-primary-muted);
+}

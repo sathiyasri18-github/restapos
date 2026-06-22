@@ -1,0 +1,409 @@
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<div class="se-wrapper">
+  <div class="split-container">
+
+    <!-- LEFT: Sale entry -->
+    <div class="split-panel panel-sale">
+      <div class="panel-toolbar">
+        <div class="toolbar-left">
+          <i class="pi pi-chart-bar toolbar-icon"></i>
+          <span class="toolbar-title">{{ pageTitle }}</span>
+          @if (isEditMode) {
+            <span class="se-ref-badge">{{ header.referenceNo || ('#' + header.saleId) }}</span>
+          }
+        </div>
+        <div class="toolbar-actions">
+          <button pButton type="button" icon="pi pi-plus" label="New"
+            class="toolbar-btn btn-new" (click)="onNewSale()"></button>
+          <button pButton type="button" icon="pi pi-times" label="Cancel"
+            class="toolbar-btn btn-cancel-action" (click)="onCancel()"></button>
+          <button pButton type="button" icon="pi pi-check" label="Save"
+            class="toolbar-btn btn-save" [loading]="isSaving" (click)="onSave()"></button>
+        </div>
+      </div>
+
+      <div class="se-content" [class.se-loading]="isLoading">
+        @if (isLoading) {
+          <div class="se-loading-overlay">
+            <i class="pi pi-spin pi-spinner"></i>
+            <span>Loading sale…</span>
+          </div>
+        }
+
+        <div class="form-section">
+          <div class="section-title">
+            <i class="pi pi-file-edit"></i>
+            Sale Header
+          </div>
+
+          <div class="form-grid-2">
+            <div class="form-field" [class.has-error]="formErrors.referenceNo">
+              <label>Reference No. <span class="required">*</span></label>
+              <input pInputText [(ngModel)]="header.referenceNo"
+                (ngModelChange)="formErrors.referenceNo = undefined"
+                placeholder="e.g. SAL-001" />
+              @if (formErrors.referenceNo) {
+                <span class="field-error">{{ formErrors.referenceNo }}</span>
+              }
+            </div>
+
+            <div class="form-field" [class.has-error]="formErrors.userId">
+              <label>User ID <span class="required">*</span></label>
+              <input pInputText type="number" [(ngModel)]="header.userId"
+                (ngModelChange)="formErrors.userId = undefined"
+                placeholder="User ID" min="1" />
+              @if (formErrors.userId) {
+                <span class="field-error">{{ formErrors.userId }}</span>
+              }
+            </div>
+
+            <div class="form-field" [class.has-error]="formErrors.warehouseId">
+              <label>Warehouse <span class="required">*</span></label>
+              <p-select [options]="warehouseOptions" optionLabel="label" optionValue="value"
+                [(ngModel)]="header.warehouseId"
+                (ngModelChange)="formErrors.warehouseId = undefined"
+                placeholder="Select warehouse" [filter]="true" appendTo="body"
+                [disabled]="!lookupsLoaded" />
+              @if (formErrors.warehouseId) {
+                <span class="field-error">{{ formErrors.warehouseId }}</span>
+              }
+            </div>
+
+            <div class="form-field" [class.has-error]="formErrors.customerId">
+              <label>Customer <span class="required">*</span></label>
+              <p-select [options]="customerOptions" optionLabel="label" optionValue="value"
+                [(ngModel)]="header.customerId"
+                (ngModelChange)="formErrors.customerId = undefined"
+                placeholder="Select customer" [filter]="true" appendTo="body"
+                [disabled]="!lookupsLoaded" />
+              @if (formErrors.customerId) {
+                <span class="field-error">{{ formErrors.customerId }}</span>
+              }
+            </div>
+
+            <div class="form-field">
+              <label>Biller ID</label>
+              <input pInputText type="number" [(ngModel)]="header.billerId"
+                placeholder="Optional" min="0" />
+            </div>
+
+            <div class="form-field">
+              <label>Cash Register ID</label>
+              <input pInputText type="number" [(ngModel)]="header.cashRegisterId"
+                placeholder="Optional" min="0" />
+            </div>
+
+            <div class="form-field">
+              <label>Shipping Cost</label>
+              <input pInputText type="number" [(ngModel)]="header.shippingCost"
+                placeholder="0.00" min="0" step="0.01" />
+            </div>
+
+            <div class="form-field">
+              <label>Order Discount</label>
+              <input pInputText type="number" [(ngModel)]="header.orderDiscount"
+                placeholder="0.00" min="0" step="0.01" />
+            </div>
+
+            <div class="form-field">
+              <label>Paid Amount</label>
+              <input pInputText type="number" [(ngModel)]="header.paidAmount"
+                placeholder="0.00" min="0" step="0.01" />
+            </div>
+
+            <div class="form-field full-span">
+              <label>Sale Note</label>
+              <textarea pInputTextarea [(ngModel)]="header.saleNote" rows="2"
+                placeholder="Optional sale note…"></textarea>
+            </div>
+
+            <div class="form-field full-span">
+              <label>Staff Note</label>
+              <textarea pInputTextarea [(ngModel)]="header.staffNote" rows="2"
+                placeholder="Optional staff note…"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="se-lines-header">
+            <div class="section-title se-lines-title">
+              <i class="pi pi-list"></i>
+              Product Sale Lines
+            </div>
+            <div class="se-lines-actions">
+              <button pButton type="button" icon="pi pi-plus" label="Add Line"
+                class="p-button-sm btn-add-line" (click)="addLine()"></button>
+              <button pButton type="button" icon="pi pi-trash" label="Remove Selected"
+                class="p-button-sm btn-remove-lines"
+                [disabled]="!selectedLines.length"
+                (click)="removeSelectedLines()"></button>
+            </div>
+          </div>
+
+          @if (formErrors.lines) {
+            <div class="se-lines-error">
+              <i class="pi pi-exclamation-circle"></i> {{ formErrors.lines }}
+            </div>
+          }
+
+          <div class="se-line-table-wrap">
+            <p-table
+              [value]="lines"
+              [(selection)]="selectedLines"
+              dataKey="rowKey"
+              selectionMode="multiple"
+              [scrollable]="true"
+              scrollHeight="240px"
+              styleClass="se-table"
+            >
+              <ng-template pTemplate="header">
+                <tr>
+                  <th class="col-check" style="width: 3rem">
+                    <p-tableHeaderCheckbox />
+                  </th>
+                  <th class="col-product">Product</th>
+                  <th class="col-qty">Qty</th>
+                  <th class="col-unit">Unit ID</th>
+                  <th class="col-price">Net Unit Price</th>
+                  <th class="col-discount">Discount</th>
+                  <th class="col-tax-rate">Tax Rate %</th>
+                  <th class="col-tax">Tax</th>
+                  <th class="col-total">Total</th>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body" let-line>
+                <tr [pSelectableRow]="line">
+                  <td class="col-check">
+                    <p-tableCheckbox [value]="line" />
+                  </td>
+                  <td class="col-product">
+                    <p-select [options]="productOptions" optionLabel="label" optionValue="value"
+                      [(ngModel)]="line.productId"
+                      (ngModelChange)="onProductSelect(line, $event)"
+                      placeholder="Product" [filter]="true" appendTo="body"
+                      styleClass="se-cell-select" />
+                  </td>
+                  <td class="col-qty">
+                    <input pInputText type="number" class="se-cell-input"
+                      [(ngModel)]="line.qty" (ngModelChange)="onLineChange(line)"
+                      min="0" step="any" />
+                  </td>
+                  <td class="col-unit">
+                    <input pInputText type="number" class="se-cell-input"
+                      [(ngModel)]="line.saleUnitId" (ngModelChange)="onLineChange(line)"
+                      min="0" />
+                  </td>
+                  <td class="col-price">
+                    <input pInputText type="number" class="se-cell-input"
+                      [(ngModel)]="line.netUnitPrice" (ngModelChange)="onLineChange(line)"
+                      min="0" step="0.01" />
+                  </td>
+                  <td class="col-discount">
+                    <input pInputText type="number" class="se-cell-input"
+                      [(ngModel)]="line.discount" (ngModelChange)="onLineChange(line)"
+                      min="0" step="0.01" />
+                  </td>
+                  <td class="col-tax-rate">
+                    <input pInputText type="number" class="se-cell-input"
+                      [(ngModel)]="line.taxRate" (ngModelChange)="onLineChange(line)"
+                      min="0" step="0.01" />
+                  </td>
+                  <td class="col-tax se-readonly">{{ formatMoney(line.tax) }}</td>
+                  <td class="col-total se-readonly amount-cell">{{ formatMoney(line.total) }}</td>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="emptymessage">
+                <tr>
+                  <td colspan="9">
+                    <div class="empty-state compact">
+                      <p class="empty-title">No lines yet</p>
+                      <button pButton icon="pi pi-plus" label="Add Line"
+                        class="p-button-sm btn-add-line" (click)="addLine()"></button>
+                    </div>
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
+        </div>
+
+        <div class="form-section se-totals-section">
+          <div class="section-title">
+            <i class="pi pi-calculator"></i>
+            Summary
+          </div>
+
+          <div class="se-totals-grid">
+            <div class="se-total-item">
+              <span class="se-total-label">Item Count</span>
+              <span class="se-total-value">{{ itemCount }}</span>
+            </div>
+            <div class="se-total-item">
+              <span class="se-total-label">Total Qty</span>
+              <span class="se-total-value">{{ formatMoney(totalQty) }}</span>
+            </div>
+            <div class="se-total-item">
+              <span class="se-total-label">Total Price</span>
+              <span class="se-total-value">{{ formatMoney(totalPrice) }}</span>
+            </div>
+            <div class="se-total-item">
+              <span class="se-total-label">Total Tax</span>
+              <span class="se-total-value">{{ formatMoney(totalTax) }}</span>
+            </div>
+            <div class="se-total-item">
+              <span class="se-total-label">Total Discount</span>
+              <span class="se-total-value">{{ formatMoney(totalDiscount) }}</span>
+            </div>
+            <div class="se-total-item se-grand-total">
+              <span class="se-total-label">Grand Total</span>
+              <span class="se-total-value">{{ formatMoney(grandTotal) }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="split-divider" aria-hidden="true"></div>
+
+    <!-- RIGHT: Sale list -->
+    <div class="split-panel panel-list">
+      <div class="panel-toolbar">
+        <div class="toolbar-left">
+          <i class="pi pi-list toolbar-icon"></i>
+          <span class="toolbar-title">Sale List</span>
+          <span class="record-badge" [class.has-filter]="hasActiveListFilters">
+            {{ filteredSales.length }}
+            @if (hasActiveListFilters) { / {{ sales.length }} }
+          </span>
+        </div>
+        <div class="toolbar-actions">
+          <button pButton type="button" icon="pi pi-plus" label="Add"
+            class="toolbar-btn btn-add" (click)="onNewSale()"></button>
+          <button pButton type="button" icon="pi pi-pencil" label="Edit"
+            class="toolbar-btn btn-edit"
+            [disabled]="!selectedSale"
+            (click)="onEditSelected()"></button>
+          <button pButton type="button" icon="pi pi-trash" label="Delete"
+            class="toolbar-btn btn-delete"
+            [disabled]="!selectedSale"
+            (click)="onDeleteSelected($event)"></button>
+          <div class="toolbar-sep"></div>
+          <app-grid-report-toolbar [config]="saleListReportConfig" [disabled]="listLoading" />
+        </div>
+      </div>
+
+      <div class="search-bar">
+        <span class="search-label"><i class="pi pi-search"></i> Search</span>
+        <div class="search-fields">
+          <div class="search-field">
+            <label for="sl-search">Reference No / Note</label>
+            <input id="sl-search" pInputText type="text"
+              [(ngModel)]="listSearchTerm"
+              (ngModelChange)="onListSearchChange()"
+              placeholder="Search sales…" />
+          </div>
+          @if (hasActiveListFilters) {
+            <button class="clear-btn" (click)="onClearListSearch()">
+              <i class="pi pi-filter-slash"></i> Clear
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="table-container">
+        <p-table
+          [value]="filteredSales"
+          selectionMode="single"
+          [(selection)]="selectedSale"
+          dataKey="saleId"
+          [scrollable]="true"
+          scrollHeight="flex"
+          [loading]="listLoading"
+          [sortField]="'referenceNo'"
+          [sortOrder]="1"
+          [paginator]="true"
+          [rows]="15"
+          [rowsPerPageOptions]="[10, 15, 25, 50]"
+          styleClass="sl-table"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th class="col-index">#</th>
+              <th class="col-reference" pSortableColumn="referenceNo">
+                Reference <p-sortIcon field="referenceNo" />
+              </th>
+              <th class="col-customer">Customer</th>
+              <th class="col-warehouse">Warehouse</th>
+              <th class="col-total" pSortableColumn="grandTotal">
+                Total <p-sortIcon field="grandTotal" />
+              </th>
+              <th class="col-actions">Actions</th>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="body" let-s let-rowIndex="rowIndex">
+            <tr
+              [pSelectableRow]="s"
+              [class.row-selected]="selectedSale?.saleId === s.saleId"
+              (dblclick)="openSaleFromList(s)"
+            >
+              <td class="col-index">
+                @if (selectedSale?.saleId === s.saleId) {
+                  <i class="pi pi-caret-left row-indicator"></i>
+                } @else {
+                  <span class="row-number">{{ rowIndex + 1 }}</span>
+                }
+              </td>
+              <td class="col-reference"><span class="name-cell">{{ s.referenceNo || '—' }}</span></td>
+              <td class="col-customer muted-cell">{{ getCustomerName(s.customerId) }}</td>
+              <td class="col-warehouse muted-cell">{{ getWarehouseName(s.warehouseId) }}</td>
+              <td class="col-total amount-cell">{{ formatAmount(s.grandTotal) }}</td>
+              <td class="col-actions">
+                <div class="action-btns">
+                  <button class="icon-btn edit-icon"
+                    (click)="openSaleFromList(s); $event.stopPropagation()">
+                    <i class="pi pi-pencil"></i>
+                  </button>
+                  <button class="icon-btn delete-icon"
+                    (click)="confirmDeleteSale(s, $event)">
+                    <i class="pi pi-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="6">
+                <div class="empty-state compact">
+                  <p class="empty-title">No sales yet</p>
+                  <button pButton icon="pi pi-plus" label="Add Sale"
+                    class="p-button-sm btn-add" (click)="onNewSale()"></button>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+
+      <div class="status-bar">
+        <span class="record-count">
+          <strong>{{ filteredSales.length }}</strong> of <strong>{{ sales.length }}</strong> sales
+        </span>
+        @if (selectedSale) {
+          <span class="selected-info">
+            <strong>{{ selectedSale.referenceNo || selectedSale.saleId }}</strong>
+          </span>
+        }
+        <span class="hint-text">Double-click to edit</span>
+      </div>
+    </div>
+
+  </div>
+</div>

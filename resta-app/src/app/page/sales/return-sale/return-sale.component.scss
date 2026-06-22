@@ -1,0 +1,432 @@
+// purchase-entry.component.scss
+
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.rs-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--bg-page);
+  overflow: hidden;
+}
+
+.rs-toolbar {
+  background: var(--toolbar-bg);
+  color: var(--toolbar-text);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  height: 44px;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  gap: 12px;
+}
+
+.toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.toolbar-icon {
+  font-size: 1rem;
+  opacity: 0.85;
+}
+
+.toolbar-title {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+}
+
+.rs-ref-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.toolbar-btn {
+  font-size: 12px !important;
+  padding: 0 12px !important;
+  border-radius: 4px !important;
+  height: 30px !important;
+  border: none !important;
+  font-weight: 600 !important;
+  transition: filter 0.15s ease, opacity 0.15s ease !important;
+
+  &:not(:disabled):hover { filter: brightness(1.1); }
+  &:disabled { opacity: 0.45 !important; cursor: not-allowed !important; }
+
+  &.btn-back {
+    background: rgba(255, 255, 255, 0.15) !important;
+    color: #fff !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  }
+
+  &.btn-cancel-action {
+    background: rgba(255, 255, 255, 0.12) !important;
+    color: #fff !important;
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  }
+
+  &.btn-save {
+    background: var(--accent-green) !important;
+    color: #fff !important;
+  }
+
+  .p-button-icon { font-size: 11px !important; margin-right: 5px !important; }
+}
+
+.rs-content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  position: relative;
+  padding-bottom: 16px;
+
+  &.rs-loading {
+    pointer-events: none;
+    opacity: 0.7;
+  }
+}
+
+.rs-loading-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--color-primary);
+  font-size: 13px;
+  font-weight: 600;
+
+  i { font-size: 1.5rem; }
+}
+
+// ─── Form sections (purchase.component.scss patterns) ─────────────────────────
+.form-section {
+  background: var(--bg-white);
+  padding: 14px 18px 16px;
+  border-bottom: 6px solid var(--bg-page);
+
+  &:last-child { border-bottom: none; }
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-label);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border-color);
+
+  i { font-size: 0.85rem; }
+}
+
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 16px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  &.full-span { grid-column: 1 / -1; }
+
+  &.has-error input,
+  &.has-error textarea {
+    border-color: var(--accent-red) !important;
+    box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.1) !important;
+  }
+
+  label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-label);
+  }
+
+  input,
+  textarea {
+    width: 100%;
+    font-size: 12.5px !important;
+    border: 1px solid var(--input-border) !important;
+    border-radius: 4px !important;
+    transition: border-color 0.15s, box-shadow 0.15s;
+
+    &:focus {
+      border-color: var(--input-focus-border) !important;
+      box-shadow: 0 0 0 3px var(--input-focus-shadow) !important;
+      outline: none;
+    }
+  }
+
+  input { height: 32px !important; padding: 0 9px !important; }
+  textarea { padding: 7px 9px !important; resize: vertical; font-family: inherit; }
+
+  ::ng-deep .p-select {
+    width: 100% !important;
+    height: 32px !important;
+    font-size: 12.5px !important;
+    border: 1px solid var(--input-border) !important;
+    border-radius: 4px !important;
+
+    .p-select-label {
+      font-size: 12.5px !important;
+      padding: 0 9px !important;
+      line-height: 30px;
+    }
+  }
+}
+
+.required { color: var(--accent-red); margin-left: 2px; }
+
+.field-error {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  color: var(--accent-red);
+  font-weight: 500;
+}
+
+// ─── Lines section ────────────────────────────────────────────────────────────
+.rs-lines-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.rs-lines-title {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+  flex: 1;
+}
+
+.rs-lines-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.btn-add-line {
+  background: var(--accent-green) !important;
+  border: none !important;
+  color: #fff !important;
+}
+
+.btn-remove-lines {
+  background: var(--accent-red) !important;
+  border: none !important;
+  color: #fff !important;
+}
+
+.rs-lines-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--accent-red);
+  font-weight: 500;
+  margin-bottom: 10px;
+  padding: 6px 10px;
+  background: #fef2f2;
+  border-radius: 4px;
+  border: 1px solid #fecaca;
+}
+
+.rs-line-table-wrap {
+  margin-top: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+::ng-deep .rs-table {
+  .p-datatable-thead > tr > th {
+    background: var(--table-header-bg) !important;
+    color: var(--table-header-text) !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    padding: 8px 10px !important;
+    border: none !important;
+    white-space: nowrap;
+  }
+
+  .p-datatable-tbody > tr > td {
+    font-size: 12px !important;
+    padding: 4px 6px !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    vertical-align: middle;
+  }
+
+  .p-datatable-tbody > tr:nth-child(even) > td {
+    background: var(--row-alt);
+  }
+
+  .p-datatable-tbody > tr:hover > td {
+    background: var(--row-hover) !important;
+  }
+
+  .p-datatable-tbody > tr.p-highlight > td {
+    background: var(--row-selected) !important;
+  }
+}
+
+.rs-cell-input {
+  width: 100% !important;
+  min-width: 64px;
+  height: 28px !important;
+  font-size: 12px !important;
+  padding: 0 6px !important;
+  border: 1px solid var(--input-border) !important;
+  border-radius: 3px !important;
+  text-align: right;
+}
+
+::ng-deep .rs-cell-select {
+  width: 100% !important;
+  min-width: 140px;
+  height: 28px !important;
+  font-size: 12px !important;
+
+  .p-select-label {
+    font-size: 12px !important;
+    padding: 0 6px !important;
+    line-height: 26px;
+  }
+}
+
+.rs-readonly {
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.amount-cell {
+  font-weight: 600;
+  color: var(--color-primary) !important;
+}
+
+.col-product { min-width: 180px !important; }
+.col-qty     { width: 72px !important; }
+.col-unit    { width: 72px !important; }
+.col-cost    { width: 96px !important; }
+.col-discount { width: 84px !important; }
+.col-tax-rate { width: 84px !important; }
+.col-tax     { width: 84px !important; }
+.col-total   { width: 96px !important; }
+
+.empty-state.compact {
+  padding: 24px 16px;
+  gap: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+
+  .empty-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin: 0;
+  }
+}
+
+// ─── Totals ───────────────────────────────────────────────────────────────────
+.rs-totals-section {
+  margin-bottom: 0;
+}
+
+.rs-totals-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px 16px;
+
+  @media (max-width: 900px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 520px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.rs-total-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  background: var(--bg-page);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+}
+
+.rs-total-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-label);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.rs-total-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-dark);
+  font-variant-numeric: tabular-nums;
+}
+
+.rs-grand-total {
+  grid-column: 1 / -1;
+  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+  border-color: #86efac;
+
+  .rs-total-label { color: #166534; }
+  .rs-total-value {
+    font-size: 20px;
+    color: var(--color-primary);
+  }
+}

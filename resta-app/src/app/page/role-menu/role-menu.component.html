@@ -1,0 +1,88 @@
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<div class="rm-wrapper">
+  <div class="rm-toolbar">
+    <div class="toolbar-left">
+      <i class="pi pi-key toolbar-icon"></i>
+      <span class="toolbar-title">Role Menus</span>
+      <span class="record-badge">{{ filtered.length }}</span>
+    </div>
+    <div class="toolbar-actions">
+      <button pButton type="button" icon="pi pi-plus" label="Add" class="toolbar-btn btn-add" (click)="openAddDialog()"></button>
+      <button pButton type="button" icon="pi pi-pencil" label="Edit" class="toolbar-btn btn-edit"
+        [disabled]="!selected" (click)="selected && openEditDialog(selected)"></button>
+    </div>
+  </div>
+
+  <div class="search-bar">
+    <input pInputText type="text" [(ngModel)]="searchTerm" (ngModelChange)="applyFilter()" placeholder="Search role or menu..." />
+  </div>
+
+  <div class="table-container">
+    <p-table [value]="filtered" selectionMode="single" [(selection)]="selected" dataKey="id"
+      [scrollable]="true" scrollHeight="flex" [loading]="isLoading" [paginator]="true" [rows]="20">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Role</th>
+          <th>Menu</th>
+          <th>View</th>
+          <th>Add</th>
+          <th>Edit</th>
+          <th>Delete</th>
+          <th>Actions</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-row>
+        <tr [pSelectableRow]="row" (dblclick)="openEditDialog(row)">
+          <td>{{ row.roleName }}</td>
+          <td>{{ row.menuName }}</td>
+          <td>{{ row.canView ? 'Yes' : 'No' }}</td>
+          <td>{{ row.canAdd ? 'Yes' : 'No' }}</td>
+          <td>{{ row.canEdit ? 'Yes' : 'No' }}</td>
+          <td>{{ row.canDelete ? 'Yes' : 'No' }}</td>
+          <td>
+            <button class="icon-btn edit-icon" (click)="openEditDialog(row); $event.stopPropagation()"><i class="pi pi-pencil"></i></button>
+            <button class="icon-btn delete-icon" (click)="confirmDelete(row, $event)"><i class="pi pi-trash"></i></button>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<p-dialog [header]="dialogMode === 'add' ? 'Add Role Menu' : 'Edit Role Menu'"
+  [(visible)]="dialogVisible" [modal]="true" [style]="{ width: '520px' }">
+  <div class="form-grid">
+    <div class="form-field">
+      <label>Role</label>
+      <p-select [options]="roleOptions" optionLabel="label" optionValue="value"
+        [(ngModel)]="formData.roleId" appendTo="body" />
+    </div>
+    <div class="form-field">
+      <label>Menu</label>
+      <p-select [options]="menuOptions" optionLabel="label" optionValue="value"
+        [(ngModel)]="formData.menuId" appendTo="body" />
+    </div>
+    <div class="form-field checkbox-field">
+      <p-checkbox [(ngModel)]="formData.canView" [binary]="true" inputId="rm-view" />
+      <label for="rm-view">Can View</label>
+    </div>
+    <div class="form-field checkbox-field">
+      <p-checkbox [(ngModel)]="formData.canAdd" [binary]="true" inputId="rm-add" />
+      <label for="rm-add">Can Add</label>
+    </div>
+    <div class="form-field checkbox-field">
+      <p-checkbox [(ngModel)]="formData.canEdit" [binary]="true" inputId="rm-edit" />
+      <label for="rm-edit">Can Edit</label>
+    </div>
+    <div class="form-field checkbox-field">
+      <p-checkbox [(ngModel)]="formData.canDelete" [binary]="true" inputId="rm-del" />
+      <label for="rm-del">Can Delete</label>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-outlined" (click)="dialogVisible=false"></button>
+    <button pButton type="button" label="Save" [loading]="isSaving" (click)="onSave()"></button>
+  </ng-template>
+</p-dialog>

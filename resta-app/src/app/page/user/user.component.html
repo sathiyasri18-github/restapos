@@ -1,0 +1,122 @@
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<div class="usr-wrapper">
+  <div class="usr-toolbar">
+    <div class="toolbar-left">
+      <i class="pi pi-users toolbar-icon"></i>
+      <span class="toolbar-title">Users</span>
+      <span class="record-badge" [class.has-filter]="hasActiveFilters">
+        {{ users.length }}
+        @if (hasActiveFilters) { / {{ totalRecords }} }
+      </span>
+    </div>
+    <div class="toolbar-actions">
+      <button pButton type="button" icon="pi pi-plus" label="Add" class="toolbar-btn btn-add" (click)="openAddDialog()"></button>
+      <button pButton type="button" icon="pi pi-pencil" label="Edit" class="toolbar-btn btn-edit"
+        [disabled]="!selectedUser" (click)="onEditSelected()"></button>
+      <button pButton type="button" icon="pi pi-trash" label="Delete" class="toolbar-btn btn-delete"
+        [disabled]="!selectedUser" (click)="onDeleteSelected($event)"></button>
+      <div class="toolbar-sep"></div>
+      <app-grid-report-toolbar [config]="userReportConfig" [disabled]="isLoading" />
+    </div>
+  </div>
+
+  <div class="search-bar">
+    <span class="search-label"><i class="pi pi-search"></i> Search</span>
+    <div class="search-fields">
+      <div class="search-field">
+        <label>User / Name / Email</label>
+        <input pInputText [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange()" placeholder="Search users…" />
+      </div>
+      <div class="search-field">
+        <label>Status</label>
+        <p-select [options]="statusFilterOptions" optionLabel="label" optionValue="value"
+          [(ngModel)]="activeFilter" (ngModelChange)="onFilterChange()" placeholder="All" appendTo="body" />
+      </div>
+      @if (hasActiveFilters) {
+        <button class="clear-btn" (click)="onClearSearch()"><i class="pi pi-filter-slash"></i> Clear</button>
+      }
+    </div>
+  </div>
+
+  <div class="table-container">
+    <p-table [value]="users" selectionMode="single" [(selection)]="selectedUser" dataKey="userId"
+      [scrollable]="true" scrollHeight="flex" [loading]="isLoading" [sortField]="'displayName'" [sortOrder]="1"
+      [paginator]="true" [rows]="20" styleClass="usr-table">
+      <ng-template pTemplate="header">
+        <tr>
+          <th class="col-index">#</th>
+          <th pSortableColumn="userName">User Name <p-sortIcon field="userName" /></th>
+          <th pSortableColumn="displayName">Display Name <p-sortIcon field="displayName" /></th>
+          <th>Email</th>
+          <th>Roles</th>
+          <th pSortableColumn="isActive">Active <p-sortIcon field="isActive" /></th>
+          <th class="col-actions">Actions</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-u let-rowIndex="rowIndex">
+        <tr [pSelectableRow]="u" (dblclick)="openEditDialog(u)">
+          <td class="col-index"><span class="row-number">{{ rowIndex + 1 }}</span></td>
+          <td class="name-cell">{{ u.userName }}</td>
+          <td>{{ u.displayName }}</td>
+          <td class="muted-cell">{{ u.email || '—' }}</td>
+          <td class="muted-cell">{{ (u.roleNames || []).join(', ') || '—' }}</td>
+          <td>{{ u.isActive ? 'Yes' : 'No' }}</td>
+          <td class="col-actions">
+            <div class="action-btns">
+              <button class="icon-btn edit-icon" (click)="openEditDialog(u); $event.stopPropagation()">
+                <i class="pi pi-pencil"></i>
+              </button>
+              <button class="icon-btn delete-icon" (click)="confirmDelete(u, $event)">
+                <i class="pi pi-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr><td colspan="7"><div class="empty-state"><p class="empty-title">No users found</p></div></td></tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<p-dialog [(visible)]="dialogVisible" [header]="dialogTitle" [modal]="true" [style]="{ width: '520px' }"
+  styleClass="usr-dialog" [draggable]="false">
+  <div class="dialog-form">
+    <div class="form-field" [class.has-error]="formErrors.userName">
+      <label>User Name <span class="required">*</span></label>
+      <input pInputText [(ngModel)]="formData.userName" (ngModelChange)="formErrors.userName = undefined" />
+      @if (formErrors.userName) { <span class="field-error">{{ formErrors.userName }}</span> }
+    </div>
+    <div class="form-field" [class.has-error]="formErrors.displayName">
+      <label>Display Name <span class="required">*</span></label>
+      <input pInputText [(ngModel)]="formData.displayName" (ngModelChange)="formErrors.displayName = undefined" />
+      @if (formErrors.displayName) { <span class="field-error">{{ formErrors.displayName }}</span> }
+    </div>
+    <div class="form-field">
+      <label>Email</label>
+      <input pInputText type="email" [(ngModel)]="formData.email" />
+    </div>
+    <div class="form-field" [class.has-error]="formErrors.password">
+      <label>Password @if (dialogMode === 'edit') { <span class="hint-inline">(leave blank to keep)</span> }</label>
+      <p-password [(ngModel)]="formData.password" [feedback]="false" [toggleMask]="true"
+        (ngModelChange)="formErrors.password = undefined" styleClass="w-full" inputStyleClass="w-full" />
+      @if (formErrors.password) { <span class="field-error">{{ formErrors.password }}</span> }
+    </div>
+    <div class="form-field">
+      <label>Roles</label>
+      <p-multiSelect [options]="roleOptions" optionLabel="label" optionValue="value"
+        [(ngModel)]="selectedRoleIds" placeholder="Select roles" appendTo="body" display="chip" />
+    </div>
+    <div class="form-field checkbox-field">
+      <p-checkbox [(ngModel)]="formData.isActive" [binary]="true" inputId="usr-active" />
+      <label for="usr-active">Active</label>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancel" class="p-button-outlined p-button-sm" (click)="dialogVisible = false"></button>
+    <button pButton label="Save" icon="pi pi-check" class="p-button-sm" [loading]="isSaving" (click)="onSave()"></button>
+  </ng-template>
+</p-dialog>

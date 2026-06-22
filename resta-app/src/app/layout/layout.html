@@ -1,0 +1,15 @@
+<div class="layout-wrapper" [class.sidebar-collapsed]="layout.sidebarCollapsed()">
+
+  <app-sidebar class="sidebar"></app-sidebar>
+
+  <div class="layout-main">
+    <app-header class="header"></app-header>
+
+    <div class="main-container">
+      <div class="content">
+        <router-outlet></router-outlet>
+      </div>
+    </div>
+  </div>
+
+</div>

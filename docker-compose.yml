@@ -1,0 +1,57 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: restapos-sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${RESTAPOS_MSSQL_SA_PASSWORD:-RestaPos@2024!}
+      MSSQL_PID: Express
+    ports:
+      - "${SQL_PORT:-1433}:1433"
+    volumes:
+      - sqldata:/var/opt/mssql
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q \"SELECT 1\" || exit 1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+    restart: unless-stopped
+
+  resta-api:
+    image: restapos/api:${RESTAPOS_VERSION:-latest}
+    build:
+      context: ./resta-api
+      dockerfile: Dockerfile
+    container_name: restapos-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Docker
+      ASPNETCORE_URLS: http://+:8080
+      Jwt__Key: ${JWT_KEY:-RestaPos_Docker_SigningKey_Min32Chars!}
+      Jwt__Issuer: ${JWT_ISSUER:-CustomerApi}
+      Jwt__Audience: ${JWT_AUDIENCE:-SystemService}
+    ports:
+      - "${API_PORT:-8081}:8080"
+    depends_on:
+      sqlserver:
+        condition: service_healthy
+    restart: unless-stopped
+
+  resta-app:
+    image: restapos/web:${RESTAPOS_VERSION:-latest}
+    build:
+      context: ./resta-app
+      dockerfile: Dockerfile
+    container_name: restapos-web
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    depends_on:
+      - resta-api
+    restart: unless-stopped
+
+volumes:
+  sqldata:

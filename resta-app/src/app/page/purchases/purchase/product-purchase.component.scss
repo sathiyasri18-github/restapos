@@ -1,0 +1,390 @@
+// product-purchase.component.scss
+
+// ─── Wrapper ──────────────────────────────────────────────────────────────────
+.pp-wrapper {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background: var(--bg-page);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+// ─── Title Bar ────────────────────────────────────────────────────────────────
+.pp-titlebar {
+  background: var(--toolbar-bg);
+  color: var(--toolbar-text);
+  font-size: 14px;
+  font-weight: 700;
+  padding: 6px 14px;
+  letter-spacing: 0.4px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  flex-shrink: 0;
+}
+
+// ─── Body ─────────────────────────────────────────────────────────────────────
+.pp-body {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+// ─── Divider ──────────────────────────────────────────────────────────────────
+.pp-divider {
+  width: 4px;
+  background: var(--border-color);
+  flex-shrink: 0;
+  cursor: col-resize;
+}
+
+// ─── LEFT PANEL ───────────────────────────────────────────────────────────────
+.pp-left {
+  flex: 0 0 54%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg-white);
+  border-right: 1px solid var(--border-color);
+}
+
+// Header Fields
+.pp-header-fields {
+  padding: 8px 12px 4px;
+  background: var(--bg-white);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.field-row {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  margin-bottom: 6px;
+}
+
+.field-group {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-label);
+    white-space: nowrap;
+    min-width: 80px;
+    text-align: right;
+  }
+
+  .field-input {
+    height: 24px !important;
+    font-size: 11px !important;
+    border: 1px solid #bdbdbd !important;
+    border-radius: 2px !important;
+    padding: 0 6px !important;
+    width: 130px;
+    &:focus { border-color: var(--input-focus-border) !important; }
+  }
+
+  .field-sm { width: 60px; }
+  .field-input-date { width: 110px; font-size: 11px !important; height: 24px !important; }
+}
+
+::ng-deep {
+  .pp-calendar .p-inputtext  { height: 24px !important; font-size: 11px !important; }
+  .pp-calendar .p-datepicker-trigger { height: 24px !important; width: 24px !important; padding: 0 !important; }
+  .pp-dropdown { height: 26px !important; font-size: 11px !important;
+    .p-dropdown-label { font-size: 11px !important; padding: 3px 6px !important; }
+    .p-dropdown-trigger { width: 24px !important; }
+  }
+}
+
+// Purchase Line Table
+.pp-line-table-wrap {
+  flex: 1;
+  overflow: hidden;
+}
+
+// Totals
+.pp-totals {
+  background: var(--bg-white);
+  border-top: 2px solid var(--border-color);
+  padding: 5px 12px;
+  display: flex;
+  gap: 20px;
+  flex-shrink: 0;
+
+  .total-item {
+    font-size: 11px;
+    color: var(--text-dark);
+    strong { color: var(--text-dark); font-weight: 700; }
+    &.tax  strong { color: var(--accent-teal); }
+    &.sub  strong { color: var(--color-primary); }
+    &.net  strong { color: var(--accent-green); }
+  }
+}
+
+// Action Bar
+.pp-actions {
+  background: var(--row-alt);
+  border-top: 1px solid var(--border-color);
+  padding: 5px 10px;
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+
+  .act-btn {
+    height: 26px !important;
+    font-size: 11px !important;
+    padding: 0 10px !important;
+    border-radius: 2px !important;
+    border: none !important;
+    font-weight: 600 !important;
+
+    .p-button-icon { font-size: 10px !important; margin-right: 4px !important; }
+
+    &.btn-save   { background: var(--accent-green)  !important; }
+    &.btn-add    { background: var(--accent-yellow)  !important; color: var(--text-dark) !important; }
+    &.btn-delete { background: var(--accent-red)     !important; }
+    &.btn-excel  { background: var(--accent-blue)    !important; }
+  }
+}
+
+// ─── RIGHT PANEL ──────────────────────────────────────────────────────────────
+.pp-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg-white);
+}
+
+// Search Bar (right)
+.pp-search-bar {
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+  background: var(--bg-white);
+
+  .search-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-label);
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .search-fields {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 4px;
+    flex-wrap: wrap;
+  }
+
+  .search-dates { margin-bottom: 0; }
+
+  .search-field {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-label);
+      white-space: nowrap;
+    }
+
+    .s-input {
+      height: 22px !important;
+      font-size: 11px !important;
+      border: 1px solid #bdbdbd !important;
+      border-radius: 2px !important;
+      padding: 0 5px !important;
+      width: 120px;
+      &-sm { width: 80px; }
+      &:focus { border-color: var(--input-focus-border) !important; }
+    }
+
+    .s-date-input {
+      height: 22px !important;
+      font-size: 11px !important;
+      width: 100px !important;
+    }
+  }
+}
+
+::ng-deep {
+  .s-calendar .p-inputtext  { height: 22px !important; font-size: 11px !important; }
+  .s-calendar .p-datepicker-trigger { height: 22px !important; width: 22px !important; padding: 0 !important; }
+}
+
+// Purchase Order Table
+.pp-order-table-wrap {
+  flex: 1;
+  overflow: hidden;
+}
+
+// ─── SHARED TABLE STYLES ──────────────────────────────────────────────────────
+::ng-deep .pp-table {
+
+  .p-datatable-thead > tr > th {
+    background: var(--table-header-bg) !important;
+    color: var(--table-header-text) !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    padding: 6px 8px !important;
+    border: none !important;
+    border-right: 1px solid rgba(255,255,255,0.2) !important;
+    white-space: nowrap;
+    &:last-child { border-right: none !important; }
+  }
+
+  .p-datatable-tbody > tr {
+    cursor: pointer;
+    > td {
+      font-size: 11px !important;
+      padding: 4px 8px !important;
+      border-bottom: 1px solid var(--border-color) !important;
+      border-right: none !important;
+      color: var(--text-dark);
+      white-space: nowrap;
+    }
+    &:nth-child(even) { background: var(--row-alt); }
+    &:hover > td     { background: var(--row-hover) !important; }
+    &.row-sel > td   { background: var(--row-selected) !important; font-weight: 600; }
+    &.p-highlight > td {
+      background: var(--row-selected) !important;
+      color: var(--text-dark) !important;
+    }
+  }
+
+  // Scrollbar
+  .p-datatable-scrollable-body::-webkit-scrollbar { width: 5px; }
+  .p-datatable-scrollable-body::-webkit-scrollbar-track { background: #f5f5f5; }
+  .p-datatable-scrollable-body::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 3px; }
+}
+
+// Column widths – Purchase Lines
+.th-rowno    { width: 46px !important; text-align: center !important; }
+.th-product  { min-width: 160px !important; }
+.th-unit     { width: 70px !important; }
+.th-qty      { width: 70px !important; text-align: right !important; }
+.th-price    { width: 60px !important; text-align: right !important; }
+.th-gst      { width: 55px !important; text-align: right !important; }
+.th-amount   { width: 80px !important; text-align: right !important; }
+.th-acts     { width: 54px !important; }
+
+// Column widths – Purchase Orders
+.th-code     { width: 90px !important; }
+.th-date     { width: 100px !important; }
+.th-orderno  { width: 70px !important; }
+.th-supplier { min-width: 120px !important; }
+.th-totqty   { width: 80px !important; text-align: right !important; }
+.th-totamt   { width: 90px !important; text-align: right !important; }
+
+.td-center { text-align: center !important; }
+.td-right  { text-align: right !important; }
+
+// Icon Buttons
+.td-acts {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  justify-content: flex-end;
+}
+
+.icon-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 2px;
+  line-height: 1;
+  transition: background 0.12s;
+
+  i { font-size: 11px; }
+
+  &.add-btn  { color: var(--accent-green);  &:hover { background: #e8f5e9; } }
+  &.del-btn  { color: var(--accent-red);    &:hover { background: #ffebee; } }
+  &.view-btn { color: var(--accent-blue);   &:hover { background: #e3f2fd; } }
+}
+
+// ─── SEARCH PRODUCT DIALOG ────────────────────────────────────────────────────
+::ng-deep .search-product-dialog {
+  .p-dialog-header {
+    background: var(--bg-white) !important;
+    border-bottom: 1px solid var(--border-color) !important;
+    padding: 10px 14px !important;
+    .p-dialog-title { font-size: 13px !important; font-weight: 700 !important; color: var(--text-dark) !important; }
+  }
+  .p-dialog-content { padding: 12px 14px !important; }
+  .p-dialog-footer  { padding: 8px 14px !important; border-top: 1px solid var(--border-color) !important; }
+}
+
+.sp-search-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.sp-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+
+  label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-label);
+    white-space: nowrap;
+  }
+
+  .sp-input {
+    height: 24px !important;
+    font-size: 11px !important;
+    border: 1px solid var(--input-border) !important;
+    border-radius: 2px !important;
+    padding: 0 6px !important;
+    &:focus { border-color: var(--input-focus-border) !important; }
+    &.sp-desc  { width: 160px; }
+    &.sp-tamil { width: 160px; color: var(--text-muted); }
+  }
+}
+
+.sp-table-wrap {
+  max-height: 260px;
+  overflow: hidden;
+}
+
+::ng-deep .sp-table {
+  .p-datatable-thead > tr > th { font-size: 11px !important; padding: 5px 7px !important; }
+  .p-datatable-tbody > tr > td { font-size: 11px !important; padding: 3px 7px !important; }
+}
+
+.sp-th-no   { width: 36px !important; text-align: center !important; }
+.sp-th-name { width: 100px !important; }
+.sp-th-desc { min-width: 130px !important; }
+.sp-th-qty  { width: 70px !important; text-align: right !important; }
+.sp-th-gst  { width: 50px !important; text-align: right !important; }
+.sp-th-unit { width: 60px !important; }
+
+.sp-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+
+  .btn-ok {
+    background: var(--accent-green) !important; border: none !important;
+    font-size: 11px !important; height: 26px !important;
+    padding: 0 12px !important; border-radius: 2px !important;
+  }
+  .btn-cancel {
+    background: var(--accent-gray) !important; border: none !important;
+    font-size: 11px !important; height: 26px !important;
+    padding: 0 12px !important; border-radius: 2px !important;
+  }
+}

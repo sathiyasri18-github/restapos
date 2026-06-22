@@ -1,0 +1,291 @@
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<div class="adj-wrapper">
+
+  <div class="adj-toolbar">
+    <div class="toolbar-left">
+      <i class="pi pi-sliders-h toolbar-icon"></i>
+      <span class="toolbar-title">Adjustment</span>
+      <span class="record-badge" [class.has-filter]="hasActiveFilters">
+        {{ filteredAdjustments.length }}
+        @if (hasActiveFilters) { / {{ adjustments.length }} }
+      </span>
+    </div>
+
+    <div class="toolbar-actions">
+      <button pButton type="button" icon="pi pi-plus" label="Add"
+        class="toolbar-btn btn-add"
+        pTooltip="Add new adjustment" tooltipPosition="bottom"
+        (click)="openAddDialog()">
+      </button>
+
+      <button pButton type="button" icon="pi pi-pencil" label="Edit"
+        class="toolbar-btn btn-edit"
+        pTooltip="Edit selected adjustment" tooltipPosition="bottom"
+        [disabled]="!selectedAdjustment"
+        (click)="onEditSelected()">
+      </button>
+
+      <button pButton type="button" icon="pi pi-trash" label="Delete"
+        class="toolbar-btn btn-delete"
+        pTooltip="Delete selected adjustment" tooltipPosition="bottom"
+        [disabled]="!selectedAdjustment"
+        (click)="onDeleteSelected($event)">
+      </button>
+
+      <div class="toolbar-sep"></div>
+
+      <app-grid-report-toolbar [config]="adjustmentReportConfig" [disabled]="isLoading" />
+    </div>
+  </div>
+
+  <div class="search-bar">
+    <span class="search-label">
+      <i class="pi pi-search"></i>
+      Search
+    </span>
+    <div class="search-fields">
+      <div class="search-field">
+        <label for="adj-search">Reference No / Note</label>
+        <input id="adj-search" pInputText type="text"
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="onSearchChange()"
+          placeholder="Search adjustments…" />
+      </div>
+
+      @if (hasActiveFilters) {
+        <button class="clear-btn" (click)="onClearSearch()">
+          <i class="pi pi-filter-slash"></i>
+          Clear
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="table-container">
+    <p-table
+      [value]="filteredAdjustments"
+      selectionMode="single"
+      [(selection)]="selectedAdjustment"
+      dataKey="adjustmentId"
+      [scrollable]="true"
+      scrollHeight="flex"
+      [loading]="isLoading"
+      [sortField]="'referenceNo'"
+      [sortOrder]="1"
+      [paginator]="true"
+      [rows]="20"
+      [rowsPerPageOptions]="[10, 20, 50, 100]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Showing {first}–{last} of {totalRecords}"
+      styleClass="adj-table"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th class="col-index">#</th>
+          <th class="col-reference" pSortableColumn="referenceNo">
+            Reference No <p-sortIcon field="referenceNo" />
+          </th>
+          <th class="col-warehouse" pSortableColumn="warehouseId">
+            Warehouse ID <p-sortIcon field="warehouseId" />
+          </th>
+          <th class="col-total-qty" pSortableColumn="totalQty">
+            Total Qty <p-sortIcon field="totalQty" />
+          </th>
+          <th class="col-items" pSortableColumn="item">
+            Items <p-sortIcon field="item" />
+          </th>
+          <th class="col-actions" pFrozenColumn alignFrozen="right">Actions</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-adj let-rowIndex="rowIndex">
+        <tr
+          [pSelectableRow]="adj"
+          [class.row-selected]="selectedAdjustment?.adjustmentId === adj.adjustmentId"
+          (dblclick)="openEditDialog(adj)"
+        >
+          <td class="col-index">
+            @if (selectedAdjustment?.adjustmentId === adj.adjustmentId) {
+              <i class="pi pi-caret-right row-indicator"></i>
+            } @else {
+              <span class="row-number">{{ rowIndex + 1 }}</span>
+            }
+          </td>
+          <td class="col-reference">
+            <span class="name-cell">{{ adj.referenceNo }}</span>
+          </td>
+          <td class="col-warehouse muted-cell">{{ adj.warehouseId || '—' }}</td>
+          <td class="col-total-qty muted-cell">{{ adj.totalQty }}</td>
+          <td class="col-items muted-cell">{{ adj.item }}</td>
+          <td class="col-actions" pFrozenColumn alignFrozen="right">
+            <div class="action-btns">
+              <button class="icon-btn edit-icon"
+                (click)="openEditDialog(adj); $event.stopPropagation()"
+                pTooltip="Edit" tooltipPosition="left">
+                <i class="pi pi-pencil"></i>
+              </button>
+              <button class="icon-btn delete-icon"
+                (click)="confirmDelete(adj, $event)"
+                pTooltip="Delete" tooltipPosition="left">
+                <i class="pi pi-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6">
+            <div class="empty-state">
+              <i class="pi pi-sliders-h empty-icon"></i>
+              @if (hasActiveFilters) {
+                <p class="empty-title">No adjustments found</p>
+                <p class="empty-sub">No adjustments match your search criteria.</p>
+                <button pButton type="button" icon="pi pi-filter-slash"
+                  label="Clear Search" class="p-button-outlined p-button-sm"
+                  (click)="onClearSearch()">
+                </button>
+              } @else {
+                <p class="empty-title">No adjustments yet</p>
+                <p class="empty-sub">Get started by adding your first adjustment.</p>
+                <button pButton type="button" icon="pi pi-plus"
+                  label="Add Adjustment" class="p-button-sm btn-add"
+                  (click)="openAddDialog()">
+                </button>
+              }
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="loadingbody">
+        @for (i of [1,2,3,4,5,6,7]; track i) {
+          <tr>
+            <td class="col-index"><p-skeleton width="24px" height="14px" /></td>
+            <td class="col-reference"><p-skeleton height="14px" /></td>
+            <td class="col-warehouse"><p-skeleton height="14px" /></td>
+            <td class="col-total-qty"><p-skeleton height="14px" /></td>
+            <td class="col-items"><p-skeleton height="14px" /></td>
+            <td class="col-actions"><p-skeleton width="60px" height="14px" /></td>
+          </tr>
+        }
+      </ng-template>
+    </p-table>
+  </div>
+
+  <div class="status-bar">
+    <span class="record-count">
+      Showing <strong>{{ filteredAdjustments.length }}</strong> of <strong>{{ adjustments.length }}</strong> adjustments
+    </span>
+    @if (selectedAdjustment) {
+      <span class="selected-info">
+        <i class="pi pi-check-circle"></i>
+        Selected: <strong>{{ selectedAdjustment.referenceNo }}</strong>
+      </span>
+    }
+    <span class="hint-text">Double-click a row to edit</span>
+  </div>
+
+</div>
+
+<p-dialog
+  [header]="dialogTitle"
+  [(visible)]="dialogVisible"
+  [modal]="true"
+  [style]="{ width: '640px' }"
+  [closable]="true"
+  [draggable]="true"
+  styleClass="adj-dialog"
+  (onHide)="onDialogHide()"
+>
+  <div class="dialog-form">
+
+    <div class="form-section">
+      <div class="section-title">
+        <i class="pi pi-sliders-h"></i>
+        Adjustment Information
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-field" [class.has-error]="formErrors.referenceNo">
+          <label>Reference No <span class="required">*</span></label>
+          <input pInputText type="text"
+            [(ngModel)]="formData.referenceNo"
+            (ngModelChange)="formErrors.referenceNo = undefined"
+            placeholder="Reference number"
+            [class.input-error]="formErrors.referenceNo" />
+          @if (formErrors.referenceNo) {
+            <span class="field-error">
+              <i class="pi pi-exclamation-circle"></i> {{ formErrors.referenceNo }}
+            </span>
+          }
+        </div>
+
+        <div class="form-field" [class.has-error]="formErrors.warehouseId">
+          <label>Warehouse ID <span class="required">*</span></label>
+          <input pInputText type="number"
+            [(ngModel)]="formData.warehouseId"
+            (ngModelChange)="formErrors.warehouseId = undefined"
+            placeholder="Warehouse ID"
+            min="1"
+            [class.input-error]="formErrors.warehouseId" />
+          @if (formErrors.warehouseId) {
+            <span class="field-error">
+              <i class="pi pi-exclamation-circle"></i> {{ formErrors.warehouseId }}
+            </span>
+          }
+        </div>
+
+        <div class="form-field">
+          <label>Document</label>
+          <input pInputText type="text"
+            [(ngModel)]="formData.document"
+            placeholder="Document reference" />
+        </div>
+
+        <div class="form-field">
+          <label>Total Qty</label>
+          <input pInputText type="number"
+            [(ngModel)]="formData.totalQty"
+            placeholder="Total quantity"
+            min="0" />
+        </div>
+
+        <div class="form-field">
+          <label>Items</label>
+          <input pInputText type="number"
+            [(ngModel)]="formData.item"
+            placeholder="Item count"
+            min="0" />
+        </div>
+
+        <div class="form-field full-span">
+          <label>Note</label>
+          <textarea pInputTextarea
+            [(ngModel)]="formData.note"
+            rows="3"
+            placeholder="Additional notes…">
+          </textarea>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button pButton type="button" icon="pi pi-times" label="Cancel"
+        class="p-button-outlined btn-cancel"
+        (click)="dialogVisible = false">
+      </button>
+      <button pButton type="button" icon="pi pi-check" label="Save"
+        class="btn-ok"
+        [loading]="isSaving"
+        (click)="onSave()">
+      </button>
+    </div>
+  </ng-template>
+</p-dialog>

@@ -1,0 +1,62 @@
+<header class="topbar">
+
+  <div class="topbar-left">
+    <button type="button" class="icon-btn menu-btn" (click)="layout.toggleSidebar()" title="Toggle menu">
+      <i class="pi pi-bars"></i>
+    </button>
+  </div>
+
+  <div class="topbar-right">
+
+    <button type="button" class="icon-btn" title="Quick add">
+      <i class="pi pi-plus"></i>
+    </button>
+
+    <button type="button" class="pos-btn" title="Point of Sale" routerLink="/pos">
+      <i class="pi pi-shopping-bag"></i>
+      <span>POS</span>
+    </button>
+
+    <button type="button" class="icon-btn" (click)="togglePicker()" title="Theme">
+      <i class="pi pi-sun"></i>
+    </button>
+
+    @if (pickerOpen()) {
+      <div class="theme-dropdown">
+        @for (t of themes; track t.key) {
+          <button
+            type="button"
+            class="theme-option"
+            [class.active]="themeService.activeTheme() === t.key"
+            (click)="selectTheme(t.key)">
+            {{ t.name }}
+          </button>
+        }
+      </div>
+    }
+
+    <button type="button" class="icon-btn" (click)="toggleFullscreen()" title="Fullscreen">
+      <i class="pi" [ngClass]="isFullscreen() ? 'pi-window-minimize' : 'pi-expand'"></i>
+    </button>
+
+    <button type="button" class="icon-btn" title="Notifications">
+      <i class="pi pi-bell"></i>
+    </button>
+
+    <button type="button" class="icon-btn" title="Language">
+      <i class="pi pi-globe"></i>
+    </button>
+
+    <div class="profile-section">
+      <div class="profile-avatar">
+        <i class="pi pi-user"></i>
+      </div>
+      <span class="profile-name">{{ auth.getUser()?.displayName ?? 'Staff' }}</span>
+      <button type="button" class="profile-menu-btn" (click)="logout()" title="Sign out">
+        <i class="pi pi-sign-out"></i>
+      </button>
+    </div>
+
+  </div>
+
+</header>

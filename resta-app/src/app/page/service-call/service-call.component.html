@@ -1,0 +1,547 @@
+<!-- service-call.component.html -->
+
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<div class="sc-wrapper">
+
+  <div class="sc-toolbar">
+    <div class="toolbar-left">
+      <i class="pi pi-wrench toolbar-icon"></i>
+      <span class="toolbar-title">Service Call</span>
+      <span class="record-badge" [class.has-filter]="hasActiveFilters">
+        {{ serviceCalls.length }}
+        @if (hasActiveFilters) { / {{ totalRecords }} }
+      </span>
+    </div>
+
+    <div class="toolbar-actions">
+      <button pButton type="button" icon="pi pi-plus" label="Add"
+        class="toolbar-btn btn-add" pTooltip="Add service call" tooltipPosition="bottom"
+        (click)="openAddDialog()"></button>
+
+      <button pButton type="button" icon="pi pi-pencil" label="Edit"
+        class="toolbar-btn btn-edit" pTooltip="Edit selected" tooltipPosition="bottom"
+        [disabled]="!selectedServiceCall" (click)="onEditSelected()"></button>
+
+      <button pButton type="button" icon="pi pi-trash" label="Delete"
+        class="toolbar-btn btn-delete" pTooltip="Delete selected" tooltipPosition="bottom"
+        [disabled]="!selectedServiceCall" (click)="onDeleteSelected($event)"></button>
+
+      <div class="toolbar-sep"></div>
+
+      <button pButton type="button" icon="pi pi-chart-bar" label="Dashboard"
+        class="toolbar-btn btn-report" pTooltip="Open service call dashboard" tooltipPosition="bottom"
+        (click)="goToDashboard()"></button>
+      <app-grid-report-toolbar [config]="serviceCallReportConfig" [disabled]="isLoading" />
+    </div>
+  </div>
+
+  <div class="search-bar">
+    <span class="search-label"><i class="pi pi-search"></i> Search</span>
+    <div class="search-fields">
+      <div class="search-field">
+        <label for="sc-search">Customer / Problem</label>
+        <input id="sc-search" pInputText type="text"
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="onSearchChange()"
+          placeholder="Search service calls…" />
+      </div>
+
+      <div class="search-field">
+        <label for="sc-status-filter">Status</label>
+        <p-select
+          inputId="sc-status-filter"
+          [options]="statusFilterOptions"
+          optionLabel="label"
+          optionValue="value"
+          [(ngModel)]="statusFilter"
+          (ngModelChange)="onFilterChange()"
+          placeholder="All"
+          [showClear]="true"
+          styleClass="filter-select" />
+      </div>
+
+      @if (hasActiveFilters) {
+        <button class="clear-btn" (click)="onClearSearch()">
+          <i class="pi pi-filter-slash"></i> Clear
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="table-container">
+    <p-table
+      [value]="serviceCalls"
+      selectionMode="single"
+      [(selection)]="selectedServiceCall"
+      dataKey="serviceCallId"
+      [scrollable]="true"
+      scrollHeight="flex"
+      [loading]="isLoading || lookupsLoading"
+      [sortField]="'serviceDate'"
+      [sortOrder]="-1"
+      [paginator]="true"
+      [rows]="20"
+      [rowsPerPageOptions]="[10, 20, 50, 100]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Showing {first}–{last} of {totalRecords}"
+      styleClass="sc-table"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th class="col-index">#</th>
+          <th class="col-date" pSortableColumn="serviceDate">
+            Service Date <p-sortIcon field="serviceDate" />
+          </th>
+          <th class="col-customer">Customer</th>
+          <th class="col-type">Service Type</th>
+          <th class="col-problem">Problem</th>
+          <th class="col-action">Action Taken</th>
+          <th class="col-due">Due Date</th>
+          <th class="col-completed">Completed</th>
+          <th class="col-status" pSortableColumn="statusId">
+            Status <p-sortIcon field="statusId" />
+          </th>
+          <th class="col-priority">Priority</th>
+          <th class="col-engineer">Engineer</th>
+          <th class="col-actions">Actions</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-sc let-rowIndex="rowIndex">
+        <tr
+          [pSelectableRow]="sc"
+          [class.row-selected]="selectedServiceCall?.serviceCallId === sc.serviceCallId"
+          (dblclick)="openEditDialog(sc)"
+        >
+          <td class="col-index">
+            @if (selectedServiceCall?.serviceCallId === sc.serviceCallId) {
+              <i class="pi pi-caret-right row-indicator"></i>
+            } @else {
+              <span class="row-number">{{ rowIndex + 1 }}</span>
+            }
+          </td>
+          <td class="col-date muted-cell">{{ formatDate(sc.serviceDate) }}</td>
+          <td class="col-customer"><span class="name-cell">{{ getCustomerName(sc.customerId) }}</span></td>
+          <td class="col-type muted-cell">{{ getServiceTypeName(sc.serviceTypeId) }}</td>
+          <td class="col-problem problem-cell" [pTooltip]="sc.problemReport" tooltipPosition="top">
+            {{ sc.problemReport || '—' }}
+          </td>
+          <td class="col-action muted-cell">{{ getActionTakenName(sc.actionTakenId) }}</td>
+          <td class="col-due muted-cell">{{ formatDate(sc.dueDate) }}</td>
+          <td class="col-completed muted-cell">{{ formatDate(sc.completedDate) }}</td>
+          <td class="col-status">
+            <span class="status-badge" [ngClass]="getStatusClass(sc.statusId)">{{ getStatusName(sc.statusId) }}</span>
+          </td>
+          <td class="col-priority muted-cell">{{ getPriorityName(sc.priorityId) }}</td>
+          <td class="col-engineer muted-cell">{{ getEmployeeName(sc.assignedEngineerId) }}</td>
+          <td class="col-actions">
+            <div class="action-btns">
+              <button class="icon-btn edit-icon"
+                (click)="openEditDialog(sc); $event.stopPropagation()"
+                pTooltip="Edit" tooltipPosition="left">
+                <i class="pi pi-pencil"></i>
+              </button>
+              <button class="icon-btn delete-icon"
+                (click)="confirmDelete(sc, $event)"
+                pTooltip="Delete" tooltipPosition="left">
+                <i class="pi pi-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="12">
+            <div class="empty-state">
+              <i class="pi pi-wrench empty-icon"></i>
+              @if (hasActiveFilters) {
+                <p class="empty-title">No service calls found</p>
+                <button pButton type="button" icon="pi pi-filter-slash"
+                  label="Clear Filters" class="p-button-outlined p-button-sm"
+                  (click)="onClearSearch()"></button>
+              } @else {
+                <p class="empty-title">No service calls yet</p>
+                <button pButton type="button" icon="pi pi-plus"
+                  label="Add Service Call" class="p-button-sm btn-add"
+                  (click)="openAddDialog()"></button>
+              }
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="loadingbody">
+        @for (i of [1,2,3,4,5,6]; track i) {
+          <tr>
+            <td class="col-index"><p-skeleton width="24px" height="14px" /></td>
+            <td class="col-date"><p-skeleton height="14px" /></td>
+            <td class="col-customer"><p-skeleton height="14px" /></td>
+            <td class="col-type"><p-skeleton height="14px" /></td>
+            <td class="col-problem"><p-skeleton height="14px" /></td>
+            <td class="col-action"><p-skeleton height="14px" /></td>
+            <td class="col-due"><p-skeleton height="14px" /></td>
+            <td class="col-completed"><p-skeleton height="14px" /></td>
+            <td class="col-status"><p-skeleton width="64px" height="20px" borderRadius="10px" /></td>
+            <td class="col-priority"><p-skeleton height="14px" /></td>
+            <td class="col-engineer"><p-skeleton height="14px" /></td>
+            <td class="col-actions"><p-skeleton width="60px" height="14px" /></td>
+          </tr>
+        }
+      </ng-template>
+    </p-table>
+  </div>
+
+  <div class="status-bar">
+    <span class="record-count"><strong>{{ serviceCalls.length }}</strong> service calls</span>
+    @if (selectedServiceCall) {
+      <span class="selected-info">
+        <i class="pi pi-check-circle"></i>
+        Call #<strong>{{ selectedServiceCall.serviceCallId }}</strong>
+      </span>
+    }
+    <span class="hint-text">Double-click a row to edit</span>
+  </div>
+
+</div>
+
+<p-dialog
+  [header]="dialogTitle"
+  [(visible)]="dialogVisible"
+  [modal]="true"
+  [style]="{ width: '760px', maxHeight: '92vh' }"
+  [contentStyle]="{ overflowY: 'auto' }"
+  [closable]="true"
+  [draggable]="true"
+  styleClass="sc-dialog"
+  (onHide)="onDialogHide()"
+>
+  <div class="dialog-form">
+    <div class="form-section">
+      <div class="section-title"><i class="pi pi-info-circle"></i> Call Details</div>
+      <div class="form-grid-2">
+        <div class="form-field" [class.has-error]="formErrors.customerId">
+          <label>Customer <span class="required">*</span></label>
+          <p-select
+            [options]="customerOptions"
+            optionLabel="label"
+            optionValue="value"
+            [(ngModel)]="formData.customerId"
+            (ngModelChange)="formErrors.customerId = undefined"
+            placeholder="Select customer"
+            [filter]="true"
+            filterBy="label"
+            filterPlaceholder="Search…"
+            appendTo="body">
+            <ng-template #filter let-options="options">
+              <div class="select-filter-row">
+                <i class="pi pi-search select-filter-icon"></i>
+                <input type="text" class="select-filter-input"
+                  (input)="options.filter($event)" (click)="$event.stopPropagation()"
+                  placeholder="Search…" />
+                <button type="button" class="select-filter-add-btn"
+                  (click)="openLookupAdd('customer', $event)"
+                  pTooltip="Add customer" tooltipPosition="top">
+                  <i class="pi pi-plus"></i>
+                </button>
+              </div>
+            </ng-template>
+          </p-select>
+          @if (formErrors.customerId) {
+            <span class="field-error"><i class="pi pi-exclamation-circle"></i> {{ formErrors.customerId }}</span>
+          }
+        </div>
+
+        <div class="form-field" [class.has-error]="formErrors.serviceTypeId">
+          <label>Service Type <span class="required">*</span></label>
+          <p-select
+            [options]="serviceTypeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [(ngModel)]="formData.serviceTypeId"
+            (ngModelChange)="formErrors.serviceTypeId = undefined"
+            placeholder="Select type"
+            [filter]="true"
+            filterBy="label"
+            filterPlaceholder="Search…"
+            appendTo="body">
+            <ng-template #filter let-options="options">
+              <div class="select-filter-row">
+                <i class="pi pi-search select-filter-icon"></i>
+                <input type="text" class="select-filter-input"
+                  (input)="options.filter($event)" (click)="$event.stopPropagation()"
+                  placeholder="Search…" />
+                <button type="button" class="select-filter-add-btn"
+                  (click)="openLookupAdd('serviceType', $event)"
+                  pTooltip="Add service type" tooltipPosition="top">
+                  <i class="pi pi-plus"></i>
+                </button>
+              </div>
+            </ng-template>
+          </p-select>
+          @if (formErrors.serviceTypeId) {
+            <span class="field-error"><i class="pi pi-exclamation-circle"></i> {{ formErrors.serviceTypeId }}</span>
+          }
+        </div>
+
+        <div class="form-field" [class.has-error]="formErrors.serviceDate">
+          <label>Service Date <span class="required">*</span></label>
+          <p-datepicker
+            [(ngModel)]="formData.serviceDate"
+            (ngModelChange)="formErrors.serviceDate = undefined"
+            dateFormat="dd/mm/yy"
+            appendTo="body"
+            placeholder="DD/MM/YYYY" />
+          @if (formErrors.serviceDate) {
+            <span class="field-error"><i class="pi pi-exclamation-circle"></i> {{ formErrors.serviceDate }}</span>
+          }
+        </div>
+
+        <div class="form-field">
+          <label>Due Date</label>
+          <p-datepicker
+            [(ngModel)]="formData.dueDate"
+            dateFormat="dd/mm/yy"
+            appendTo="body"
+            placeholder="DD/MM/YYYY" />
+        </div>
+
+        @if (isEditMode) {
+          <div class="form-field">
+            <label>Completed Date</label>
+            <p-datepicker
+              [(ngModel)]="formData.completedDate"
+              dateFormat="dd/mm/yy"
+              appendTo="body"
+              placeholder="DD/MM/YYYY" />
+          </div>
+        }
+
+        <div class="form-field" [class.has-error]="formErrors.statusId">
+          <label>Status <span class="required">*</span></label>
+          <p-select
+            [options]="statusOptions"
+            optionLabel="label"
+            optionValue="value"
+            [(ngModel)]="formData.statusId"
+            (ngModelChange)="formErrors.statusId = undefined"
+            placeholder="Select status"
+            [filter]="true"
+            filterBy="label"
+            filterPlaceholder="Search…"
+            appendTo="body">
+            <ng-template #filter let-options="options">
+              <div class="select-filter-row">
+                <i class="pi pi-search select-filter-icon"></i>
+                <input type="text" class="select-filter-input"
+                  (input)="options.filter($event)" (click)="$event.stopPropagation()"
+                  placeholder="Search…" />
+                <button type="button" class="select-filter-add-btn"
+                  (click)="openLookupAdd('status', $event)"
+                  pTooltip="Add status" tooltipPosition="top">
+                  <i class="pi pi-plus"></i>
+                </button>
+              </div>
+            </ng-template>
+          </p-select>
+          @if (formErrors.statusId) {
+            <span class="field-error"><i class="pi pi-exclamation-circle"></i> {{ formErrors.statusId }}</span>
+          }
+        </div>
+
+        <div class="form-field">
+          <label>Priority</label>
+          <p-select
+            [options]="priorityOptions"
+            optionLabel="label"
+            optionValue="value"
+            [(ngModel)]="formData.priorityId"
+            placeholder="Select priority"
+            [showClear]="true"
+            [filter]="true"
+            filterBy="label"
+            filterPlaceholder="Search…"
+            appendTo="body">
+            <ng-template #filter let-options="options">
+              <div class="select-filter-row">
+                <i class="pi pi-search select-filter-icon"></i>
+                <input type="text" class="select-filter-input"
+                  (input)="options.filter($event)" (click)="$event.stopPropagation()"
+                  placeholder="Search…" />
+                <button type="button" class="select-filter-add-btn"
+                  (click)="openLookupAdd('priority', $event)"
+                  pTooltip="Add priority" tooltipPosition="top">
+                  <i class="pi pi-plus"></i>
+                </button>
+              </div>
+            </ng-template>
+          </p-select>
+        </div>
+
+        <div class="form-field">
+          <label>Action Taken</label>
+          <p-select
+            [options]="actionTakenOptions"
+            optionLabel="label"
+            optionValue="value"
+            [(ngModel)]="formData.actionTakenId"
+            placeholder="Select action"
+            [showClear]="true"
+            [filter]="true"
+            filterBy="label"
+            filterPlaceholder="Search…"
+            appendTo="body">
+            <ng-template #filter let-options="options">
+              <div class="select-filter-row">
+                <i class="pi pi-search select-filter-icon"></i>
+                <input type="text" class="select-filter-input"
+                  (input)="options.filter($event)" (click)="$event.stopPropagation()"
+                  placeholder="Search…" />
+                <button type="button" class="select-filter-add-btn"
+                  (click)="openLookupAdd('actionTaken', $event)"
+                  pTooltip="Add action taken" tooltipPosition="top">
+                  <i class="pi pi-plus"></i>
+                </button>
+              </div>
+            </ng-template>
+          </p-select>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="section-title"><i class="pi pi-users"></i> Engineers</div>
+      <div class="form-grid-2">
+        <div class="form-field">
+          <label>Assigned Engineer</label>
+          <p-select
+            [options]="employeeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [(ngModel)]="formData.assignedEngineerId"
+            placeholder="Select engineer"
+            [showClear]="true"
+            [filter]="true"
+            filterBy="label"
+            filterPlaceholder="Search…"
+            appendTo="body">
+            <ng-template #filter let-options="options">
+              <div class="select-filter-row">
+                <i class="pi pi-search select-filter-icon"></i>
+                <input type="text" class="select-filter-input"
+                  (input)="options.filter($event)" (click)="$event.stopPropagation()"
+                  placeholder="Search…" />
+                <button type="button" class="select-filter-add-btn"
+                  (click)="openLookupAdd('engineer', $event, 'assigned')"
+                  pTooltip="Add engineer" tooltipPosition="top">
+                  <i class="pi pi-plus"></i>
+                </button>
+              </div>
+            </ng-template>
+          </p-select>
+        </div>
+        <div class="form-field">
+          <label>Chief Engineer</label>
+          <p-select
+            [options]="employeeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [(ngModel)]="formData.chiefEngineerId"
+            placeholder="Select engineer"
+            [showClear]="true"
+            [filter]="true"
+            filterBy="label"
+            filterPlaceholder="Search…"
+            appendTo="body">
+            <ng-template #filter let-options="options">
+              <div class="select-filter-row">
+                <i class="pi pi-search select-filter-icon"></i>
+                <input type="text" class="select-filter-input"
+                  (input)="options.filter($event)" (click)="$event.stopPropagation()"
+                  placeholder="Search…" />
+                <button type="button" class="select-filter-add-btn"
+                  (click)="openLookupAdd('engineer', $event, 'chief')"
+                  pTooltip="Add engineer" tooltipPosition="top">
+                  <i class="pi pi-plus"></i>
+                </button>
+              </div>
+            </ng-template>
+          </p-select>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="section-title"><i class="pi pi-file-edit"></i> Description</div>
+      <div class="form-grid-2">
+        <div class="form-field full-span" [class.has-error]="formErrors.problemReport">
+          <label>Problem Report <span class="required">*</span></label>
+          <textarea pInputTextarea
+            [(ngModel)]="formData.problemReport"
+            (ngModelChange)="formErrors.problemReport = undefined"
+            rows="3"
+            placeholder="Describe the problem…"></textarea>
+          @if (formErrors.problemReport) {
+            <span class="field-error"><i class="pi pi-exclamation-circle"></i> {{ formErrors.problemReport }}</span>
+          }
+        </div>
+        <div class="form-field full-span">
+          <label>Remarks</label>
+          <textarea pInputTextarea
+            [(ngModel)]="formData.remarks"
+            rows="2"
+            placeholder="Additional notes…"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button pButton type="button" icon="pi pi-times" label="Cancel"
+        class="p-button-outlined btn-cancel"
+        (click)="dialogVisible = false"></button>
+      <button pButton type="button" icon="pi pi-check" label="Save"
+        class="btn-ok" [loading]="isSaving" (click)="onSave()"></button>
+    </div>
+  </ng-template>
+</p-dialog>
+
+<p-dialog
+  [header]="lookupAddTitle"
+  [(visible)]="lookupAddVisible"
+  [modal]="true"
+  [style]="{ width: '400px' }"
+  [closable]="true"
+  [draggable]="true"
+  styleClass="sc-dialog lookup-add-dialog"
+  (onHide)="onLookupAddHide()"
+>
+  <div class="dialog-form">
+    <div class="form-section" style="border-bottom: none; padding-bottom: 0;">
+      <div class="form-field" [class.has-error]="lookupAddError">
+        <label>{{ lookupAddLabel }} <span class="required">*</span></label>
+        <input pInputText type="text"
+          [(ngModel)]="lookupAddName"
+          (ngModelChange)="lookupAddError = ''"
+          [placeholder]="'Enter ' + lookupAddLabel.toLowerCase()"
+          (keyup.enter)="onLookupAddSave()" />
+        @if (lookupAddError) {
+          <span class="field-error"><i class="pi pi-exclamation-circle"></i> {{ lookupAddError }}</span>
+        }
+      </div>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button pButton type="button" icon="pi pi-times" label="Cancel"
+        class="p-button-outlined btn-cancel"
+        (click)="lookupAddVisible = false"></button>
+      <button pButton type="button" icon="pi pi-check" label="Save"
+        class="btn-ok" [loading]="lookupAddSaving" (click)="onLookupAddSave()"></button>
+    </div>
+  </ng-template>
+</p-dialog>

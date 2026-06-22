@@ -1,0 +1,180 @@
+<p-toast position="top-right" />
+
+<div class="dash-wrapper">
+
+  <div class="dash-toolbar">
+    <div class="toolbar-left">
+      <i class="pi pi-chart-bar toolbar-icon"></i>
+      <span class="toolbar-title">Service Call Dashboard</span>
+      <span class="record-badge">{{ totalCalls }} calls</span>
+    </div>
+    <div class="toolbar-actions">
+      <button pButton type="button" icon="pi pi-wrench" label="Service Calls"
+        class="toolbar-btn btn-list" pTooltip="Open service call list" tooltipPosition="bottom"
+        (click)="goToServiceCalls()"></button>
+      <button pButton type="button" icon="pi pi-refresh" label="Refresh"
+        class="toolbar-btn btn-refresh" pTooltip="Reload dashboard" tooltipPosition="bottom"
+        [loading]="isLoading" (click)="loadDashboard()"></button>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <div class="search-field">
+      <label>From Date</label>
+      <p-datepicker
+        [(ngModel)]="fromDate"
+        (ngModelChange)="onDateChange()"
+        dateFormat="dd/mm/yy"
+        appendTo="body"
+        placeholder="From" />
+    </div>
+    <div class="search-field">
+      <label>To Date</label>
+      <p-datepicker
+        [(ngModel)]="toDate"
+        (ngModelChange)="onDateChange()"
+        dateFormat="dd/mm/yy"
+        appendTo="body"
+        placeholder="To" />
+    </div>
+  </div>
+
+  @if (isLoading && !charts) {
+    <div class="dashboard-grid dashboard-skeleton">
+      @for (i of [1,2,3,4,5]; track i) {
+        <div class="chart-card"><p-skeleton height="160px" /></div>
+      }
+    </div>
+  } @else if (charts) {
+    <div class="dashboard-grid">
+      <div class="chart-card">
+        <h4>Service Type</h4>
+        @if (charts.serviceType.length) {
+          @for (item of charts.serviceType; track item.label) {
+            <div class="chart-row">
+              <span class="chart-label">{{ item.label }}</span>
+              <div class="chart-bar-track">
+                <div class="chart-bar-fill type" [style.width.%]="getBarWidth(item, charts.serviceType)"></div>
+              </div>
+              <span class="chart-count">{{ item.count }}</span>
+            </div>
+          }
+        } @else { <p class="chart-empty">No data</p> }
+      </div>
+
+      <div class="chart-card">
+        <h4>Status</h4>
+        @if (charts.status.length) {
+          @for (item of charts.status; track item.label) {
+            <div class="chart-row">
+              <span class="chart-label">{{ item.label }}</span>
+              <div class="chart-bar-track">
+                <div class="chart-bar-fill status" [style.width.%]="getBarWidth(item, charts.status)"></div>
+              </div>
+              <span class="chart-count">{{ item.count }}</span>
+            </div>
+          }
+        } @else { <p class="chart-empty">No data</p> }
+      </div>
+
+      <div class="chart-card">
+        <h4>Priority</h4>
+        @if (charts.priority.length) {
+          @for (item of charts.priority; track item.label) {
+            <div class="chart-row">
+              <span class="chart-label">{{ item.label }}</span>
+              <div class="chart-bar-track">
+                <div class="chart-bar-fill priority" [style.width.%]="getBarWidth(item, charts.priority)"></div>
+              </div>
+              <span class="chart-count">{{ item.count }}</span>
+            </div>
+          }
+        } @else { <p class="chart-empty">No data</p> }
+      </div>
+
+      <div class="chart-card">
+        <h4>Action Taken</h4>
+        @if (charts.actionTaken.length) {
+          @for (item of charts.actionTaken; track item.label) {
+            <div class="chart-row">
+              <span class="chart-label">{{ item.label }}</span>
+              <div class="chart-bar-track">
+                <div class="chart-bar-fill action" [style.width.%]="getBarWidth(item, charts.actionTaken)"></div>
+              </div>
+              <span class="chart-count">{{ item.count }}</span>
+            </div>
+          }
+        } @else { <p class="chart-empty">No data</p> }
+      </div>
+
+      <div class="chart-card">
+        <h4>Assigned Engineer</h4>
+        @if (charts.assignedEngineer.length) {
+          @for (item of charts.assignedEngineer; track item.label) {
+            <div class="chart-row">
+              <span class="chart-label">{{ item.label }}</span>
+              <div class="chart-bar-track">
+                <div class="chart-bar-fill engineer" [style.width.%]="getBarWidth(item, charts.assignedEngineer)"></div>
+              </div>
+              <span class="chart-count">{{ item.count }}</span>
+            </div>
+          }
+        } @else { <p class="chart-empty">No data</p> }
+      </div>
+    </div>
+  }
+
+  <div class="table-container">
+    <p-table
+      [value]="serviceCalls"
+      selectionMode="single"
+      [(selection)]="selectedServiceCall"
+      dataKey="serviceCallId"
+      [scrollable]="true"
+      scrollHeight="flex"
+      [loading]="isLoading || lookupsLoading"
+      [sortField]="'serviceDate'"
+      [sortOrder]="-1"
+      [paginator]="true"
+      [rows]="20"
+      [rowsPerPageOptions]="[10, 20, 50, 100]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Showing {first}–{last} of {totalRecords}"
+      styleClass="dash-table"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th class="col-index">#</th>
+          <th pSortableColumn="serviceDate">Service Date <p-sortIcon field="serviceDate" /></th>
+          <th>Customer</th>
+          <th>Service Type</th>
+          <th>Problem</th>
+          <th>Action Taken</th>
+          <th pSortableColumn="statusId">Status <p-sortIcon field="statusId" /></th>
+          <th>Priority</th>
+          <th>Engineer</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-sc let-rowIndex="rowIndex">
+        <tr [pSelectableRow]="sc">
+          <td class="col-index">{{ rowIndex + 1 }}</td>
+          <td class="muted-cell">{{ formatDate(sc.serviceDate) }}</td>
+          <td>{{ getCustomerName(sc.customerId) }}</td>
+          <td class="muted-cell">{{ getServiceTypeName(sc.serviceTypeId) }}</td>
+          <td class="problem-cell">{{ sc.problemReport || '—' }}</td>
+          <td class="muted-cell">{{ getActionTakenName(sc.actionTakenId) }}</td>
+          <td>
+            <span class="status-badge" [ngClass]="getStatusClass(sc.statusId)">{{ getStatusName(sc.statusId) }}</span>
+          </td>
+          <td class="muted-cell">{{ getPriorityName(sc.priorityId) }}</td>
+          <td class="muted-cell">{{ getEmployeeName(sc.assignedEngineerId) }}</td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="9" class="empty-msg">No service calls in the selected date range.</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>

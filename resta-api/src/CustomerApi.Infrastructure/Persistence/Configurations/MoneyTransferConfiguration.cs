@@ -1,0 +1,21 @@
+using CustomerApi.Domain.Entities;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Builders;
+
+namespace CustomerApi.Infrastructure.Persistence.Configurations;
+
+public class MoneyTransferConfiguration : IEntityTypeConfiguration<MoneyTransfer>
+{
+    public void Configure(EntityTypeBuilder<MoneyTransfer> builder)
+    {
+        builder.ToTable("MoneyTransfer");
+        builder.HasKey(x => x.Id).HasName("PK_MoneyTransfer");
+        builder.Property(x => x.Id).UseIdentityColumn();
+        builder.Property(x => x.ReferenceNo).HasMaxLength(191);
+        builder.Property(x => x.ReferenceNo).IsRequired();
+        builder.Property(x => x.CreatedDate).HasDefaultValueSql("GETDATE()");
+        builder.Property(x => x.CreatedDate).HasAnnotation("Relational:DefaultConstraintName", "DF_MoneyTransfer_CreatedDate");
+        builder.Property(x => x.ModifiedDate).HasDefaultValueSql("GETDATE()");
+        builder.Property(x => x.ModifiedDate).HasAnnotation("Relational:DefaultConstraintName", "DF_MoneyTransfer_ModifiedDate");
+    }
+}

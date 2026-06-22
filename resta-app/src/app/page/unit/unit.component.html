@@ -1,0 +1,259 @@
+<!-- unit.component.html -->
+
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<div class="unit-wrapper">
+
+  <!-- ── Toolbar ─────────────────────────────────────────────────────────── -->
+  <div class="unit-toolbar">
+    <div class="toolbar-left">
+      <i class="pi pi-list toolbar-icon"></i>
+      <span class="toolbar-title">Unit</span>
+      <span class="record-badge" [class.has-filter]="hasActiveSearch">
+        {{ filteredUnits.length }}
+        @if (hasActiveSearch) { / {{ units.length }} }
+      </span>
+    </div>
+
+    <div class="toolbar-actions">
+      <button pButton type="button" icon="pi pi-plus" label="Add"
+        class="toolbar-btn btn-add"
+        pTooltip="Add new unit" tooltipPosition="bottom"
+        (click)="openAddDialog()">
+      </button>
+
+      <button pButton type="button" icon="pi pi-pencil" label="Edit"
+        class="toolbar-btn btn-edit"
+        pTooltip="Edit selected unit" tooltipPosition="bottom"
+        [disabled]="!selectedUnit"
+        (click)="onEditSelected()">
+      </button>
+
+      <button pButton type="button" icon="pi pi-trash" label="Delete"
+        class="toolbar-btn btn-delete"
+        pTooltip="Delete selected unit" tooltipPosition="bottom"
+        [disabled]="!selectedUnit"
+        (click)="onDeleteSelected($event)">
+      </button>
+
+      <div class="toolbar-sep"></div>
+
+      <app-grid-report-toolbar [config]="unitReportConfig" [disabled]="isLoading" />
+    </div>
+  </div>
+
+  <!-- ── Search Bar ──────────────────────────────────────────────────────── -->
+  <div class="search-bar">
+    <span class="search-label">
+      <i class="pi pi-search"></i>
+      Filter
+    </span>
+
+    <div class="search-fields">
+      <div class="search-field">
+        <label for="search-name">Name</label>
+        <input id="search-name" pInputText type="text"
+          [(ngModel)]="searchName"
+          (ngModelChange)="onSearch()"
+          placeholder="Search name…" />
+      </div>
+
+      <div class="search-field">
+        <label for="search-desc">Description</label>
+        <input id="search-desc" pInputText type="text"
+          [(ngModel)]="searchDescription"
+          (ngModelChange)="onSearch()"
+          placeholder="Search description…" />
+      </div>
+
+      @if (hasActiveSearch) {
+        <button class="clear-btn" (click)="onClearSearch()" title="Clear filters">
+          <i class="pi pi-filter-slash"></i>
+          Clear
+        </button>
+      }
+    </div>
+  </div>
+
+  <!-- ── Data Grid ───────────────────────────────────────────────────────── -->
+  <div class="table-container">
+    <p-table
+      [value]="filteredUnits"
+      selectionMode="single"
+      [(selection)]="selectedUnit"
+      dataKey="id"
+      [scrollable]="true"
+      scrollHeight="flex"
+      [loading]="isLoading"
+      [sortField]="'name'"
+      [sortOrder]="1"
+      styleClass="unit-table"
+    >
+      <!-- Header -->
+      <ng-template pTemplate="header">
+        <tr>
+          <th class="col-index">#</th>
+          <th class="col-name" pSortableColumn="name">
+            Name
+            <p-sortIcon field="name" />
+          </th>
+          <th class="col-description" pSortableColumn="description">
+            Description
+            <p-sortIcon field="description" />
+          </th>
+          <th class="col-actions">Actions</th>
+        </tr>
+      </ng-template>
+
+      <!-- Body -->
+      <ng-template pTemplate="body" let-unit let-rowIndex="rowIndex">
+        <tr
+          [pSelectableRow]="unit"
+          [class.row-selected]="selectedUnit?.id === unit?.id"
+          (dblclick)="openEditDialog(unit)"
+        >
+          <td class="col-index">
+            @if (selectedUnit?.id === unit?.id) {
+              <i class="pi pi-caret-right row-indicator"></i>
+            } @else {
+              <span class="row-number">{{ rowIndex + 1 }}</span>
+            }
+          </td>
+          <td class="col-name">{{ unit.name }}</td>
+          <td class="col-description">
+            <span class="desc-cell">{{ unit.description || '—' }}</span>
+          </td>
+          <td class="col-actions">
+            <div class="action-btns">
+              <button class="icon-btn edit-icon"
+                (click)="openEditDialog(unit); $event.stopPropagation()"
+                pTooltip="Edit" tooltipPosition="left">
+                <i class="pi pi-pencil"></i>
+              </button>
+              <button class="icon-btn delete-icon"
+                (click)="confirmDelete(unit, $event)"
+                pTooltip="Delete" tooltipPosition="left">
+                <i class="pi pi-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <!-- Empty State -->
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="4">
+            <div class="empty-state">
+              <i class="pi pi-inbox empty-icon"></i>
+              @if (hasActiveSearch) {
+                <p class="empty-title">No results found</p>
+                <p class="empty-sub">No units match your filter criteria.</p>
+                <button pButton type="button" icon="pi pi-filter-slash"
+                  label="Clear Filters" class="p-button-outlined p-button-sm"
+                  (click)="onClearSearch()">
+                </button>
+              } @else {
+                <p class="empty-title">No units yet</p>
+                <p class="empty-sub">Get started by adding your first unit.</p>
+                <button pButton type="button" icon="pi pi-plus"
+                  label="Add Unit" class="p-button-sm btn-add"
+                  (click)="openAddDialog()">
+                </button>
+              }
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <!-- Loading Skeleton -->
+      <ng-template pTemplate="loadingbody">
+        @for (i of [1,2,3,4,5,6]; track i) {
+          <tr>
+            <td class="col-index"><p-skeleton width="24px" height="14px" /></td>
+            <td class="col-name"><p-skeleton height="14px" /></td>
+            <td class="col-description"><p-skeleton height="14px" /></td>
+            <td class="col-actions"><p-skeleton width="60px" height="14px" /></td>
+          </tr>
+        }
+      </ng-template>
+    </p-table>
+  </div>
+
+  <!-- ── Status Bar ──────────────────────────────────────────────────────── -->
+  <div class="status-bar">
+    <span class="record-count">
+      Showing <strong>{{ filteredUnits.length }}</strong> of <strong>{{ units.length }}</strong> units
+    </span>
+    @if (selectedUnit) {
+      <span class="selected-info">
+        <i class="pi pi-check-circle"></i>
+        Selected: <strong>{{ selectedUnit.name }}</strong>
+      </span>
+    }
+    <span class="hint-text">Double-click a row to edit</span>
+  </div>
+
+</div>
+
+<!-- ── Add / Edit Dialog ─────────────────────────────────────────────────── -->
+<p-dialog
+  [header]="dialogTitle"
+  [(visible)]="dialogVisible"
+  [modal]="true"
+  [style]="{ width: '400px' }"
+  [closable]="true"
+  [draggable]="true"
+  styleClass="unit-dialog"
+  (onHide)="onDialogHide()"
+>
+  <div class="dialog-form">
+
+    <!-- Name -->
+    <div class="form-row" [class.has-error]="formErrors.name">
+      <label for="unit-name">
+        Name <span class="required">*</span>
+      </label>
+      <div class="field-wrap">
+        <input id="unit-name" pInputText type="text"
+          [(ngModel)]="formUnit.name"
+          (ngModelChange)="formErrors.name = undefined"
+          class="dialog-input"
+          placeholder="e.g. Kilogram, Litre, Piece"
+          [class.input-error]="formErrors.name" />
+        @if (formErrors.name) {
+          <span class="field-error">
+            <i class="pi pi-exclamation-circle"></i>
+            {{ formErrors.name }}
+          </span>
+        }
+      </div>
+    </div>
+
+    <!-- Description -->
+    <div class="form-row">
+      <label for="unit-desc">Description</label>
+      <textarea id="unit-desc" pInputTextarea
+        [(ngModel)]="formUnit.description"
+        class="dialog-textarea"
+        rows="3"
+        placeholder="Optional description…">
+      </textarea>
+    </div>
+
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button pButton type="button" icon="pi pi-times" label="Cancel"
+        class="p-button-sm p-button-outlined btn-cancel"
+        (click)="dialogVisible = false">
+      </button>
+      <button pButton type="button" icon="pi pi-check" label="Save"
+        class="p-button-sm btn-ok"
+        (click)="onSave()">
+      </button>
+    </div>
+  </ng-template>
+</p-dialog>

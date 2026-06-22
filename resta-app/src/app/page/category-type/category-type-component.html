@@ -1,0 +1,433 @@
+<!-- category-type-component.html -->
+
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<div class="ct-wrapper">
+
+  <div class="split-container">
+
+    <!-- ═══ LEFT: Category Type ═══════════════════════════════════════════════ -->
+    <div class="split-panel panel-type">
+      <div class="panel-toolbar">
+        <div class="toolbar-left">
+          <i class="pi pi-tags toolbar-icon"></i>
+          <span class="toolbar-title">Category Type</span>
+          <span class="record-badge" [class.has-filter]="hasTypeSearch">
+            {{ categoryTypes.length }}
+            @if (hasTypeSearch) { / {{ typeTotalRecords }} }
+          </span>
+        </div>
+        <div class="toolbar-actions">
+          <button pButton type="button" icon="pi pi-plus" label="Add"
+            class="toolbar-btn btn-add" pTooltip="Add category type" tooltipPosition="bottom"
+            (click)="openTypeAddDialog()"></button>
+          <button pButton type="button" icon="pi pi-pencil" label="Edit"
+            class="toolbar-btn btn-edit" pTooltip="Edit selected" tooltipPosition="bottom"
+            [disabled]="!selectedCategoryType" (click)="onTypeEditSelected()"></button>
+          <button pButton type="button" icon="pi pi-trash" label="Delete"
+            class="toolbar-btn btn-delete" pTooltip="Delete selected" tooltipPosition="bottom"
+            [disabled]="!selectedCategoryType" (click)="onTypeDeleteSelected($event)"></button>
+          <div class="toolbar-sep"></div>
+          <app-grid-report-toolbar [config]="categoryTypesReportConfig" [disabled]="typeLoading" />
+        </div>
+      </div>
+
+      <div class="search-bar">
+        <span class="search-label"><i class="pi pi-search"></i> Search</span>
+        <div class="search-fields">
+          <div class="search-field">
+            <label for="type-search">Code / Name</label>
+            <input id="type-search" pInputText type="text"
+              [(ngModel)]="typeSearchTerm"
+              (ngModelChange)="onTypeSearchChange()"
+              placeholder="Search types…" />
+          </div>
+          @if (hasTypeSearch) {
+            <button class="clear-btn" (click)="onClearTypeSearch()">
+              <i class="pi pi-filter-slash"></i> Clear
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="table-container">
+        <p-table
+          [value]="categoryTypes"
+          selectionMode="single"
+          [(selection)]="selectedCategoryType"
+          (selectionChange)="onCategoryTypeSelect()"
+          dataKey="categoryTypeId"
+          [scrollable]="true"
+          scrollHeight="flex"
+          [loading]="typeLoading"
+          [sortField]="'categoryTypeName'"
+          [sortOrder]="1"
+          [paginator]="true"
+          [rows]="15"
+          [rowsPerPageOptions]="[10, 15, 25, 50]"
+          [showCurrentPageReport]="true"
+          currentPageReportTemplate="{first}–{last} of {totalRecords}"
+          styleClass="ct-table type-table"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th class="col-index">#</th>
+              <th class="col-code" pSortableColumn="categoryTypeCode">
+                Code <p-sortIcon field="categoryTypeCode" />
+              </th>
+              <th class="col-name" pSortableColumn="categoryTypeName">
+                Name <p-sortIcon field="categoryTypeName" />
+              </th>
+              <th class="col-actions">Actions</th>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="body" let-item let-rowIndex="rowIndex">
+            <tr
+              [pSelectableRow]="item"
+              [class.row-selected]="selectedCategoryType?.categoryTypeId === item.categoryTypeId"
+              (dblclick)="openTypeEditDialog(item)"
+            >
+              <td class="col-index">
+                @if (selectedCategoryType?.categoryTypeId === item.categoryTypeId) {
+                  <i class="pi pi-caret-right row-indicator"></i>
+                } @else {
+                  <span class="row-number">{{ rowIndex + 1 }}</span>
+                }
+              </td>
+              <td class="col-code"><span class="code-cell">{{ item.categoryTypeCode }}</span></td>
+              <td class="col-name"><span class="name-cell">{{ item.categoryTypeName }}</span></td>
+              <td class="col-actions">
+                <div class="action-btns">
+                  <button class="icon-btn edit-icon"
+                    (click)="openTypeEditDialog(item); $event.stopPropagation()"
+                    pTooltip="Edit" tooltipPosition="left">
+                    <i class="pi pi-pencil"></i>
+                  </button>
+                  <button class="icon-btn delete-icon"
+                    (click)="confirmTypeDelete(item, $event)"
+                    pTooltip="Delete" tooltipPosition="left">
+                    <i class="pi pi-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="4">
+                <div class="empty-state compact">
+                  <i class="pi pi-tags empty-icon"></i>
+                  @if (hasTypeSearch) {
+                    <p class="empty-title">No types found</p>
+                    <button pButton type="button" icon="pi pi-filter-slash"
+                      label="Clear" class="p-button-outlined p-button-sm"
+                      (click)="onClearTypeSearch()"></button>
+                  } @else {
+                    <p class="empty-title">No category types</p>
+                    <button pButton type="button" icon="pi pi-plus"
+                      label="Add Type" class="p-button-sm btn-add"
+                      (click)="openTypeAddDialog()"></button>
+                  }
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="loadingbody">
+            @for (i of [1,2,3,4,5]; track i) {
+              <tr>
+                <td class="col-index"><p-skeleton width="24px" height="14px" /></td>
+                <td class="col-code"><p-skeleton height="14px" /></td>
+                <td class="col-name"><p-skeleton height="14px" /></td>
+                <td class="col-actions"><p-skeleton width="60px" height="14px" /></td>
+              </tr>
+            }
+          </ng-template>
+        </p-table>
+      </div>
+
+      <div class="status-bar">
+        <span class="record-count"><strong>{{ categoryTypes.length }}</strong> types</span>
+        @if (selectedCategoryType) {
+          <span class="selected-info">
+            <i class="pi pi-check-circle"></i>
+            <strong>{{ selectedCategoryType.categoryTypeName }}</strong>
+          </span>
+        }
+        <span class="hint-text">Click a row to load categories</span>
+      </div>
+    </div>
+
+    <!-- ═══ Vertical divider ══════════════════════════════════════════════════ -->
+    <div class="split-divider" aria-hidden="true"></div>
+
+    <!-- ═══ RIGHT: Category ═════════════════════════════════════════════════ -->
+    <div class="split-panel panel-category" [class.panel-disabled]="!hasSelectedType">
+      <div class="panel-toolbar">
+        <div class="toolbar-left">
+          <i class="pi pi-sitemap toolbar-icon"></i>
+          <span class="toolbar-title">Category</span>
+          @if (hasSelectedType) {
+            <span class="type-context-badge">{{ selectedCategoryType!.categoryTypeName }}</span>
+          }
+          <span class="record-badge" [class.has-filter]="hasCatSearch">
+            {{ categories.length }}
+            @if (hasCatSearch) { / {{ catTotalRecords }} }
+          </span>
+        </div>
+        <div class="toolbar-actions">
+          <button pButton type="button" icon="pi pi-plus" label="Add"
+            class="toolbar-btn btn-add" pTooltip="Add category" tooltipPosition="bottom"
+            [disabled]="!hasSelectedType" (click)="openCatAddDialog()"></button>
+          <button pButton type="button" icon="pi pi-pencil" label="Edit"
+            class="toolbar-btn btn-edit" pTooltip="Edit selected" tooltipPosition="bottom"
+            [disabled]="!selectedCategory" (click)="onCatEditSelected()"></button>
+          <button pButton type="button" icon="pi pi-trash" label="Delete"
+            class="toolbar-btn btn-delete" pTooltip="Delete selected" tooltipPosition="bottom"
+            [disabled]="!selectedCategory" (click)="onCatDeleteSelected($event)"></button>
+          <div class="toolbar-sep"></div>
+          <app-grid-report-toolbar [config]="categoriesReportConfig" [disabled]="!hasSelectedType || catLoading" />
+        </div>
+      </div>
+
+      <div class="search-bar">
+        <span class="search-label"><i class="pi pi-search"></i> Search</span>
+        <div class="search-fields">
+          <div class="search-field">
+            <label for="cat-search">Name</label>
+            <input id="cat-search" pInputText type="text"
+              [(ngModel)]="catSearchTerm"
+              (ngModelChange)="onCatSearchChange()"
+              [disabled]="!hasSelectedType"
+              placeholder="Search categories…" />
+          </div>
+          @if (hasCatSearch) {
+            <button class="clear-btn" (click)="onClearCatSearch()" [disabled]="!hasSelectedType">
+              <i class="pi pi-filter-slash"></i> Clear
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="table-container">
+        @if (!hasSelectedType) {
+          <div class="panel-placeholder">
+            <i class="pi pi-arrow-left placeholder-icon"></i>
+            <p class="placeholder-title">Select a category type</p>
+            <p class="placeholder-sub">Choose a type on the left to view and manage its categories.</p>
+          </div>
+        } @else {
+          <p-table
+            [value]="categories"
+            selectionMode="single"
+            [(selection)]="selectedCategory"
+            dataKey="categoryId"
+            [scrollable]="true"
+            scrollHeight="flex"
+            [loading]="catLoading"
+            [sortField]="'categoryName'"
+            [sortOrder]="1"
+            [paginator]="true"
+            [rows]="15"
+            [rowsPerPageOptions]="[10, 15, 25, 50]"
+            [showCurrentPageReport]="true"
+            currentPageReportTemplate="{first}–{last} of {totalRecords}"
+            styleClass="ct-table cat-table"
+          >
+            <ng-template pTemplate="header">
+              <tr>
+                <th class="col-index">#</th>
+                <th class="col-name" pSortableColumn="categoryName">
+                  Name <p-sortIcon field="categoryName" />
+                </th>
+                <th class="col-created">Created</th>
+                <th class="col-modified">Modified</th>
+                <th class="col-actions">Actions</th>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-item let-rowIndex="rowIndex">
+              <tr
+                [pSelectableRow]="item"
+                [class.row-selected]="selectedCategory?.categoryId === item.categoryId"
+                (dblclick)="openCatEditDialog(item)"
+              >
+                <td class="col-index">
+                  @if (selectedCategory?.categoryId === item.categoryId) {
+                    <i class="pi pi-caret-right row-indicator"></i>
+                  } @else {
+                    <span class="row-number">{{ rowIndex + 1 }}</span>
+                  }
+                </td>
+                <td class="col-name"><span class="name-cell">{{ item.categoryName }}</span></td>
+                <td class="col-created muted-cell">{{ formatDate(item.createdDate) }}</td>
+                <td class="col-modified muted-cell">{{ formatDate(item.modifiedDate) }}</td>
+                <td class="col-actions">
+                  <div class="action-btns">
+                    <button class="icon-btn edit-icon"
+                      (click)="openCatEditDialog(item); $event.stopPropagation()"
+                      pTooltip="Edit" tooltipPosition="left">
+                      <i class="pi pi-pencil"></i>
+                    </button>
+                    <button class="icon-btn delete-icon"
+                      (click)="confirmCatDelete(item, $event)"
+                      pTooltip="Delete" tooltipPosition="left">
+                      <i class="pi pi-trash"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="5">
+                  <div class="empty-state compact">
+                    <i class="pi pi-sitemap empty-icon"></i>
+                    @if (hasCatSearch) {
+                      <p class="empty-title">No categories found</p>
+                      <button pButton type="button" icon="pi pi-filter-slash"
+                        label="Clear" class="p-button-outlined p-button-sm"
+                        (click)="onClearCatSearch()"></button>
+                    } @else {
+                      <p class="empty-title">No categories yet</p>
+                      <button pButton type="button" icon="pi pi-plus"
+                        label="Add Category" class="p-button-sm btn-add"
+                        (click)="openCatAddDialog()"></button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="loadingbody">
+              @for (i of [1,2,3,4,5]; track i) {
+                <tr>
+                  <td class="col-index"><p-skeleton width="24px" height="14px" /></td>
+                  <td class="col-name"><p-skeleton height="14px" /></td>
+                  <td class="col-created"><p-skeleton height="14px" /></td>
+                  <td class="col-modified"><p-skeleton height="14px" /></td>
+                  <td class="col-actions"><p-skeleton width="60px" height="14px" /></td>
+                </tr>
+              }
+            </ng-template>
+          </p-table>
+        }
+      </div>
+
+      <div class="status-bar">
+        @if (hasSelectedType) {
+          <span class="record-count"><strong>{{ categories.length }}</strong> categories</span>
+          @if (selectedCategory) {
+            <span class="selected-info">
+              <i class="pi pi-check-circle"></i>
+              <strong>{{ selectedCategory.categoryName }}</strong>
+            </span>
+          }
+          <span class="hint-text">Double-click to edit</span>
+        }
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Category Type dialog -->
+<p-dialog
+  [header]="typeDialogTitle"
+  [(visible)]="typeDialogVisible"
+  [modal]="true"
+  [style]="{ width: '480px' }"
+  [closable]="true"
+  [draggable]="true"
+  styleClass="ct-dialog"
+  (onHide)="onTypeDialogHide()"
+>
+  <div class="dialog-form">
+    <div class="form-section">
+      <div class="section-title"><i class="pi pi-tags"></i> Category Type Details</div>
+      <div class="form-grid-2">
+        <div class="form-field full-span" [class.has-error]="typeFormErrors.categoryTypeCode">
+          <label>Code <span class="required">*</span></label>
+          <input pInputText type="text"
+            [(ngModel)]="typeFormData.categoryTypeCode"
+            (ngModelChange)="typeFormErrors.categoryTypeCode = undefined"
+            placeholder="e.g. RAW, FIN"
+            style="text-transform: uppercase"
+            [class.input-error]="typeFormErrors.categoryTypeCode" />
+          @if (typeFormErrors.categoryTypeCode) {
+            <span class="field-error"><i class="pi pi-exclamation-circle"></i> {{ typeFormErrors.categoryTypeCode }}</span>
+          }
+        </div>
+        <div class="form-field full-span" [class.has-error]="typeFormErrors.categoryTypeName">
+          <label>Name <span class="required">*</span></label>
+          <input pInputText type="text"
+            [(ngModel)]="typeFormData.categoryTypeName"
+            (ngModelChange)="typeFormErrors.categoryTypeName = undefined"
+            placeholder="Category type name"
+            [class.input-error]="typeFormErrors.categoryTypeName" />
+          @if (typeFormErrors.categoryTypeName) {
+            <span class="field-error"><i class="pi pi-exclamation-circle"></i> {{ typeFormErrors.categoryTypeName }}</span>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button pButton type="button" icon="pi pi-times" label="Cancel"
+        class="p-button-outlined btn-cancel" (click)="typeDialogVisible = false"></button>
+      <button pButton type="button" icon="pi pi-check" label="Save"
+        class="btn-ok" [loading]="typeSaving" (click)="onTypeSave()"></button>
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Category dialog -->
+<p-dialog
+  [header]="catDialogTitle"
+  [(visible)]="catDialogVisible"
+  [modal]="true"
+  [style]="{ width: '480px' }"
+  [closable]="true"
+  [draggable]="true"
+  styleClass="ct-dialog"
+  (onHide)="onCatDialogHide()"
+>
+  <div class="dialog-form">
+    <div class="form-section">
+      <div class="section-title"><i class="pi pi-sitemap"></i> Category Details</div>
+      @if (selectedCategoryType) {
+        <div class="context-field">
+          <label>Category Type</label>
+          <span class="context-value">{{ selectedCategoryType.categoryTypeName }}</span>
+        </div>
+      }
+      <div class="form-grid-2">
+        <div class="form-field full-span" [class.has-error]="catFormErrors.categoryName">
+          <label>Name <span class="required">*</span></label>
+          <input pInputText type="text"
+            [(ngModel)]="catFormData.categoryName"
+            (ngModelChange)="catFormErrors.categoryName = undefined"
+            placeholder="Category name"
+            [class.input-error]="catFormErrors.categoryName" />
+          @if (catFormErrors.categoryName) {
+            <span class="field-error"><i class="pi pi-exclamation-circle"></i> {{ catFormErrors.categoryName }}</span>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button pButton type="button" icon="pi pi-times" label="Cancel"
+        class="p-button-outlined btn-cancel" (click)="catDialogVisible = false"></button>
+      <button pButton type="button" icon="pi pi-check" label="Save"
+        class="btn-ok" [loading]="catSaving" (click)="onCatSave()"></button>
+    </div>
+  </ng-template>
+</p-dialog>

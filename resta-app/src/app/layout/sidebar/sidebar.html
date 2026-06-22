@@ -1,0 +1,69 @@
+<aside class="sidebar" [class.collapsed]="layout.sidebarCollapsed()">
+
+  <div class="logo-section">
+    <div class="logo-mark">
+      <span class="logo-arrow"></span>
+    </div>
+    <span class="logo-text">
+      <span class="logo-pro">Resta POS</span>
+    </span>
+  </div>
+
+  <nav class="menu-nav">
+    @if (isLoadingMenus) {
+      <div class="menu-loading">
+        <i class="pi pi-spin pi-spinner"></i>
+        <span>Loading menu…</span>
+      </div>
+    } @else if (menuLoadError) {
+      <div class="menu-empty">
+        <span>Could not load menu.</span>
+        <button type="button" class="menu-retry" (click)="loadMenus()">Retry</button>
+      </div>
+    } @else if (!menuItems.length) {
+      <div class="menu-empty">
+        <span>No menu access assigned.</span>
+      </div>
+    } @else {
+      <ul class="menu-list">
+        <ng-container *ngTemplateOutlet="menuBranch; context: { $implicit: menuItems, depth: 0 }"></ng-container>
+      </ul>
+    }
+  </nav>
+
+</aside>
+
+<ng-template #menuBranch let-menus let-depth="depth">
+  @for (menu of menus; track trackMenu($index, menu)) {
+    <li [class.menu-group]="depth === 0" [class.menu-nested]="depth > 0">
+
+      @if (!menu.children?.length) {
+        <a class="menu-link"
+           [class.child-link]="depth > 0"
+           [routerLink]="menu.routerLink"
+           routerLinkActive="active-link"
+           [routerLinkActiveOptions]="{ exact: false }">
+          <i [class]="iconClasses(menu, depth)"></i>
+          <span [class]="depth > 0 ? '' : 'menu-label'">{{ menu.label }}</span>
+        </a>
+      } @else {
+        <button type="button"
+                class="menu-link menu-parent"
+                [class.child-link]="depth > 0"
+                [class.expanded]="menu.expanded"
+                (click)="toggleMenu(menu)">
+          <i [class]="iconClasses(menu, depth)"></i>
+          <span [class]="depth > 0 ? '' : 'menu-label'">{{ menu.label }}</span>
+          <i class="pi chevron" [ngClass]="menu.expanded ? 'pi-chevron-down' : 'pi-chevron-right'"></i>
+        </button>
+
+        @if (menu.expanded) {
+          <ul [class.child-menu]="depth === 0" [class.nested-menu]="depth > 0">
+            <ng-container *ngTemplateOutlet="menuBranch; context: { $implicit: menu.children, depth: depth + 1 }"></ng-container>
+          </ul>
+        }
+      }
+
+    </li>
+  }
+</ng-template>

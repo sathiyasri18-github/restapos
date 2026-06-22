@@ -1,0 +1,308 @@
+<!-- service-call-log.component.html -->
+
+<div class="service-log-page">
+
+    <!-- Header -->
+    <div class="top-header">
+
+        <div class="page-title">
+            Service Call Log
+        </div>
+
+        <div class="header-actions">
+
+            <button
+                pButton
+                icon="pi pi-plus"
+                label="Add"
+                class="p-button-text toolbar-btn">
+            </button>
+
+            <button
+                pButton
+                icon="pi pi-file-excel"
+                label="Export"
+                class="p-button-text toolbar-btn">
+            </button>
+
+            <button
+                pButton
+                icon="pi pi-print"
+                label="Print"
+                class="p-button-text toolbar-btn">
+            </button>
+
+        </div>
+
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-section">
+
+        <div class="filter-row">
+
+            <div class="field-group">
+                <label>Customer :</label>
+
+                <input
+                    pInputText
+                    [(ngModel)]="searchCustomer">
+            </div>
+
+            <div class="field-group">
+
+                <label>Status :</label>
+
+                <p-select
+                    [options]="statusOptions"
+                    optionLabel="name"
+                    optionValue="name"
+                    [(ngModel)]="selectedStatus"
+                    placeholder="All">
+                </p-select>
+
+            </div>
+
+            <div class="field-group">
+
+                <label>Service :</label>
+
+                <p-select
+                    [options]="serviceOptions"
+                    optionLabel="name"
+                    optionValue="name"
+                    [(ngModel)]="selectedService"
+                    placeholder="All">
+                </p-select>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Table -->
+
+    <p-table
+        [value]="serviceLogs"
+        [scrollable]="true"
+        scrollHeight="calc(100vh - 145px)"
+        styleClass="service-log-table">
+
+        <ng-template pTemplate="header">
+
+            <tr>
+
+                <th style="width: 70px">S.No</th>
+
+                <th style="width: 140px">Date</th>
+
+                <th>Customer Name</th>
+
+                <th style="width: 150px">Type Of Service</th>
+
+                <th>Problem Report</th>
+
+                <th>Action Taken</th>
+
+                <th style="width: 150px">Completed Date</th>
+
+                <th style="width: 130px">Status</th>
+
+                <th style="width: 120px">Er.Name</th>
+
+                <th style="width: 70px"></th>
+
+            </tr>
+
+        </ng-template>
+
+        <ng-template pTemplate="body" let-item let-rowIndex="rowIndex">
+
+            <tr>
+
+                <td>{{ rowIndex + 1 }}</td>
+
+                <td>{{ item.date }}</td>
+
+                <td>{{ item.customerName }}</td>
+
+                <td>{{ item.serviceType }}</td>
+
+                <td>{{ item.problem }}</td>
+
+                <td>{{ item.actionTaken }}</td>
+
+                <td>{{ item.completedDate }}</td>
+
+                <td>
+
+                    <span
+                        class="status-badge"
+                        [ngClass]="{
+                            'completed': item.status === 'COMPLETED',
+                            'pending': item.status === 'PENDING'
+                        }">
+
+                        {{ item.status }}
+
+                    </span>
+
+                </td>
+
+                <td>{{ item.engineer }}</td>
+
+                <td class="action-cell">
+
+                    <button
+                        pButton
+                        icon="pi pi-pencil"
+                        class="p-button-text p-button-sm edit-btn"
+                        (click)="editLog(item)">
+                    </button>
+
+                </td>
+
+            </tr>
+
+        </ng-template>
+
+    </p-table>
+
+</div>
+
+<!-- Dialog -->
+
+<p-dialog
+    [(visible)]="logDialog"
+    [modal]="true"
+    [style]="{ width: '700px' }"
+    [draggable]="false"
+    [resizable]="false"
+    styleClass="service-dialog"
+    header="Edit Service Log">
+
+    <div class="dialog-form">
+
+        <div class="grid-form">
+
+            <div class="form-row">
+
+                <label>Customer :</label>
+
+                <input
+                    pInputText
+                    [(ngModel)]="selectedLog.customerName">
+
+            </div>
+
+            <div class="form-row">
+
+                <label>Date :</label>
+
+                <p-datepicker
+                    appendTo="body"
+                    [(ngModel)]="selectedLog.date">
+                </p-datepicker>
+
+            </div>
+
+            <div class="form-row">
+
+                <label>Service :</label>
+
+                <p-select
+                    [options]="serviceOptions"
+                    optionLabel="name"
+                    optionValue="name"
+                    [(ngModel)]="selectedLog.serviceType">
+                </p-select>
+
+            </div>
+
+            <div class="form-row">
+
+                <label>Status :</label>
+
+                <p-select
+                    [options]="statusOptions"
+                    optionLabel="name"
+                    optionValue="name"
+                    [(ngModel)]="selectedLog.status">
+                </p-select>
+
+            </div>
+
+        </div>
+
+        <div class="form-row textarea-row">
+
+            <label>Problem :</label>
+
+            <textarea
+                pTextarea
+                rows="3"
+                [(ngModel)]="selectedLog.problem">
+            </textarea>
+
+        </div>
+
+        <div class="form-row textarea-row">
+
+            <label>Action Taken :</label>
+
+            <textarea
+                pTextarea
+                rows="3"
+                [(ngModel)]="selectedLog.actionTaken">
+            </textarea>
+
+        </div>
+
+        <div class="grid-form">
+
+            <div class="form-row">
+
+                <label>Engineer :</label>
+
+                <input
+                    pInputText
+                    [(ngModel)]="selectedLog.engineer">
+
+            </div>
+
+            <div class="form-row">
+
+                <label>Completed Date :</label>
+
+                <p-datepicker
+                    appendTo="body"
+                    [(ngModel)]="selectedLog.completedDate">
+                </p-datepicker>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <ng-template pTemplate="footer">
+
+        <button
+            pButton
+            label="Save"
+            icon="pi pi-check"
+            class="p-button-success">
+        </button>
+
+        <button
+            pButton
+            label="Cancel"
+            icon="pi pi-times"
+            class="p-button-secondary"
+            (click)="logDialog = false">
+        </button>
+
+    </ng-template>
+
+</p-dialog>

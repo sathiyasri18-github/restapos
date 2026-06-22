@@ -1,0 +1,297 @@
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<div class="pw-wrapper">
+
+  <div class="pw-toolbar">
+    <div class="toolbar-left">
+      <i class="pi pi-box toolbar-icon"></i>
+      <span class="toolbar-title">Product Warehouse</span>
+      <span class="record-badge" [class.has-filter]="hasActiveFilters">
+        {{ filteredItems.length }}
+        @if (hasActiveFilters) { / {{ items.length }} }
+      </span>
+    </div>
+
+    <div class="toolbar-actions">
+      <button pButton type="button" icon="pi pi-plus" label="Add"
+        class="toolbar-btn btn-add"
+        pTooltip="Add new product warehouse" tooltipPosition="bottom"
+        (click)="openAddDialog()">
+      </button>
+
+      <button pButton type="button" icon="pi pi-pencil" label="Edit"
+        class="toolbar-btn btn-edit"
+        pTooltip="Edit selected product warehouse" tooltipPosition="bottom"
+        [disabled]="!selectedItem"
+        (click)="onEditSelected()">
+      </button>
+
+      <button pButton type="button" icon="pi pi-trash" label="Delete"
+        class="toolbar-btn btn-delete"
+        pTooltip="Delete selected product warehouse" tooltipPosition="bottom"
+        [disabled]="!selectedItem"
+        (click)="onDeleteSelected($event)">
+      </button>
+
+      <div class="toolbar-sep"></div>
+
+      <app-grid-report-toolbar [config]="itemReportConfig" [disabled]="isLoading" />
+    </div>
+  </div>
+
+  <div class="search-bar">
+    <span class="search-label">
+      <i class="pi pi-search"></i>
+      Search
+    </span>
+    <div class="search-fields">
+      <div class="search-field">
+        <label for="pw-search">Product / Warehouse / IMEI</label>
+        <input id="pw-search" pInputText type="text"
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="onSearchChange()"
+          placeholder="Search product warehouses…" />
+      </div>
+
+      @if (hasActiveFilters) {
+        <button class="clear-btn" (click)="onClearSearch()">
+          <i class="pi pi-filter-slash"></i>
+          Clear
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="table-container">
+    <p-table
+      [value]="filteredItems"
+      selectionMode="single"
+      [(selection)]="selectedItem"
+      dataKey="productWarehouseId"
+      [scrollable]="true"
+      scrollHeight="flex"
+      [loading]="isLoading"
+      [sortField]="'productId'"
+      [sortOrder]="1"
+      [paginator]="true"
+      [rows]="20"
+      [rowsPerPageOptions]="[10, 20, 50, 100]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Showing {first}–{last} of {totalRecords}"
+      styleClass="pw-table"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th class="col-index">#</th>
+          <th class="col-product" pSortableColumn="productId">
+            Product <p-sortIcon field="productId" />
+          </th>
+          <th class="col-warehouse" pSortableColumn="warehouseId">
+            Warehouse <p-sortIcon field="warehouseId" />
+          </th>
+          <th class="col-qty" pSortableColumn="qty">
+            Qty <p-sortIcon field="qty" />
+          </th>
+          <th class="col-price">Price</th>
+          <th class="col-imei">IMEI</th>
+          <th class="col-actions" pFrozenColumn alignFrozen="right">Actions</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-item let-rowIndex="rowIndex">
+        <tr
+          [pSelectableRow]="item"
+          [class.row-selected]="selectedItem?.productWarehouseId === item.productWarehouseId"
+          (dblclick)="openEditDialog(item)"
+        >
+          <td class="col-index">
+            @if (selectedItem?.productWarehouseId === item.productWarehouseId) {
+              <i class="pi pi-caret-right row-indicator"></i>
+            } @else {
+              <span class="row-number">{{ rowIndex + 1 }}</span>
+            }
+          </td>
+          <td class="col-product">
+            <span class="name-cell">{{ item.productId }}</span>
+          </td>
+          <td class="col-warehouse muted-cell">{{ item.warehouseId }}</td>
+          <td class="col-qty muted-cell">{{ item.qty }}</td>
+          <td class="col-price muted-cell">{{ item.price != null ? (item.price | number:'1.2-2') : '—' }}</td>
+          <td class="col-imei muted-cell">{{ item.imeiNumber || '—' }}</td>
+          <td class="col-actions" pFrozenColumn alignFrozen="right">
+            <div class="action-btns">
+              <button class="icon-btn edit-icon"
+                (click)="openEditDialog(item); $event.stopPropagation()"
+                pTooltip="Edit" tooltipPosition="left">
+                <i class="pi pi-pencil"></i>
+              </button>
+              <button class="icon-btn delete-icon"
+                (click)="confirmDelete(item, $event)"
+                pTooltip="Delete" tooltipPosition="left">
+                <i class="pi pi-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="7">
+            <div class="empty-state">
+              <i class="pi pi-box empty-icon"></i>
+              @if (hasActiveFilters) {
+                <p class="empty-title">No product warehouses found</p>
+                <p class="empty-sub">No product warehouses match your filter criteria.</p>
+                <button pButton type="button" icon="pi pi-filter-slash"
+                  label="Clear Filters" class="p-button-outlined p-button-sm"
+                  (click)="onClearSearch()">
+                </button>
+              } @else {
+                <p class="empty-title">No product warehouses yet</p>
+                <p class="empty-sub">Get started by adding your first product warehouse.</p>
+                <button pButton type="button" icon="pi pi-plus"
+                  label="Add Product Warehouse" class="p-button-sm btn-add"
+                  (click)="openAddDialog()">
+                </button>
+              }
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="loadingbody">
+        @for (i of [1,2,3,4,5,6,7]; track i) {
+          <tr>
+            <td class="col-index"><p-skeleton width="24px" height="14px" /></td>
+            <td class="col-product"><p-skeleton height="14px" /></td>
+            <td class="col-warehouse"><p-skeleton height="14px" /></td>
+            <td class="col-qty"><p-skeleton height="14px" /></td>
+            <td class="col-price"><p-skeleton height="14px" /></td>
+            <td class="col-imei"><p-skeleton height="14px" /></td>
+            <td class="col-actions"><p-skeleton width="60px" height="14px" /></td>
+          </tr>
+        }
+      </ng-template>
+    </p-table>
+  </div>
+
+  <div class="status-bar">
+    <span class="record-count">
+      Showing <strong>{{ filteredItems.length }}</strong> of <strong>{{ items.length }}</strong> product warehouses
+    </span>
+    @if (selectedItem) {
+      <span class="selected-info">
+        <i class="pi pi-check-circle"></i>
+        Selected: <strong>{{ selectedItem.productId }}</strong>
+      </span>
+    }
+    <span class="hint-text">Double-click a row to edit</span>
+  </div>
+
+</div>
+
+<p-dialog
+  [header]="dialogTitle"
+  [(visible)]="dialogVisible"
+  [modal]="true"
+  [style]="{ width: '560px' }"
+  [closable]="true"
+  [draggable]="true"
+  styleClass="pw-dialog"
+  (onHide)="onDialogHide()"
+>
+  <div class="dialog-form">
+
+    <div class="form-section">
+      <div class="section-title">
+        <i class="pi pi-box"></i>
+        Warehouse Stock Information
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-field full-span" [class.has-error]="formErrors.productId">
+          <label>Product ID <span class="required">*</span></label>
+          <input pInputText type="text"
+            [(ngModel)]="formData.productId"
+            (ngModelChange)="formErrors.productId = undefined"
+            placeholder="Product ID"
+            [class.input-error]="formErrors.productId" />
+          @if (formErrors.productId) {
+            <span class="field-error">
+              <i class="pi pi-exclamation-circle"></i> {{ formErrors.productId }}
+            </span>
+          }
+        </div>
+
+        <div class="form-field" [class.has-error]="formErrors.warehouseId">
+          <label>Warehouse ID <span class="required">*</span></label>
+          <input pInputText type="number"
+            [(ngModel)]="formData.warehouseId"
+            (ngModelChange)="formErrors.warehouseId = undefined"
+            placeholder="Warehouse ID"
+            [class.input-error]="formErrors.warehouseId" />
+          @if (formErrors.warehouseId) {
+            <span class="field-error">
+              <i class="pi pi-exclamation-circle"></i> {{ formErrors.warehouseId }}
+            </span>
+          }
+        </div>
+
+        <div class="form-field">
+          <label>Qty</label>
+          <input pInputText type="number"
+            [(ngModel)]="formData.qty"
+            placeholder="Quantity" />
+        </div>
+
+        <div class="form-field">
+          <label>Product Batch ID</label>
+          <input pInputText type="number"
+            [ngModel]="formData.productBatchId"
+            (ngModelChange)="formData.productBatchId = $event != null && $event !== '' ? +$event : null"
+            placeholder="Optional" />
+        </div>
+
+        <div class="form-field">
+          <label>Variant ID</label>
+          <input pInputText type="number"
+            [ngModel]="formData.variantId"
+            (ngModelChange)="formData.variantId = $event != null && $event !== '' ? +$event : null"
+            placeholder="Optional" />
+        </div>
+
+        <div class="form-field">
+          <label>Price</label>
+          <input pInputText type="number"
+            [ngModel]="formData.price"
+            (ngModelChange)="formData.price = $event != null && $event !== '' ? +$event : null"
+            placeholder="0.00" />
+        </div>
+
+        <div class="form-field full-span">
+          <label>IMEI Number</label>
+          <input pInputText type="text"
+            [(ngModel)]="formData.imeiNumber"
+            placeholder="IMEI number" />
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button pButton type="button" icon="pi pi-times" label="Cancel"
+        class="p-button-outlined btn-cancel"
+        (click)="dialogVisible = false">
+      </button>
+      <button pButton type="button" icon="pi pi-check" label="Save"
+        class="btn-ok"
+        [loading]="isSaving"
+        (click)="onSave()">
+      </button>
+    </div>
+  </ng-template>
+</p-dialog>

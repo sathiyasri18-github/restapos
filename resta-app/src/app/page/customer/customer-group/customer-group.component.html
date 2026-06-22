@@ -1,0 +1,277 @@
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<div class="cg-wrapper">
+
+  <div class="cg-toolbar">
+    <div class="toolbar-left">
+      <i class="pi pi-sitemap toolbar-icon"></i>
+      <span class="toolbar-title">Customer Group</span>
+      <span class="record-badge" [class.has-filter]="hasActiveFilters">
+        {{ filteredGroups.length }}
+        @if (hasActiveFilters) { / {{ groups.length }} }
+      </span>
+    </div>
+
+    <div class="toolbar-actions">
+      <button pButton type="button" icon="pi pi-plus" label="Add"
+        class="toolbar-btn btn-add"
+        pTooltip="Add new customer group" tooltipPosition="bottom"
+        (click)="openAddDialog()">
+      </button>
+
+      <button pButton type="button" icon="pi pi-pencil" label="Edit"
+        class="toolbar-btn btn-edit"
+        pTooltip="Edit selected group" tooltipPosition="bottom"
+        [disabled]="!selectedGroup"
+        (click)="onEditSelected()">
+      </button>
+
+      <button pButton type="button" icon="pi pi-trash" label="Delete"
+        class="toolbar-btn btn-delete"
+        pTooltip="Delete selected group" tooltipPosition="bottom"
+        [disabled]="!selectedGroup"
+        (click)="onDeleteSelected($event)">
+      </button>
+
+      <div class="toolbar-sep"></div>
+
+      <app-grid-report-toolbar [config]="groupReportConfig" [disabled]="isLoading" />
+    </div>
+  </div>
+
+  <div class="search-bar">
+    <span class="search-label">
+      <i class="pi pi-search"></i>
+      Search
+    </span>
+    <div class="search-fields">
+      <div class="search-field">
+        <label for="cg-search">Name / Percentage</label>
+        <input id="cg-search" pInputText type="text"
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="onSearchChange()"
+          placeholder="Search groups…" />
+      </div>
+
+      <div class="search-field">
+        <label for="cg-status">Status</label>
+        <p-select
+          inputId="cg-status"
+          [options]="statusFilterOptions"
+          optionLabel="label"
+          optionValue="value"
+          [(ngModel)]="activeFilter"
+          (ngModelChange)="onFilterChange()"
+          placeholder="All"
+          appendTo="body" />
+      </div>
+
+      @if (hasActiveFilters) {
+        <button class="clear-btn" (click)="onClearSearch()">
+          <i class="pi pi-filter-slash"></i>
+          Clear
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="table-container">
+    <p-table
+      [value]="filteredGroups"
+      selectionMode="single"
+      [(selection)]="selectedGroup"
+      dataKey="customerGroupId"
+      [scrollable]="true"
+      scrollHeight="flex"
+      [loading]="isLoading"
+      [sortField]="'name'"
+      [sortOrder]="1"
+      [paginator]="true"
+      [rows]="20"
+      [rowsPerPageOptions]="[10, 20, 50, 100]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Showing {first}–{last} of {totalRecords}"
+      styleClass="cg-table"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th class="col-index">#</th>
+          <th class="col-name" pSortableColumn="name">
+            Name <p-sortIcon field="name" />
+          </th>
+          <th class="col-percentage" pSortableColumn="percentage">
+            Percentage <p-sortIcon field="percentage" />
+          </th>
+          <th class="col-active" pSortableColumn="isActive">
+            Active <p-sortIcon field="isActive" />
+          </th>
+          <th class="col-actions" pFrozenColumn alignFrozen="right">Actions</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-g let-rowIndex="rowIndex">
+        <tr
+          [pSelectableRow]="g"
+          [class.row-selected]="selectedGroup?.customerGroupId === g.customerGroupId"
+          (dblclick)="openEditDialog(g)"
+        >
+          <td class="col-index">
+            @if (selectedGroup?.customerGroupId === g.customerGroupId) {
+              <i class="pi pi-caret-right row-indicator"></i>
+            } @else {
+              <span class="row-number">{{ rowIndex + 1 }}</span>
+            }
+          </td>
+          <td class="col-name">
+            <span class="name-cell">{{ g.name }}</span>
+          </td>
+          <td class="col-percentage muted-cell">{{ g.percentage }}%</td>
+          <td class="col-active">
+            @if (g.isActive) {
+              <span class="status-badge active">Active</span>
+            } @else {
+              <span class="status-badge inactive">Inactive</span>
+            }
+          </td>
+          <td class="col-actions" pFrozenColumn alignFrozen="right">
+            <div class="action-btns">
+              <button class="icon-btn edit-icon"
+                (click)="openEditDialog(g); $event.stopPropagation()"
+                pTooltip="Edit" tooltipPosition="left">
+                <i class="pi pi-pencil"></i>
+              </button>
+              <button class="icon-btn delete-icon"
+                (click)="confirmDelete(g, $event)"
+                pTooltip="Delete" tooltipPosition="left">
+                <i class="pi pi-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="5">
+            <div class="empty-state">
+              <i class="pi pi-sitemap empty-icon"></i>
+              @if (hasActiveFilters) {
+                <p class="empty-title">No groups found</p>
+                <p class="empty-sub">No customer groups match your filter criteria.</p>
+                <button pButton type="button" icon="pi pi-filter-slash"
+                  label="Clear Filters" class="p-button-outlined p-button-sm"
+                  (click)="onClearSearch()">
+                </button>
+              } @else {
+                <p class="empty-title">No customer groups yet</p>
+                <p class="empty-sub">Get started by adding your first customer group.</p>
+                <button pButton type="button" icon="pi pi-plus"
+                  label="Add Group" class="p-button-sm btn-add"
+                  (click)="openAddDialog()">
+                </button>
+              }
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="loadingbody">
+        @for (i of [1,2,3,4,5,6,7]; track i) {
+          <tr>
+            <td class="col-index"><p-skeleton width="24px" height="14px" /></td>
+            <td class="col-name"><p-skeleton height="14px" /></td>
+            <td class="col-percentage"><p-skeleton height="14px" /></td>
+            <td class="col-active"><p-skeleton width="64px" height="20px" borderRadius="10px" /></td>
+            <td class="col-actions"><p-skeleton width="60px" height="14px" /></td>
+          </tr>
+        }
+      </ng-template>
+    </p-table>
+  </div>
+
+  <div class="status-bar">
+    <span class="record-count">
+      Showing <strong>{{ filteredGroups.length }}</strong> of <strong>{{ groups.length }}</strong> groups
+    </span>
+    @if (selectedGroup) {
+      <span class="selected-info">
+        <i class="pi pi-check-circle"></i>
+        Selected: <strong>{{ selectedGroup.name }}</strong>
+      </span>
+    }
+    <span class="hint-text">Double-click a row to edit</span>
+  </div>
+
+</div>
+
+<p-dialog
+  [header]="dialogTitle"
+  [(visible)]="dialogVisible"
+  [modal]="true"
+  [style]="{ width: '480px' }"
+  [closable]="true"
+  [draggable]="true"
+  styleClass="cg-dialog"
+  (onHide)="onDialogHide()"
+>
+  <div class="dialog-form">
+
+    <div class="form-section">
+      <div class="section-title">
+        <i class="pi pi-sitemap"></i>
+        Group Information
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-field full-span" [class.has-error]="formErrors.name">
+          <label>Name <span class="required">*</span></label>
+          <input pInputText type="text"
+            [(ngModel)]="formData.name"
+            (ngModelChange)="formErrors.name = undefined"
+            placeholder="Group name"
+            [class.input-error]="formErrors.name" />
+          @if (formErrors.name) {
+            <span class="field-error">
+              <i class="pi pi-exclamation-circle"></i> {{ formErrors.name }}
+            </span>
+          }
+        </div>
+
+        <div class="form-field full-span" [class.has-error]="formErrors.percentage">
+          <label>Percentage <span class="required">*</span></label>
+          <input pInputText type="text"
+            [(ngModel)]="formData.percentage"
+            (ngModelChange)="formErrors.percentage = undefined"
+            placeholder="e.g. 0, -10, 5"
+            [class.input-error]="formErrors.percentage" />
+          @if (formErrors.percentage) {
+            <span class="field-error">
+              <i class="pi pi-exclamation-circle"></i> {{ formErrors.percentage }}
+            </span>
+          }
+        </div>
+
+        <div class="form-field full-span checkbox-field">
+          <p-checkbox [(ngModel)]="formData.isActive" [binary]="true" inputId="cg-active" />
+          <label for="cg-active">Active</label>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button pButton type="button" icon="pi pi-times" label="Cancel"
+        class="p-button-outlined btn-cancel"
+        (click)="dialogVisible = false">
+      </button>
+      <button pButton type="button" icon="pi pi-check" label="Save"
+        class="btn-ok"
+        [loading]="isSaving"
+        (click)="onSave()">
+      </button>
+    </div>
+  </ng-template>
+</p-dialog>

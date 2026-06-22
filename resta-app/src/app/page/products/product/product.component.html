@@ -1,0 +1,180 @@
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<div class="prod-wrapper">
+  <div class="prod-toolbar">
+    <div class="toolbar-left">
+      <i class="pi pi-box toolbar-icon"></i>
+      <span class="toolbar-title">Product</span>
+      <span class="record-badge" [class.has-filter]="hasActiveFilters">
+        {{ filteredProducts.length }}
+        @if (hasActiveFilters) { / {{ products.length }} }
+      </span>
+    </div>
+
+    <div class="toolbar-actions">
+      <button pButton type="button" icon="pi pi-plus" label="Add" class="toolbar-btn btn-add" (click)="openAddDialog()"></button>
+      <button pButton type="button" icon="pi pi-pencil" label="Edit" class="toolbar-btn btn-edit" [disabled]="!selectedProduct" (click)="onEditSelected()"></button>
+      <button pButton type="button" icon="pi pi-trash" label="Delete" class="toolbar-btn btn-delete" [disabled]="!selectedProduct" (click)="onDeleteSelected($event)"></button>
+      <div class="toolbar-sep"></div>
+      <app-grid-report-toolbar [config]="productReportConfig" [disabled]="isLoading" />
+    </div>
+  </div>
+
+  <div class="search-bar">
+    <span class="search-label"><i class="pi pi-search"></i> Search</span>
+    <div class="search-fields">
+      <div class="search-field">
+        <label for="prod-search">Name / Code / Details</label>
+        <input id="prod-search" pInputText type="text" [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange()" placeholder="Search products..." />
+      </div>
+      <div class="search-field">
+        <label for="prod-active">Status</label>
+        <p-select inputId="prod-active" [options]="statusFilterOptions" optionLabel="label" optionValue="value" [(ngModel)]="activeFilter" (ngModelChange)="onFilterChange()" appendTo="body"></p-select>
+      </div>
+      @if (hasActiveFilters) {
+        <button class="clear-btn" (click)="onClearSearch()"><i class="pi pi-filter-slash"></i> Clear</button>
+      }
+    </div>
+  </div>
+
+  <div class="table-container">
+    <p-table [value]="filteredProducts" selectionMode="single" [(selection)]="selectedProduct" dataKey="productId"
+      [scrollable]="true" scrollHeight="flex" [loading]="isLoading" [paginator]="true" [rows]="20" styleClass="prod-table">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>#</th>
+          <th>Image</th>
+          <th>Name</th>
+          <th>Code</th>
+          <th>Type</th>
+          <th>Cost</th>
+          <th>Price</th>
+          <th>Qty</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-p let-rowIndex="rowIndex">
+        <tr [pSelectableRow]="p" (dblclick)="openEditDialog(p)">
+          <td>{{ rowIndex + 1 }}</td>
+          <td class="image-cell">
+            @if (productImageUrl(p); as imgUrl) {
+              <img [src]="imgUrl" [alt]="p.name" class="product-thumb" (error)="$any($event.target).style.display='none'" />
+            } @else {
+              <span class="no-image">—</span>
+            }
+          </td>
+          <td>{{ p.name }}</td>
+          <td>{{ p.code || '—' }}</td>
+          <td>{{ p.type || '—' }}</td>
+          <td>{{ p.cost || '0' }}</td>
+          <td>{{ p.price || '0' }}</td>
+          <td>{{ p.qty ?? '—' }}</td>
+          <td>{{ p.isActive ? 'Active' : 'Inactive' }}</td>
+          <td>
+            <button class="icon-btn edit-icon" (click)="openEditDialog(p); $event.stopPropagation()"><i class="pi pi-pencil"></i></button>
+            <button class="icon-btn delete-icon" (click)="confirmDelete(p, $event)"><i class="pi pi-trash"></i></button>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<p-dialog [header]="dialogTitle" [(visible)]="dialogVisible" [modal]="true" [style]="{ width: '780px' }" (onHide)="onDialogHide()">
+  <div class="form-grid">
+    <div class="form-field" [class.has-error]="formErrors.name">
+      <label>Name *</label>
+      <input pInputText [(ngModel)]="formData.name" (ngModelChange)="formErrors.name = undefined" />
+      @if (formErrors.name) { <span class="field-error">{{ formErrors.name }}</span> }
+    </div>
+
+    <div class="form-field" [class.has-error]="formErrors.code">
+      <label>Code *</label>
+      <input pInputText [(ngModel)]="formData.code" (ngModelChange)="formErrors.code = undefined" />
+      @if (formErrors.code) { <span class="field-error">{{ formErrors.code }}</span> }
+    </div>
+
+    <div class="form-field"><label>Type</label><input pInputText [(ngModel)]="formData.type" /></div>
+    <div class="form-field"><label>Barcode Symbology</label><input pInputText [(ngModel)]="formData.barcodeSymbology" /></div>
+    <div class="form-field">
+      <label>Brand</label>
+      <p-select [options]="brandOptions" optionLabel="label" optionValue="value"
+        [(ngModel)]="formData.brandId" [showClear]="true" placeholder="Select brand"
+        appendTo="body" [disabled]="!lookupsLoaded" />
+    </div>
+    <div class="form-field">
+      <label>Category</label>
+      <p-select [options]="categoryOptions" optionLabel="label" optionValue="value"
+        [(ngModel)]="formData.categoryId" [showClear]="true" placeholder="Select category"
+        appendTo="body" [disabled]="!lookupsLoaded" />
+    </div>
+    <div class="form-field">
+      <label>Unit</label>
+      <p-select [options]="unitOptions" optionLabel="label" optionValue="value"
+        [(ngModel)]="formData.unitId" [showClear]="true" placeholder="Select unit"
+        appendTo="body" [disabled]="!lookupsLoaded" />
+    </div>
+    <div class="form-field">
+      <label>Purchase Unit</label>
+      <p-select [options]="unitOptions" optionLabel="label" optionValue="value"
+        [(ngModel)]="formData.purchaseUnitId" [showClear]="true" placeholder="Select purchase unit"
+        appendTo="body" [disabled]="!lookupsLoaded" />
+    </div>
+    <div class="form-field">
+      <label>Sale Unit</label>
+      <p-select [options]="unitOptions" optionLabel="label" optionValue="value"
+        [(ngModel)]="formData.saleUnitId" [showClear]="true" placeholder="Select sale unit"
+        appendTo="body" [disabled]="!lookupsLoaded" />
+    </div>
+    <div class="form-field"><label>Cost</label><input pInputText [(ngModel)]="formData.cost" /></div>
+    <div class="form-field"><label>Price</label><input pInputText [(ngModel)]="formData.price" /></div>
+    <div class="form-field"><label>Qty</label><input pInputText type="number" [(ngModel)]="formData.qty" /></div>
+    <div class="form-field"><label>Alert Quantity</label><input pInputText type="number" [(ngModel)]="formData.alertQuantity" /></div>
+    <div class="form-field">
+      <label>Tax</label>
+      <p-select [options]="taxOptions" optionLabel="label" optionValue="value"
+        [(ngModel)]="formData.taxId" [showClear]="true" placeholder="Select tax"
+        appendTo="body" [disabled]="!lookupsLoaded" />
+    </div>
+    <div class="form-field"><label>Tax Method</label><input pInputText type="number" [(ngModel)]="formData.taxMethod" /></div>
+    <div class="form-field full-span image-upload-field">
+      <label>Product Image</label>
+      <div class="image-upload-row">
+        <div class="image-preview-box">
+          @if (imagePreviewUrl) {
+            <img [src]="imagePreviewUrl" alt="Product preview" class="image-preview" />
+          } @else {
+            <div class="image-placeholder"><i class="pi pi-image"></i><span>No image</span></div>
+          }
+        </div>
+        <div class="image-upload-actions">
+          <input #imageInput type="file" accept="image/jpeg,image/png,image/gif,image/webp" hidden (change)="onImageSelected($event)" />
+          <button pButton type="button" icon="pi pi-upload" label="Upload" class="p-button-outlined"
+            [loading]="isUploadingImage" (click)="imageInput.click()"></button>
+          @if (imagePreviewUrl) {
+            <button pButton type="button" icon="pi pi-times" label="Remove" class="p-button-outlined p-button-danger"
+              [disabled]="isUploadingImage" (click)="removeImage()"></button>
+          }
+          <p class="image-hint">JPG, PNG, GIF, WEBP. Max 5 MB.</p>
+          @if (dialogMode === 'add' && pendingImageFile) {
+            <p class="image-hint">Image will upload after the product is saved.</p>
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="form-field full-span"><label>Product Details</label><textarea pInputTextarea [(ngModel)]="formData.productDetails" rows="3"></textarea></div>
+    <div class="form-field checkbox-field full-span">
+      <p-checkbox [(ngModel)]="formData.isActive" [binary]="true" inputId="prod-active-check"></p-checkbox>
+      <label for="prod-active-check">Active</label>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Cancel" class="p-button-outlined" (click)="dialogVisible=false"></button>
+    <button pButton type="button" label="Save" [loading]="isSaving" (click)="onSave()"></button>
+  </ng-template>
+</p-dialog>
+

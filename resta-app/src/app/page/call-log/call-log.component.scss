@@ -1,0 +1,194 @@
+/* service-call-log.component.scss */
+
+:host {
+    display: block;
+    height: 100%;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.service-log-page {
+    height: 100vh;
+    background: var(--bg-page);
+    overflow: hidden;
+}
+
+/* Header */
+
+.top-header {
+    height: 45px;
+
+    background: var(--toolbar-bg);
+
+    color: var(--toolbar-text);
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 12px;
+
+    border-bottom: 1px solid rgba(255,255,255,0.15);
+}
+
+.page-title {
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.header-actions {
+    display: flex;
+    gap: 6px;
+}
+
+.toolbar-btn {
+    color: var(--toolbar-text) !important;
+    font-size: 12px;
+}
+
+/* Filters */
+
+.filter-section {
+    background: var(--row-alt);
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.filter-row {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.field-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.field-group label {
+    font-size: 13px;
+    min-width: 70px;
+}
+
+.field-group input {
+    width: 180px;
+}
+
+:host ::ng-deep .field-group .p-select {
+    width: 170px;
+}
+
+/* Table */
+
+:host ::ng-deep .service-log-table {
+    font-size: 12px;
+}
+
+:host ::ng-deep .service-log-table .p-datatable-thead > tr > th {
+    background: var(--table-header-bg);
+    color: var(--table-header-text);
+    padding: 7px;
+    border: 1px solid rgba(255,255,255,0.2);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+:host ::ng-deep .service-log-table .p-datatable-tbody > tr > td {
+    padding: 5px 8px;
+    border: 1px solid var(--border-color);
+    background: var(--bg-white);
+    white-space: nowrap;
+}
+
+:host ::ng-deep .service-log-table .p-datatable-tbody > tr:nth-child(even) td {
+    background: var(--row-alt);
+}
+
+.action-cell {
+    text-align: center;
+}
+
+.edit-btn {
+    color: var(--accent-yellow) !important;
+}
+
+/* Status */
+
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.completed {
+    background: #d9f5dd;
+    color: #177d2f;
+}
+
+.pending {
+    background: #ffe1e1;
+    color: #c62828;
+}
+
+/* Dialog */
+
+:host ::ng-deep .service-dialog .p-dialog-header {
+    padding: 18px 22px;
+}
+
+:host ::ng-deep .service-dialog .p-dialog-title {
+    font-size: 28px;
+    font-weight: 300;
+}
+
+:host ::ng-deep .service-dialog .p-dialog-content {
+    padding: 18px 22px;
+}
+
+.dialog-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.grid-form {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px 20px;
+}
+
+.form-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.form-row label {
+    width: 120px;
+    font-size: 13px;
+    color: var(--text-label);
+}
+
+.textarea-row {
+    align-items: flex-start;
+}
+
+:host ::ng-deep input,
+:host ::ng-deep textarea,
+:host ::ng-deep .p-select,
+:host ::ng-deep .p-datepicker {
+    width: 100%;
+}
+
+:host ::ng-deep .p-inputtext,
+:host ::ng-deep textarea {
+    border-radius: 0;
+    border: 1px solid var(--input-border);
+    padding: 5px 6px;
+    font-size: 13px;
+}
+
+:host ::ng-deep .p-dialog-footer {
+    padding: 12px 22px 18px;
+}

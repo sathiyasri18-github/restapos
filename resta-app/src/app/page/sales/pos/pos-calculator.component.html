@@ -1,0 +1,16 @@
+<div class="calc">
+  <div class="calc-display" aria-live="polite">{{ display }}</div>
+  <div class="calc-keys">
+    @for (key of keys; track key.action) {
+      <button
+        type="button"
+        class="calc-key"
+        [class.wide]="key.wide"
+        [class.equals]="key.action === 'equals'"
+        [class.op]="key.action.startsWith('op:')"
+        [class.fn]="key.action === 'clear' || key.action === 'ce' || key.action === 'backspace'"
+        (click)="onKey(key.action)"
+      >{{ key.label }}</button>
+    }
+  </div>
+</div>

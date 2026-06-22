@@ -1,0 +1,282 @@
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<div class="cat-wrapper">
+
+  <div class="cat-toolbar">
+    <div class="toolbar-left">
+      <i class="pi pi-tags toolbar-icon"></i>
+      <span class="toolbar-title">Category</span>
+      <span class="record-badge" [class.has-filter]="hasActiveFilters">
+        {{ filteredCategories.length }}
+        @if (hasActiveFilters) { / {{ categories.length }} }
+      </span>
+    </div>
+
+    <div class="toolbar-actions">
+      <button pButton type="button" icon="pi pi-plus" label="Add"
+        class="toolbar-btn btn-add"
+        pTooltip="Add new category" tooltipPosition="bottom"
+        (click)="openAddDialog()">
+      </button>
+
+      <button pButton type="button" icon="pi pi-pencil" label="Edit"
+        class="toolbar-btn btn-edit"
+        pTooltip="Edit selected category" tooltipPosition="bottom"
+        [disabled]="!selectedCategory"
+        (click)="onEditSelected()">
+      </button>
+
+      <button pButton type="button" icon="pi pi-trash" label="Delete"
+        class="toolbar-btn btn-delete"
+        pTooltip="Delete selected category" tooltipPosition="bottom"
+        [disabled]="!selectedCategory"
+        (click)="onDeleteSelected($event)">
+      </button>
+
+      <div class="toolbar-sep"></div>
+
+      <app-grid-report-toolbar [config]="categoryReportConfig" [disabled]="isLoading" />
+    </div>
+  </div>
+
+  <div class="search-bar">
+    <span class="search-label">
+      <i class="pi pi-search"></i>
+      Search
+    </span>
+    <div class="search-fields">
+      <div class="search-field">
+        <label for="cat-search">Name</label>
+        <input id="cat-search" pInputText type="text"
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="onSearchChange()"
+          placeholder="Search categories…" />
+      </div>
+
+      <div class="search-field">
+        <label for="cat-status">Status</label>
+        <p-select
+          inputId="cat-status"
+          [options]="statusFilterOptions"
+          optionLabel="label"
+          optionValue="value"
+          [(ngModel)]="activeFilter"
+          (ngModelChange)="onFilterChange()"
+          placeholder="All"
+          appendTo="body" />
+      </div>
+
+      @if (hasActiveFilters) {
+        <button class="clear-btn" (click)="onClearSearch()">
+          <i class="pi pi-filter-slash"></i>
+          Clear
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="table-container">
+    <p-table
+      [value]="filteredCategories"
+      selectionMode="single"
+      [(selection)]="selectedCategory"
+      dataKey="categoryId"
+      [scrollable]="true"
+      scrollHeight="flex"
+      [loading]="isLoading"
+      [sortField]="'name'"
+      [sortOrder]="1"
+      [paginator]="true"
+      [rows]="20"
+      [rowsPerPageOptions]="[10, 20, 50, 100]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Showing {first}–{last} of {totalRecords}"
+      styleClass="cat-table"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th class="col-index">#</th>
+          <th class="col-name" pSortableColumn="name">
+            Name <p-sortIcon field="name" />
+          </th>
+          <th class="col-parent">Parent</th>
+          <th class="col-image">Image</th>
+          <th class="col-active" pSortableColumn="isActive">
+            Active <p-sortIcon field="isActive" />
+          </th>
+          <th class="col-actions" pFrozenColumn alignFrozen="right">Actions</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-cat let-rowIndex="rowIndex">
+        <tr
+          [pSelectableRow]="cat"
+          [class.row-selected]="selectedCategory?.categoryId === cat.categoryId"
+          (dblclick)="openEditDialog(cat)"
+        >
+          <td class="col-index">
+            @if (selectedCategory?.categoryId === cat.categoryId) {
+              <i class="pi pi-caret-right row-indicator"></i>
+            } @else {
+              <span class="row-number">{{ rowIndex + 1 }}</span>
+            }
+          </td>
+          <td class="col-name">
+            <span class="name-cell">{{ cat.name }}</span>
+          </td>
+          <td class="col-parent muted-cell">{{ getParentName(cat.parentId) }}</td>
+          <td class="col-image muted-cell">{{ cat.image || '—' }}</td>
+          <td class="col-active">
+            @if (cat.isActive) {
+              <span class="status-badge active">Active</span>
+            } @else {
+              <span class="status-badge inactive">Inactive</span>
+            }
+          </td>
+          <td class="col-actions" pFrozenColumn alignFrozen="right">
+            <div class="action-btns">
+              <button class="icon-btn edit-icon"
+                (click)="openEditDialog(cat); $event.stopPropagation()"
+                pTooltip="Edit" tooltipPosition="left">
+                <i class="pi pi-pencil"></i>
+              </button>
+              <button class="icon-btn delete-icon"
+                (click)="confirmDelete(cat, $event)"
+                pTooltip="Delete" tooltipPosition="left">
+                <i class="pi pi-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6">
+            <div class="empty-state">
+              <i class="pi pi-tags empty-icon"></i>
+              @if (hasActiveFilters) {
+                <p class="empty-title">No categories found</p>
+                <p class="empty-sub">No categories match your filter criteria.</p>
+                <button pButton type="button" icon="pi pi-filter-slash"
+                  label="Clear Filters" class="p-button-outlined p-button-sm"
+                  (click)="onClearSearch()">
+                </button>
+              } @else {
+                <p class="empty-title">No categories yet</p>
+                <p class="empty-sub">Get started by adding your first category.</p>
+                <button pButton type="button" icon="pi pi-plus"
+                  label="Add Category" class="p-button-sm btn-add"
+                  (click)="openAddDialog()">
+                </button>
+              }
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="loadingbody">
+        @for (i of [1,2,3,4,5,6,7]; track i) {
+          <tr>
+            <td class="col-index"><p-skeleton width="24px" height="14px" /></td>
+            <td class="col-name"><p-skeleton height="14px" /></td>
+            <td class="col-parent"><p-skeleton height="14px" /></td>
+            <td class="col-image"><p-skeleton height="14px" /></td>
+            <td class="col-active"><p-skeleton width="64px" height="20px" borderRadius="10px" /></td>
+            <td class="col-actions"><p-skeleton width="60px" height="14px" /></td>
+          </tr>
+        }
+      </ng-template>
+    </p-table>
+  </div>
+
+  <div class="status-bar">
+    <span class="record-count">
+      Showing <strong>{{ filteredCategories.length }}</strong> of <strong>{{ categories.length }}</strong> categories
+    </span>
+    @if (selectedCategory) {
+      <span class="selected-info">
+        <i class="pi pi-check-circle"></i>
+        Selected: <strong>{{ selectedCategory.name }}</strong>
+      </span>
+    }
+    <span class="hint-text">Double-click a row to edit</span>
+  </div>
+
+</div>
+
+<p-dialog
+  [header]="dialogTitle"
+  [(visible)]="dialogVisible"
+  [modal]="true"
+  [style]="{ width: '520px' }"
+  [closable]="true"
+  [draggable]="true"
+  styleClass="cat-dialog"
+  (onHide)="onDialogHide()"
+>
+  <div class="dialog-form">
+
+    <div class="form-section">
+      <div class="section-title">
+        <i class="pi pi-tags"></i>
+        Category Information
+      </div>
+
+      <div class="form-grid-2">
+        <div class="form-field full-span" [class.has-error]="formErrors.name">
+          <label>Name <span class="required">*</span></label>
+          <input pInputText type="text"
+            [(ngModel)]="formData.name"
+            (ngModelChange)="formErrors.name = undefined"
+            placeholder="Category name"
+            [class.input-error]="formErrors.name" />
+          @if (formErrors.name) {
+            <span class="field-error">
+              <i class="pi pi-exclamation-circle"></i> {{ formErrors.name }}
+            </span>
+          }
+        </div>
+
+        <div class="form-field full-span">
+          <label>Parent Category</label>
+          <p-select
+            [options]="parentOptions"
+            optionLabel="label"
+            optionValue="value"
+            [(ngModel)]="formData.parentId"
+            placeholder="Select parent"
+            appendTo="body" />
+        </div>
+
+        <div class="form-field full-span">
+          <label>Image URL</label>
+          <input pInputText type="text"
+            [(ngModel)]="formData.image"
+            placeholder="Optional image path or URL" />
+        </div>
+
+        <div class="form-field full-span checkbox-field">
+          <p-checkbox [(ngModel)]="formData.isActive" [binary]="true" inputId="cat-active" />
+          <label for="cat-active">Active</label>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button pButton type="button" icon="pi pi-times" label="Cancel"
+        class="p-button-outlined btn-cancel"
+        (click)="dialogVisible = false">
+      </button>
+      <button pButton type="button" icon="pi pi-check" label="Save"
+        class="btn-ok"
+        [loading]="isSaving"
+        (click)="onSave()">
+      </button>
+    </div>
+  </ng-template>
+</p-dialog>

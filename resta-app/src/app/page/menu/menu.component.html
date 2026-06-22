@@ -1,0 +1,116 @@
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<div class="mnu-wrapper">
+  <div class="mnu-toolbar">
+    <div class="toolbar-left">
+      <i class="pi pi-sitemap toolbar-icon"></i>
+      <span class="toolbar-title">Menus</span>
+      <span class="record-badge">{{ displayedMenus.length }}</span>
+    </div>
+    <div class="toolbar-actions">
+      <button pButton icon="pi pi-plus" label="Add" class="toolbar-btn btn-add" (click)="openAddDialog()"></button>
+      <button pButton icon="pi pi-pencil" label="Edit" class="toolbar-btn btn-edit"
+        [disabled]="!selectedMenu" (click)="onEditSelected()"></button>
+      <button pButton icon="pi pi-trash" label="Delete" class="toolbar-btn btn-delete"
+        [disabled]="!selectedMenu" (click)="onDeleteSelected($event)"></button>
+      <div class="toolbar-sep"></div>
+      <app-grid-report-toolbar [config]="menuReportConfig" [disabled]="isLoading" />
+    </div>
+  </div>
+
+  <div class="search-bar">
+    <span class="search-label"><i class="pi pi-search"></i> Search</span>
+    <input pInputText [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange()" placeholder="Code / name / route…" />
+    @if (hasActiveSearch) {
+      <button class="clear-btn" (click)="onClearSearch()"><i class="pi pi-filter-slash"></i> Clear</button>
+    }
+  </div>
+
+  <div class="table-container">
+    <p-table [value]="displayedMenus" selectionMode="single" [(selection)]="selectedMenu" dataKey="id"
+      [scrollable]="true" scrollHeight="flex" [loading]="isLoading" styleClass="mnu-table">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>#</th>
+          <th>Code</th>
+          <th>Name</th>
+          <th>Parent</th>
+          <th>Route</th>
+          <th>Icon</th>
+          <th>Sort</th>
+          <th>Active</th>
+          <th>Actions</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-m let-rowIndex="rowIndex">
+        <tr [pSelectableRow]="m" (dblclick)="openEditDialog(m)">
+          <td>{{ rowIndex + 1 }}</td>
+          <td>{{ m.menuCode }}</td>
+          <td class="name-cell">{{ m.menuName }}</td>
+          <td class="muted-cell">{{ m.parentMenuName || '—' }}</td>
+          <td class="muted-cell">{{ m.routePath || '—' }}</td>
+          <td class="icon-cell">
+            @if (m.icon) {
+              <i [class]="m.icon + ' table-icon'"></i>
+              <span class="icon-label">{{ m.icon }}</span>
+            } @else {
+              <span class="muted-cell">—</span>
+            }
+          </td>
+          <td>{{ m.sortOrder }}</td>
+          <td>{{ m.isActive ? 'Yes' : 'No' }}</td>
+          <td>
+            <div class="action-btns">
+              <button class="icon-btn edit-icon" (click)="openEditDialog(m); $event.stopPropagation()"><i class="pi pi-pencil"></i></button>
+              <button class="icon-btn delete-icon" (click)="confirmDelete(m, $event)"><i class="pi pi-trash"></i></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</div>
+
+<p-dialog [(visible)]="dialogVisible" [header]="dialogTitle" [modal]="true" [style]="{ width: '520px' }" styleClass="mnu-dialog">
+  <div class="dialog-form">
+    <div class="form-field">
+      <label>Parent Menu</label>
+      <p-select [options]="parentOptions" optionLabel="label" optionValue="value"
+        [(ngModel)]="formData.parentMenuId" [showClear]="true" appendTo="body" placeholder="Top level" />
+    </div>
+    <div class="form-field" [class.has-error]="formErrors.menuCode">
+      <label>Menu Code *</label>
+      <input pInputText [(ngModel)]="formData.menuCode" />
+      @if (formErrors.menuCode) { <span class="field-error">{{ formErrors.menuCode }}</span> }
+    </div>
+    <div class="form-field" [class.has-error]="formErrors.menuName">
+      <label>Menu Name *</label>
+      <input pInputText [(ngModel)]="formData.menuName" />
+      @if (formErrors.menuName) { <span class="field-error">{{ formErrors.menuName }}</span> }
+    </div>
+    <div class="form-field">
+      <label>Route Path</label>
+      <input pInputText [(ngModel)]="formData.routePath" placeholder="/customer" />
+    </div>
+    <div class="form-field">
+      <label>Icon (PrimeIcons class)</label>
+      <div class="icon-input-row">
+        <span class="icon-preview"><i [class]="formData.icon || 'pi pi-circle'"></i></span>
+        <input pInputText [(ngModel)]="formData.icon" placeholder="pi pi-users" />
+      </div>
+    </div>
+    <div class="form-field">
+      <label>Sort Order</label>
+      <input pInputText type="number" [(ngModel)]="formData.sortOrder" />
+    </div>
+    <div class="form-field checkbox-field">
+      <p-checkbox [(ngModel)]="formData.isActive" [binary]="true" inputId="mnu-active" />
+      <label for="mnu-active">Active</label>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancel" class="p-button-outlined p-button-sm" (click)="dialogVisible = false"></button>
+    <button pButton label="Save" [loading]="isSaving" (click)="onSave()"></button>
+  </ng-template>
+</p-dialog>

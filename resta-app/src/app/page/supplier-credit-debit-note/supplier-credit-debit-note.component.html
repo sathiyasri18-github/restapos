@@ -1,0 +1,329 @@
+<!-- supplier-credit-debit-note.component.html -->
+
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<div class="sdn-wrapper">
+
+  <div class="sdn-toolbar">
+    <div class="toolbar-left">
+      <i class="pi pi-truck toolbar-icon"></i>
+      <span class="toolbar-title">Supplier Credit / Debit Note</span>
+      <span class="record-badge" [class.has-filter]="hasActiveSearch">
+        {{ notes.length }}
+        @if (hasActiveSearch) { / {{ totalRecords }} }
+      </span>
+    </div>
+
+    <div class="toolbar-actions">
+      <button pButton type="button" icon="pi pi-plus" label="Add"
+        class="toolbar-btn btn-add"
+        pTooltip="Add new note" tooltipPosition="bottom"
+        (click)="openAddDialog()">
+      </button>
+
+      <button pButton type="button" icon="pi pi-pencil" label="Edit"
+        class="toolbar-btn btn-edit"
+        pTooltip="Edit selected note" tooltipPosition="bottom"
+        [disabled]="!selectedNote"
+        (click)="onEditSelected()">
+      </button>
+
+      <button pButton type="button" icon="pi pi-trash" label="Delete"
+        class="toolbar-btn btn-delete"
+        pTooltip="Delete selected note" tooltipPosition="bottom"
+        [disabled]="!selectedNote"
+        (click)="onDeleteSelected($event)">
+      </button>
+
+      <div class="toolbar-sep"></div>
+
+      <app-grid-report-toolbar [config]="noteReportConfig" [disabled]="isLoading" />
+    </div>
+  </div>
+
+  <div class="search-bar">
+    <span class="search-label">
+      <i class="pi pi-search"></i>
+      Search
+    </span>
+    <div class="search-fields">
+      <div class="search-field">
+        <label for="sdn-search">Voucher No / Narration</label>
+        <input id="sdn-search" pInputText type="text"
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="onSearchChange()"
+          placeholder="Search notes…" />
+      </div>
+
+      @if (hasActiveSearch) {
+        <button class="clear-btn" (click)="onClearSearch()">
+          <i class="pi pi-filter-slash"></i>
+          Clear
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="table-container">
+    <p-table
+      [value]="notes"
+      selectionMode="single"
+      [(selection)]="selectedNote"
+      dataKey="supplierCreditDebitNoteId"
+      [scrollable]="true"
+      scrollHeight="flex"
+      [loading]="isLoading"
+      [sortField]="'voucherDate'"
+      [sortOrder]="-1"
+      [paginator]="true"
+      [rows]="20"
+      [rowsPerPageOptions]="[10, 20, 50, 100]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Showing {first}–{last} of {totalRecords}"
+      styleClass="sdn-table"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th class="col-index">#</th>
+          <th class="col-vno" pSortableColumn="voucherNo">
+            Voucher No. <p-sortIcon field="voucherNo" />
+          </th>
+          <th class="col-date" pSortableColumn="voucherDate">
+            Date <p-sortIcon field="voucherDate" />
+          </th>
+          <th class="col-type" pSortableColumn="voucherType">
+            Type <p-sortIcon field="voucherType" />
+          </th>
+          <th class="col-supplier">Supplier</th>
+          <th class="col-amount" pSortableColumn="totalAmount">
+            Amount <p-sortIcon field="totalAmount" />
+          </th>
+          <th class="col-narration">Narration</th>
+          <th class="col-actions">Actions</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-n let-rowIndex="rowIndex">
+        <tr
+          [pSelectableRow]="n"
+          [class.row-selected]="selectedNote?.supplierCreditDebitNoteId === n.supplierCreditDebitNoteId"
+          (dblclick)="openEditDialog(n)"
+        >
+          <td class="col-index">
+            @if (selectedNote?.supplierCreditDebitNoteId === n.supplierCreditDebitNoteId) {
+              <i class="pi pi-caret-right row-indicator"></i>
+            } @else {
+              <span class="row-number">{{ rowIndex + 1 }}</span>
+            }
+          </td>
+          <td class="col-vno">
+            <span class="name-cell">{{ n.voucherNo || '—' }}</span>
+          </td>
+          <td class="col-date muted-cell">{{ formatDate(n.voucherDate) }}</td>
+          <td class="col-type">
+            @if (n.voucherType != null) {
+              <span class="type-badge type-{{ getVoucherTypeKey(n.voucherType) }}">
+                {{ getVoucherTypeName(n.voucherType) }}
+              </span>
+            } @else {
+              <span class="muted-cell">—</span>
+            }
+          </td>
+          <td class="col-supplier muted-cell">{{ getSupplierName(n.supplierId) }}</td>
+          <td class="col-amount amount-cell">{{ formatAmount(n.totalAmount) }}</td>
+          <td class="col-narration muted-cell truncate-cell">{{ n.narration || '—' }}</td>
+          <td class="col-actions">
+            <div class="action-btns">
+              <button class="icon-btn edit-icon"
+                (click)="openEditDialog(n); $event.stopPropagation()"
+                pTooltip="Edit" tooltipPosition="left">
+                <i class="pi pi-pencil"></i>
+              </button>
+              <button class="icon-btn delete-icon"
+                (click)="confirmDelete(n, $event)"
+                pTooltip="Delete" tooltipPosition="left">
+                <i class="pi pi-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="8">
+            <div class="empty-state">
+              <i class="pi pi-file-edit empty-icon"></i>
+              @if (hasActiveSearch) {
+                <p class="empty-title">No notes found</p>
+                <p class="empty-sub">No notes match "<strong>{{ searchTerm }}</strong>"</p>
+                <button pButton type="button" icon="pi pi-filter-slash"
+                  label="Clear Search" class="p-button-outlined p-button-sm"
+                  (click)="onClearSearch()">
+                </button>
+              } @else {
+                <p class="empty-title">No credit/debit notes yet</p>
+                <p class="empty-sub">Get started by adding your first supplier credit or debit note.</p>
+                <button pButton type="button" icon="pi pi-plus"
+                  label="Add Note" class="p-button-sm btn-add"
+                  (click)="openAddDialog()">
+                </button>
+              }
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="loadingbody">
+        @for (i of [1,2,3,4,5,6,7]; track i) {
+          <tr>
+            <td class="col-index"><p-skeleton width="24px" height="14px" /></td>
+            <td class="col-vno"><p-skeleton height="14px" /></td>
+            <td class="col-date"><p-skeleton height="14px" /></td>
+            <td class="col-type"><p-skeleton width="64px" height="20px" borderRadius="10px" /></td>
+            <td class="col-supplier"><p-skeleton height="14px" /></td>
+            <td class="col-amount"><p-skeleton height="14px" /></td>
+            <td class="col-narration"><p-skeleton height="14px" /></td>
+            <td class="col-actions"><p-skeleton width="60px" height="14px" /></td>
+          </tr>
+        }
+      </ng-template>
+    </p-table>
+  </div>
+
+  <div class="status-bar">
+    <span class="record-count">
+      <strong>{{ notes.length }}</strong> notes loaded
+    </span>
+    @if (selectedNote) {
+      <span class="selected-info">
+        <i class="pi pi-check-circle"></i>
+        Selected: <strong>{{ selectedNote.voucherNo || ('#' + selectedNote.supplierCreditDebitNoteId) }}</strong>
+      </span>
+    }
+    <span class="hint-text">Double-click a row to edit</span>
+  </div>
+
+</div>
+
+<p-dialog
+  [header]="dialogTitle"
+  [(visible)]="dialogVisible"
+  [modal]="true"
+  [style]="{ width: '700px', maxHeight: '90vh' }"
+  [contentStyle]="{ overflowY: 'auto' }"
+  [closable]="true"
+  [draggable]="true"
+  styleClass="sdn-dialog"
+  (onHide)="onDialogHide()"
+>
+  <div class="dialog-form">
+
+    <div class="form-section">
+      <div class="section-title">
+        <i class="pi pi-file-edit"></i>
+        Note Details
+      </div>
+
+      <div class="form-grid-2">
+
+        <div class="form-field" [class.has-error]="formErrors.voucherNo">
+          <label>Voucher No.</label>
+          <input pInputText type="text"
+            [(ngModel)]="formData.voucherNo"
+            (ngModelChange)="formErrors.voucherNo = undefined"
+            placeholder="e.g. SDN-001"
+            maxlength="20"
+            [class.input-error]="formErrors.voucherNo" />
+          @if (formErrors.voucherNo) {
+            <span class="field-error">
+              <i class="pi pi-exclamation-circle"></i> {{ formErrors.voucherNo }}
+            </span>
+          }
+        </div>
+
+        <div class="form-field">
+          <label>Voucher Date</label>
+          <p-datepicker
+            [(ngModel)]="formData.voucherDate"
+            dateFormat="dd/mm/yy"
+            appendTo="body"
+            placeholder="DD/MM/YYYY" />
+        </div>
+
+        <div class="form-field">
+          <label>Note Type</label>
+          <p-select
+            [options]="voucherTypeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [(ngModel)]="formData.voucherType"
+            placeholder="Select type"
+            [showClear]="true" />
+        </div>
+
+        <div class="form-field">
+          <label>Supplier</label>
+          <p-select
+            [options]="supplierOptions"
+            optionLabel="label"
+            optionValue="value"
+            [(ngModel)]="formData.supplierId"
+            placeholder="Select supplier"
+            [showClear]="true"
+            [filter]="true"
+            filterPlaceholder="Search…" />
+        </div>
+
+        <div class="form-field" [class.has-error]="formErrors.totalAmount">
+          <label>Total Amount</label>
+          <input pInputText type="number"
+            [(ngModel)]="formData.totalAmount"
+            (ngModelChange)="formErrors.totalAmount = undefined"
+            placeholder="0.00"
+            min="0"
+            step="0.01"
+            [class.input-error]="formErrors.totalAmount" />
+          @if (formErrors.totalAmount) {
+            <span class="field-error">
+              <i class="pi pi-exclamation-circle"></i> {{ formErrors.totalAmount }}
+            </span>
+          }
+        </div>
+
+        <div class="form-field full-span" [class.has-error]="formErrors.narration">
+          <label>Narration</label>
+          <textarea pInputTextarea
+            [(ngModel)]="formData.narration"
+            (ngModelChange)="formErrors.narration = undefined"
+            rows="3"
+            maxlength="500"
+            placeholder="Note description…">
+          </textarea>
+          @if (formErrors.narration) {
+            <span class="field-error">
+              <i class="pi pi-exclamation-circle"></i> {{ formErrors.narration }}
+            </span>
+          }
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button pButton type="button" icon="pi pi-times" label="Cancel"
+        class="p-button-outlined btn-cancel"
+        (click)="dialogVisible = false">
+      </button>
+      <button pButton type="button" icon="pi pi-check" label="Save"
+        class="btn-ok"
+        [loading]="isSaving"
+        (click)="onSave()">
+      </button>
+    </div>
+  </ng-template>
+</p-dialog>
