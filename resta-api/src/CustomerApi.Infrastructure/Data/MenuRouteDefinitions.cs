@@ -40,7 +40,7 @@ public static class MenuRouteDefinitions
         new(210, 2, "CUSTOMER_GROUP", "Customer Group", "/customer-group", "pi pi-users", 100),
         new(211, 2, "CURRENCY", "Currency", "/currency", "pi pi-dollar", 110),
         new(212, 2, "EXPENSE_CATEGORY", "Expense Category", "/expense-category", "pi pi-wallet", 120),
-        new(213, 2, "CATEGORY_TYPE", "Category Type", "/category-type", "pi pi-sitemap", 130),
+        new(213, 2, "META_TYPE", "Meta Type", "/meta-type", "pi pi-sitemap", 130),
 
         // Purchase
         new(301, 3, "PURCHASE_ORDER", "Purchase Order", "/product-purchase", "pi pi-shopping-cart", 10),

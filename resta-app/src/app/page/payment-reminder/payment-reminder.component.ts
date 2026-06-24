@@ -9,8 +9,8 @@ import {
   formatMoney,
   formatYesNo
 } from '../../common/grid-report';
-import { CategoryService } from '../../services/category.service';
-import { CategoryType, CategoryTypeService } from '../../services/category-type.service';
+import { MetaService } from '../../services/meta.service';
+import { MetaType, MetaTypeService } from '../../services/meta-type.service';
 import { CustomerService } from '../../services/customer.service';
 import {
   CreatePaymentReminderDto,
@@ -82,8 +82,8 @@ export class PaymentReminderComponent implements OnInit, OnDestroy {
   constructor(
     private paymentReminderService: PaymentReminderService,
     private customerService: CustomerService,
-    private categoryTypeService: CategoryTypeService,
-    private categoryService: CategoryService,
+    private metaTypeService: MetaTypeService,
+    private metaService: MetaService,
     private messageService: MessageService,
     private confirmationService: ConfirmationService,
     private cdr: ChangeDetectorRef
@@ -146,17 +146,17 @@ export class PaymentReminderComponent implements OnInit, OnDestroy {
     this.lookupsLoading = true;
     forkJoin({
       customers: this.customerService.getAll({ pageSize: 500 }),
-      types:     this.categoryTypeService.getAll({ pageSize: 200 }),
+      types:     this.metaTypeService.getAll({ pageSize: 200 }),
     }).subscribe({
       next: ({ customers, types }) => {
         this.bindCustomers(customers);
-        const typeList = this.extractItems(types) as CategoryType[];
+        const typeList = this.extractItems(types) as MetaType[];
         const typeId = REMINDER_TYPE_CODES
-          .map(code => typeList.find(t => t.categoryTypeCode?.toUpperCase() === code)?.categoryTypeId)
+          .map(code => typeList.find(t => t.metaTypeCode?.toUpperCase() === code)?.metaTypeId)
           .find(id => id != null);
 
         if (typeId) {
-          this.categoryService.getAll({ categoryTypeId: typeId, pageSize: 500 }).subscribe({
+          this.metaService.getAll({ metaTypeId: typeId, pageSize: 500 }).subscribe({
             next: (cats) => {
               this.bindReminderTypes(cats);
               this.lookupsLoading = false;
@@ -167,7 +167,7 @@ export class PaymentReminderComponent implements OnInit, OnDestroy {
             }
           });
         } else {
-          this.categoryService.getAll({ pageSize: 500 }).subscribe({
+          this.metaService.getAll({ pageSize: 500 }).subscribe({
             next: (cats) => {
               this.bindReminderTypes(cats);
               this.lookupsLoading = false;
@@ -199,8 +199,8 @@ export class PaymentReminderComponent implements OnInit, OnDestroy {
     const list = this.extractItems(res);
     this.reminderTypeMap.clear();
     this.reminderTypeOptions = list.map((c: any) => {
-      const id = c.categoryId ?? c.id ?? 0;
-      const name = c.categoryName ?? '';
+      const id = c.metaId ?? c.categoryId ?? c.id ?? 0;
+      const name = c.metaName ?? c.categoryName ?? '';
       this.reminderTypeMap.set(id, name);
       return { label: name, value: id };
     });

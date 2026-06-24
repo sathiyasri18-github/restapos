@@ -45,7 +45,7 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
             context.Response.StatusCode  = (int)HttpStatusCode.InternalServerError;
             context.Response.ContentType = "application/json";
 
-            var response = new { title = "An unexpected error occurred.",exception = ex.Message, status = 500 };
+            var response = new { title = "An unexpected error occurred.",exception = ex.Message, stackTrace = ex.StackTrace, innerException = ex.InnerException?.Message, status = 500 };
             await context.Response.WriteAsync(JsonSerializer.Serialize(response));
         }
     }

@@ -6,8 +6,8 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { forkJoin, Subject, debounceTime, takeUntil } from 'rxjs';
 import { AppModule } from '../../module/app.module';
 import { GridReportConfig, GridReportToolbarComponent } from '../../common/grid-report';
-import { Category, CategoryService, CreateCategoryDto } from '../../services/category.service';
-import { CategoryType, CategoryTypeService } from '../../services/category-type.service';
+import { Meta, MetaService, CreateMetaDto } from '../../services/meta.service';
+import { MetaType, MetaTypeService } from '../../services/meta-type.service';
 import { Customer, CustomerService, CreateCustomerDto } from '../../services/customer.service';
 import { CreateEmployeeDto, Employee, EmployeeService } from '../../services/employee.service';
 import {
@@ -35,7 +35,7 @@ interface FormErrors {
 type LookupAddKind = 'customer' | 'serviceType' | 'status' | 'priority' | 'actionTaken' | 'engineer';
 type EngineerField = 'assigned' | 'chief';
 
-/** Category type codes used to load lookup lists from Categories API */
+/** Meta type codes used to load lookup lists from Metas API */
 const LOOKUP_TYPE_CODES = {
   serviceType: ['SERVICE_TYPE', 'SVC_TYPE', 'SERVICETYPE'],
   actionTaken: ['ACTION_TAKEN', 'ACTIONTAKEN'],
@@ -102,7 +102,7 @@ export class ServiceCallComponent implements OnInit, OnDestroy {
   lookupAddError = '';
   lookupAddSaving = false;
 
-  private categoryTypeIds: {
+  private metaTypeIds: {
     serviceType?: number;
     actionTaken?: number;
     status?: number;
@@ -121,8 +121,8 @@ export class ServiceCallComponent implements OnInit, OnDestroy {
     private router: Router,
     private customerService: CustomerService,
     private employeeService: EmployeeService,
-    private categoryTypeService: CategoryTypeService,
-    private categoryService: CategoryService,
+    private metaTypeService: MetaTypeService,
+    private metaService: MetaService,
     private messageService: MessageService,
     private confirmationService: ConfirmationService,
     private cdr: ChangeDetectorRef
@@ -210,7 +210,7 @@ export class ServiceCallComponent implements OnInit, OnDestroy {
   loadLookups(): void {
     this.lookupsLoading = true;
     forkJoin({
-      types:     this.categoryTypeService.getAll({ pageSize: 200 }),
+      types:     this.metaTypeService.getAll({ pageSize: 200 }),
       customers: this.customerService.getAll({ pageSize: 500 }),
       employees: this.employeeService.getAll({ isActive: true, pageSize: 500 }),
     }).subscribe({
@@ -218,15 +218,15 @@ export class ServiceCallComponent implements OnInit, OnDestroy {
         this.bindCustomers(customers);
         this.bindEmployees(employees);
 
-        const typeList = this.extractItems(types) as CategoryType[];
-        const loads: Record<string, ReturnType<CategoryService['getAll']>> = {};
+        const typeList = this.extractItems(types) as MetaType[];
+        const loads: Record<string, ReturnType<MetaService['getAll']>> = {};
 
         const resolveTypeId = (codes: readonly string[]): number | undefined => {
           for (const code of codes) {
             const found = typeList.find(
-              t => t.categoryTypeCode?.toUpperCase() === code.toUpperCase()
+              t => t.metaTypeCode?.toUpperCase() === code.toUpperCase()
             );
-            if (found) return found.categoryTypeId;
+            if (found) return found.metaTypeId;
           }
           return undefined;
         };
@@ -237,12 +237,12 @@ export class ServiceCallComponent implements OnInit, OnDestroy {
           status:      resolveTypeId(LOOKUP_TYPE_CODES.status),
           priority:    resolveTypeId(LOOKUP_TYPE_CODES.priority),
         };
-        this.categoryTypeIds = typeIds;
+        this.metaTypeIds = typeIds;
 
-        if (typeIds.serviceType) loads['serviceType'] = this.categoryService.getAll({ categoryTypeId: typeIds.serviceType, pageSize: 500 });
-        if (typeIds.actionTaken) loads['actionTaken'] = this.categoryService.getAll({ categoryTypeId: typeIds.actionTaken, pageSize: 500 });
-        if (typeIds.status)      loads['status']      = this.categoryService.getAll({ categoryTypeId: typeIds.status, pageSize: 500 });
-        if (typeIds.priority)    loads['priority']    = this.categoryService.getAll({ categoryTypeId: typeIds.priority, pageSize: 500 });
+        if (typeIds.serviceType) loads['serviceType'] = this.metaService.getAll({ metaTypeId: typeIds.serviceType, pageSize: 500 });
+        if (typeIds.actionTaken) loads['actionTaken'] = this.metaService.getAll({ metaTypeId: typeIds.actionTaken, pageSize: 500 });
+        if (typeIds.status)      loads['status']      = this.metaService.getAll({ metaTypeId: typeIds.status, pageSize: 500 });
+        if (typeIds.priority)    loads['priority']    = this.metaService.getAll({ metaTypeId: typeIds.priority, pageSize: 500 });
 
         if (Object.keys(loads).length === 0) {
           this.lookupsLoading = false;
@@ -267,7 +267,7 @@ export class ServiceCallComponent implements OnInit, OnDestroy {
           },
           error: () => {
             this.lookupsLoading = false;
-            this.messageService.add({ severity: 'warn', summary: 'Lookups', detail: 'Could not load category lists.' });
+            this.messageService.add({ severity: 'warn', summary: 'Lookups', detail: 'Could not load meta lists.' });
           }
         });
       },
@@ -300,37 +300,37 @@ export class ServiceCallComponent implements OnInit, OnDestroy {
     });
   }
 
-  private mapCategory(x: any): Category {
+  private mapMeta(x: any): Meta {
     return {
-      categoryId:     x.categoryId ?? x.id ?? 0,
-      categoryName:   x.categoryName ?? '',
-      categoryTypeId: x.categoryTypeId != null ? Number(x.categoryTypeId) : null,
+      metaId:     x.metaId ?? x.categoryId ?? x.id ?? 0,
+      metaName:   x.metaName ?? x.categoryName ?? '',
+      metaTypeId: x.metaTypeId != null ? Number(x.metaTypeId) : (x.categoryTypeId != null ? Number(x.categoryTypeId) : null),
     };
   }
 
   private bindCategoryOptions(list: any[], target: 'serviceType' | 'actionTaken' | 'status' | 'priority'): void {
-    const cats = list.map(x => this.mapCategory(x));
-    const options = cats.map(c => ({ label: c.categoryName, value: c.categoryId }));
+    const cats = list.map(x => this.mapMeta(x));
+    const options = cats.map(c => ({ label: c.metaName, value: c.metaId }));
 
     if (target === 'serviceType') {
       this.serviceTypeMap.clear();
       this.serviceTypeOptions = options;
-      cats.forEach(c => this.serviceTypeMap.set(c.categoryId, c.categoryName));
+      cats.forEach(c => this.serviceTypeMap.set(c.metaId, c.metaName));
     }
     if (target === 'actionTaken') {
       this.actionTakenMap.clear();
       this.actionTakenOptions = options;
-      cats.forEach(c => this.actionTakenMap.set(c.categoryId, c.categoryName));
+      cats.forEach(c => this.actionTakenMap.set(c.metaId, c.metaName));
     }
     if (target === 'status') {
       this.statusMap.clear();
       this.statusOptions = options;
-      cats.forEach(c => this.statusMap.set(c.categoryId, c.categoryName));
+      cats.forEach(c => this.statusMap.set(c.metaId, c.metaName));
     }
     if (target === 'priority') {
       this.priorityMap.clear();
       this.priorityOptions = options;
-      cats.forEach(c => this.priorityMap.set(c.categoryId, c.categoryName));
+      cats.forEach(c => this.priorityMap.set(c.metaId, c.metaName));
     }
   }
 
@@ -550,27 +550,26 @@ export class ServiceCallComponent implements OnInit, OnDestroy {
     kind: 'serviceType' | 'status' | 'priority' | 'actionTaken',
     name: string
   ): void {
-    const categoryTypeId = this.categoryTypeIds[kind];
-    if (!categoryTypeId) {
-      this.failLookupAdd('Category type is not configured. Add it under Category Type first.');
+    const metaTypeId = this.metaTypeIds[kind];
+    if (!metaTypeId) {
+      this.failLookupAdd('Meta type is not configured. Add it under Meta Type first.');
       return;
     }
-    const dto: CreateCategoryDto = {
-      categoryName: name,
-      categoryTypeId,
-      createdBy: null,
+    const dto: CreateMetaDto = {
+      metaName: name,
+      metaTypeId,
     };
-    this.categoryService.create(dto).subscribe({
+    this.metaService.create(dto).subscribe({
       next: (res: any) => {
-        const cat = this.mapCategory(res?.data ?? res ?? { categoryName: name, categoryTypeId });
+        const cat = this.mapMeta(res?.data ?? res ?? { metaName: name, metaTypeId });
         this.appendCategoryOption(cat, kind);
         switch (kind) {
           case 'serviceType':
-            this.formData.serviceTypeId = cat.categoryId;
+            this.formData.serviceTypeId = cat.metaId;
             this.formErrors.serviceTypeId = undefined;
             break;
           case 'status':
-            this.formData.statusId = cat.categoryId;
+            this.formData.statusId = cat.metaId;
             this.formErrors.statusId = undefined;
             this.statusFilterOptions = [
               { label: 'All', value: null },
@@ -578,10 +577,10 @@ export class ServiceCallComponent implements OnInit, OnDestroy {
             ];
             break;
           case 'priority':
-            this.formData.priorityId = cat.categoryId;
+            this.formData.priorityId = cat.metaId;
             break;
           case 'actionTaken':
-            this.formData.actionTakenId = cat.categoryId;
+            this.formData.actionTakenId = cat.metaId;
             break;
         }
         this.finishLookupAdd('Item added');
@@ -609,13 +608,13 @@ export class ServiceCallComponent implements OnInit, OnDestroy {
   }
 
   private appendCategoryOption(
-    cat: Category,
+    cat: Meta,
     target: 'serviceType' | 'actionTaken' | 'status' | 'priority'
   ): void {
-    const opt = { label: cat.categoryName, value: cat.categoryId };
+    const opt = { label: cat.metaName, value: cat.metaId };
     const append = (options: SelectOption<number>[], map: Map<number, string>) => {
-      map.set(cat.categoryId, cat.categoryName);
-      if (!options.some(o => o.value === cat.categoryId)) {
+      map.set(cat.metaId, cat.metaName);
+      if (!options.some(o => o.value === cat.metaId)) {
         return [...options, opt].sort((a, b) => a.label.localeCompare(b.label));
       }
       return options;

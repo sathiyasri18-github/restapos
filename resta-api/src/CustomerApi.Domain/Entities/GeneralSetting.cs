@@ -5,6 +5,7 @@ public class GeneralSetting
     public int Id { get; set; }
     public string SiteTitle { get; set; } = null!;
     public string? SiteLogo { get; set; }
+    public string? Favicon { get; set; }
     public bool? IsRtl { get; set; }
     public string Currency { get; set; } = null!;
     public string StaffAccess { get; set; } = null!;

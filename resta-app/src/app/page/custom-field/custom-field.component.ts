@@ -3,7 +3,7 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { Subject, debounceTime, distinctUntilChanged, takeUntil } from 'rxjs';
 import { AppModule } from '../../module/app.module';
 import { GridReportConfig, GridReportToolbarComponent, formatYesNo } from '../../common/grid-report';
-import { CategoryService } from '../../services/category.service';
+import { MetaService } from '../../services/meta.service';
 import {
   CreateCustomFieldDto,
   CustomField,
@@ -106,7 +106,7 @@ export class CustomFieldComponent implements OnInit, OnDestroy {
   constructor(
     private customFieldService: CustomFieldService,
     private customFieldValueService: CustomFieldValueService,
-    private categoryService: CategoryService,
+    private metaService: MetaService,
     private messageService: MessageService,
     private confirmationService: ConfirmationService,
     private cdr: ChangeDetectorRef
@@ -160,7 +160,7 @@ export class CustomFieldComponent implements OnInit, OnDestroy {
   private loadEntityTypes(): void {
     const tryLoad = (index: number) => {
       if (index >= ENTITY_TYPE_CODES.length) return;
-      this.categoryService.getByCategoryTypeCode(ENTITY_TYPE_CODES[index]).subscribe({
+      this.metaService.getByMetaTypeCode(ENTITY_TYPE_CODES[index]).subscribe({
         next: (res) => {
           const items = this.extractItems(res);
           if (items.length > 0) {
@@ -179,10 +179,10 @@ export class CustomFieldComponent implements OnInit, OnDestroy {
   private loadFieldTypes(): void {
     const tryLoad = (index: number) => {
       if (index >= FIELD_TYPE_CODES.length) {
-        this.messageService.add({ severity: 'warn', summary: 'Lookups', detail: 'Could not load field type categories.' });
+        this.messageService.add({ severity: 'warn', summary: 'Lookups', detail: 'Could not load field type metas.' });
         return;
       }
-      this.categoryService.getByCategoryTypeCode(FIELD_TYPE_CODES[index]).subscribe({
+      this.metaService.getByMetaTypeCode(FIELD_TYPE_CODES[index]).subscribe({
         next: (res) => {
           const items = this.extractItems(res);
           if (items.length > 0) {
@@ -201,8 +201,8 @@ export class CustomFieldComponent implements OnInit, OnDestroy {
   private bindEntityTypes(res: any): void {
     const list = this.extractItems(res);
     this.entityTypeOptions = list.map((c: any) => ({
-      label: c.categoryName ?? '',
-      value: c.categoryId ?? c.id ?? 0,
+      label: c.metaName ?? c.categoryName ?? '',
+      value: c.metaId ?? c.categoryId ?? c.id ?? 0,
     })).filter(o => o.value > 0);
   }
 
@@ -210,8 +210,8 @@ export class CustomFieldComponent implements OnInit, OnDestroy {
     const list = this.extractItems(res);
     this.fieldTypeNameMap.clear();
     this.fieldTypeOptions = list.map((c: any) => {
-      const id = c.categoryId ?? c.id ?? 0;
-      const name = c.categoryName ?? '';
+      const id = c.metaId ?? c.categoryId ?? c.id ?? 0;
+      const name = c.metaName ?? c.categoryName ?? '';
       this.fieldTypeNameMap.set(id, name);
       return { label: name, value: id };
     }).filter(o => o.value > 0);

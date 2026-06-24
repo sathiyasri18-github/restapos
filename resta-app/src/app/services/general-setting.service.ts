@@ -1,12 +1,13 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { apiUrl } from '../core/api-config';
+import { apiUrl, apiAssetUrl } from '../core/api-config';
 
 export interface GeneralSetting {
   generalSettingId: number;
   siteTitle: string;
   siteLogo: string;
+  favicon: string;
   isRtl: boolean;
   currency: string;
   staffAccess: string;
@@ -21,6 +22,7 @@ export interface GeneralSetting {
 export interface CreateGeneralSettingDto {
   siteTitle: string;
   siteLogo: string | null;
+  favicon: string | null;
   isRtl: boolean | null;
   currency: string;
   staffAccess: string;
@@ -36,6 +38,7 @@ export interface UpdateGeneralSettingDto {
   id: number;
   siteTitle: string;
   siteLogo: string | null;
+  favicon: string | null;
   isRtl: boolean | null;
   currency: string;
   staffAccess: string;
@@ -79,5 +82,29 @@ export class GeneralSettingService {
 
   delete(id: number): Observable<any> {
     return this.http.delete<any>(`${this.apiUrl}/${id}`);
+  }
+
+  uploadSiteLogo(id: number, file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file, file.name);
+    return this.http.post<any>(`${this.apiUrl}/${id}/site-logo`, formData);
+  }
+
+  deleteSiteLogo(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/${id}/site-logo`);
+  }
+
+  uploadFavicon(id: number, file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file, file.name);
+    return this.http.post<any>(`${this.apiUrl}/${id}/favicon`, formData);
+  }
+
+  deleteFavicon(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/${id}/favicon`);
+  }
+
+  resolveAssetUrl(path: string | null | undefined): string | null {
+    return apiAssetUrl(path);
   }
 }

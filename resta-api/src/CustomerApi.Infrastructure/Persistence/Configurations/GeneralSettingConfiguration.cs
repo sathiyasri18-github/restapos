@@ -13,8 +13,10 @@ public class GeneralSettingConfiguration : IEntityTypeConfiguration<GeneralSetti
         builder.Property(x => x.Id).UseIdentityColumn();
         builder.Property(x => x.SiteTitle).HasMaxLength(191);
         builder.Property(x => x.SiteTitle).IsRequired();
-        builder.Property(x => x.SiteLogo).HasMaxLength(191);
+        builder.Property(x => x.SiteLogo).HasMaxLength(500);
         builder.Property(x => x.SiteLogo).IsRequired(false);
+        builder.Property(x => x.Favicon).HasMaxLength(500);
+        builder.Property(x => x.Favicon).IsRequired(false);
         builder.Property(x => x.Currency).HasMaxLength(191);
         builder.Property(x => x.Currency).IsRequired();
         builder.Property(x => x.StaffAccess).HasMaxLength(191);

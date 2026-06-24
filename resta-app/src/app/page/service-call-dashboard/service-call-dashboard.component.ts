@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { MessageService } from 'primeng/api';
 import { forkJoin } from 'rxjs';
 import { AppModule } from '../../module/app.module';
-import { CategoryService } from '../../services/category.service';
+import { MetaService } from '../../services/meta.service';
 import { CustomerService } from '../../services/customer.service';
 import { EmployeeService } from '../../services/employee.service';
 import {
@@ -33,13 +33,13 @@ export class ServiceCallDashboardComponent implements OnInit {
 
   private customerMap = new Map<number, string>();
   private employeeMap = new Map<number, string>();
-  private categoryMap = new Map<number, string>();
+  private metaMap = new Map<number, string>();
 
   constructor(
     private reportsService: ReportsService,
     private customerService: CustomerService,
     private employeeService: EmployeeService,
-    private categoryService: CategoryService,
+    private metaService: MetaService,
     private messageService: MessageService,
     private router: Router,
     private cdr: ChangeDetectorRef
@@ -70,7 +70,7 @@ export class ServiceCallDashboardComponent implements OnInit {
 
   getCategoryName(id: number | null | undefined): string {
     if (id == null) return '—';
-    return this.categoryMap.get(id) ?? '—';
+    return this.metaMap.get(id) ?? '—';
   }
 
   getServiceTypeName(id: number): string {
@@ -150,12 +150,12 @@ export class ServiceCallDashboardComponent implements OnInit {
     forkJoin({
       customers: this.customerService.getAll({ pageSize: 500 }),
       employees: this.employeeService.getAll({ isActive: true, pageSize: 500 }),
-      categories: this.categoryService.getAll({ pageSize: 2000 }),
+      metas: this.metaService.getAll({ pageSize: 2000 }),
     }).subscribe({
-      next: ({ customers, employees, categories }) => {
+      next: ({ customers, employees, metas }) => {
         this.bindCustomers(customers);
         this.bindEmployees(employees);
-        this.bindCategories(categories);
+        this.bindMetas(metas);
         this.lookupsLoading = false;
         this.cdr.detectChanges();
       },
@@ -183,13 +183,13 @@ export class ServiceCallDashboardComponent implements OnInit {
     });
   }
 
-  private bindCategories(res: any): void {
+  private bindMetas(res: any): void {
     const list = this.extractItems(res);
-    this.categoryMap.clear();
+    this.metaMap.clear();
     list.forEach((x: any) => {
-      const id = x.categoryId ?? x.id ?? 0;
-      const name = x.categoryName ?? '';
-      if (id) this.categoryMap.set(id, name);
+      const id = x.metaId ?? x.categoryId ?? x.id ?? 0;
+      const name = x.metaName ?? x.categoryName ?? '';
+      if (id) this.metaMap.set(id, name);
     });
   }
 

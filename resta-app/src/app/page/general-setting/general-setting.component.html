@@ -18,6 +18,7 @@
       <div class="settings-card">
         <p class="form-hint">
           The field labels marked with <span class="required">*</span> are required input fields.
+          Dropdown values are loaded from Meta Type (CURRENCY, CURRENCYPOSITION, DATEFORMAT, INVOICEFORMAT).
         </p>
 
         <div class="settings-form">
@@ -39,11 +40,56 @@
                 }
               </div>
 
-              <div class="form-field full-span">
+              <div class="form-field full-span image-upload-field">
                 <label>Site Logo</label>
-                <input pInputText type="text"
-                  [(ngModel)]="formData.siteLogo"
-                  placeholder="Logo URL or path" />
+                <div class="image-upload-row">
+                  <div class="image-preview-box logo-preview">
+                    @if (logoPreviewUrl) {
+                      <img [src]="logoPreviewUrl" alt="Site logo preview" class="image-preview" />
+                    } @else {
+                      <div class="image-placeholder"><i class="pi pi-image"></i><span>No logo</span></div>
+                    }
+                  </div>
+                  <div class="image-upload-actions">
+                    <input #logoInput type="file" accept="image/jpeg,image/png,image/gif,image/webp" hidden (change)="onLogoSelected($event)" />
+                    <button pButton type="button" icon="pi pi-upload" label="Upload Logo" class="p-button-outlined"
+                      [loading]="isUploadingLogo" (click)="logoInput.click()"></button>
+                    @if (logoPreviewUrl) {
+                      <button pButton type="button" icon="pi pi-trash" label="Remove" class="p-button-outlined p-button-danger"
+                        [loading]="isUploadingLogo" (click)="removeLogo()"></button>
+                    }
+                    <p class="image-hint">JPG, PNG, GIF, WEBP. Max 2 MB.</p>
+                    @if (!canUploadAssets) {
+                      <p class="image-hint">Save settings once to enable logo upload.</p>
+                    }
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-field full-span image-upload-field">
+                <label>Favicon</label>
+                <div class="image-upload-row">
+                  <div class="image-preview-box favicon-preview">
+                    @if (faviconPreviewUrl) {
+                      <img [src]="faviconPreviewUrl" alt="Favicon preview" class="image-preview" />
+                    } @else {
+                      <div class="image-placeholder"><i class="pi pi-bookmark"></i><span>No favicon</span></div>
+                    }
+                  </div>
+                  <div class="image-upload-actions">
+                    <input #faviconInput type="file" accept="image/x-icon,image/vnd.microsoft.icon,image/png,image/gif,image/webp,image/jpeg" hidden (change)="onFaviconSelected($event)" />
+                    <button pButton type="button" icon="pi pi-upload" label="Upload Favicon" class="p-button-outlined"
+                      [loading]="isUploadingFavicon" (click)="faviconInput.click()"></button>
+                    @if (faviconPreviewUrl) {
+                      <button pButton type="button" icon="pi pi-trash" label="Remove" class="p-button-outlined p-button-danger"
+                        [loading]="isUploadingFavicon" (click)="removeFavicon()"></button>
+                    }
+                    <p class="image-hint">ICO, PNG, GIF, WEBP, JPG. Max 2 MB.</p>
+                    @if (!canUploadAssets) {
+                      <p class="image-hint">Save settings once to enable favicon upload.</p>
+                    }
+                  </div>
+                </div>
               </div>
 
               <div class="form-field full-span">
@@ -64,10 +110,16 @@
             <div class="form-grid-2">
               <div class="form-field" [class.has-error]="formErrors.currency">
                 <label>Currency <span class="required">*</span></label>
-                <input pInputText type="text"
+                <p-select
+                  [options]="currencyOptions"
+                  optionLabel="label"
+                  optionValue="value"
                   [(ngModel)]="formData.currency"
                   (ngModelChange)="formErrors.currency = undefined"
-                  placeholder="e.g. USD" />
+                  [loading]="lookupsLoading"
+                  placeholder="Select currency"
+                  appendTo="body"
+                  [showClear]="true" />
                 @if (formErrors.currency) {
                   <span class="field-error"><i class="pi pi-exclamation-circle"></i> {{ formErrors.currency }}</span>
                 }
@@ -75,10 +127,16 @@
 
               <div class="form-field" [class.has-error]="formErrors.currencyPosition">
                 <label>Currency Position <span class="required">*</span></label>
-                <input pInputText type="text"
+                <p-select
+                  [options]="currencyPositionOptions"
+                  optionLabel="label"
+                  optionValue="value"
                   [(ngModel)]="formData.currencyPosition"
                   (ngModelChange)="formErrors.currencyPosition = undefined"
-                  placeholder="e.g. left, right" />
+                  [loading]="lookupsLoading"
+                  placeholder="Select currency position"
+                  appendTo="body"
+                  [showClear]="true" />
                 @if (formErrors.currencyPosition) {
                   <span class="field-error"><i class="pi pi-exclamation-circle"></i> {{ formErrors.currencyPosition }}</span>
                 }
@@ -86,10 +144,16 @@
 
               <div class="form-field" [class.has-error]="formErrors.dateFormat">
                 <label>Date Format <span class="required">*</span></label>
-                <input pInputText type="text"
+                <p-select
+                  [options]="dateFormatOptions"
+                  optionLabel="label"
+                  optionValue="value"
                   [(ngModel)]="formData.dateFormat"
                   (ngModelChange)="formErrors.dateFormat = undefined"
-                  placeholder="e.g. dd/MM/yyyy" />
+                  [loading]="lookupsLoading"
+                  placeholder="Select date format"
+                  appendTo="body"
+                  [showClear]="true" />
                 @if (formErrors.dateFormat) {
                   <span class="field-error"><i class="pi pi-exclamation-circle"></i> {{ formErrors.dateFormat }}</span>
                 }
@@ -133,9 +197,15 @@
 
               <div class="form-field">
                 <label>Invoice Format</label>
-                <input pInputText type="text"
+                <p-select
+                  [options]="invoiceFormatOptions"
+                  optionLabel="label"
+                  optionValue="value"
                   [(ngModel)]="formData.invoiceFormat"
-                  placeholder="Invoice format" />
+                  [loading]="lookupsLoading"
+                  placeholder="Select invoice format"
+                  appendTo="body"
+                  [showClear]="true" />
               </div>
 
               <div class="form-field">

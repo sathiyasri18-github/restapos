@@ -175,6 +175,62 @@
   i { font-size: 0.72rem; }
 }
 
+.image-upload-field .image-upload-row {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.image-preview-box {
+  border: 1px dashed var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafc;
+
+  &.logo-preview {
+    width: 120px;
+    height: 120px;
+  }
+
+  &.favicon-preview {
+    width: 64px;
+    height: 64px;
+  }
+}
+
+.image-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.image-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  color: var(--text-muted);
+  font-size: 11px;
+
+  i { font-size: 1.25rem; }
+}
+
+.image-upload-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.image-hint {
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
 .form-actions {
   padding: 14px 18px 18px;
   border-top: 1px solid var(--border-color);

@@ -2,7 +2,7 @@ namespace CustomerApi.Application.Common;
 
 public static class EntityCustomFieldTypes
 {
-    public static readonly string[] EntityCategoryTypeCodes = ["CUSTOM_FIELD_ENTITY", "ENTITY_TYPE"];
+    public static readonly string[] EntityMetaTypeCodes = ["CUSTOM_FIELD_ENTITY", "ENTITY_TYPE"];
 
     public static readonly IReadOnlyDictionary<string, string[]> EntityNameAliases = new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
     {

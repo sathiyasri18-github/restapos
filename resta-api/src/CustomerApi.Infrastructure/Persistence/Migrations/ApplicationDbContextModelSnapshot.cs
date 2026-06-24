@@ -951,6 +951,10 @@ namespace CustomerApi.Infrastructure.Persistence.Migrations
                         .HasMaxLength(191)
                         .HasColumnType("nvarchar(191)");
 
+                    b.Property<string>("Favicon")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<bool?>("IsRtl")
                         .HasColumnType("bit");
 
@@ -961,8 +965,8 @@ namespace CustomerApi.Infrastructure.Persistence.Migrations
                         .HasAnnotation("Relational:DefaultConstraintName", "DF_GeneralSetting_ModifiedDate");
 
                     b.Property<string>("SiteLogo")
-                        .HasMaxLength(191)
-                        .HasColumnType("nvarchar(191)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("SiteTitle")
                         .IsRequired()
@@ -1240,6 +1244,78 @@ namespace CustomerApi.Infrastructure.Persistence.Migrations
                         .HasName("PK_Menu");
 
                     b.ToTable("Menu", (string)null);
+                });
+
+            modelBuilder.Entity("CustomerApi.Domain.Entities.Meta", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<int>("MetaTypeId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(191)
+                        .HasColumnType("nvarchar(191)");
+
+                    b.HasKey("Id")
+                        .HasName("PK_Meta");
+
+                    b.HasIndex("MetaTypeId", "Name")
+                        .IsUnique();
+
+                    b.ToTable("Meta", (string)null);
+                });
+
+            modelBuilder.Entity("CustomerApi.Domain.Entities.MetaType", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id")
+                        .HasName("PK_MetaType");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("MetaType", (string)null);
                 });
 
             modelBuilder.Entity("CustomerApi.Domain.Entities.MoneyTransfer", b =>
@@ -2787,6 +2863,60 @@ namespace CustomerApi.Infrastructure.Persistence.Migrations
                     b.ToTable("RoleHasPermission", (string)null);
                 });
 
+            modelBuilder.Entity("CustomerApi.Domain.Entities.RoleMenu", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("CanAdd")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("CanDelete")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("CanEdit")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("CanView")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<int>("MenuId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.Property<int>("RoleId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id")
+                        .HasName("PK_RoleMenu");
+
+                    b.HasIndex("MenuId");
+
+                    b.HasIndex("RoleId", "MenuId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_RoleMenu_RoleId_MenuId");
+
+                    b.ToTable("RoleMenu", (string)null);
+                });
+
             modelBuilder.Entity("CustomerApi.Domain.Entities.Sale", b =>
                 {
                     b.Property<int>("Id")
@@ -3358,6 +3488,30 @@ namespace CustomerApi.Infrastructure.Persistence.Migrations
                     b.ToTable("User", (string)null);
                 });
 
+            modelBuilder.Entity("CustomerApi.Domain.Entities.UserRole", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RoleId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETDATE()");
+
+                    b.HasKey("UserId", "RoleId")
+                        .HasName("PK_UserRole");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("UserRole", (string)null);
+                });
+
             modelBuilder.Entity("CustomerApi.Domain.Entities.Variant", b =>
                 {
                     b.Property<int>("Id")
@@ -3435,6 +3589,37 @@ namespace CustomerApi.Infrastructure.Persistence.Migrations
                     b.ToTable("Warehouse", (string)null);
                 });
 
+            modelBuilder.Entity("CustomerApi.Domain.Entities.Meta", b =>
+                {
+                    b.HasOne("CustomerApi.Domain.Entities.MetaType", "MetaType")
+                        .WithMany()
+                        .HasForeignKey("MetaTypeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("FK_Meta_MetaType");
+
+                    b.Navigation("MetaType");
+                });
+
+            modelBuilder.Entity("CustomerApi.Domain.Entities.RoleMenu", b =>
+                {
+                    b.HasOne("CustomerApi.Domain.Entities.Menu", "Menu")
+                        .WithMany()
+                        .HasForeignKey("MenuId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CustomerApi.Domain.Entities.Role", "Role")
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Menu");
+
+                    b.Navigation("Role");
+                });
+
             modelBuilder.Entity("CustomerApi.Domain.Entities.User", b =>
                 {
                     b.HasOne("CustomerApi.Domain.Entities.Role", "Role")
@@ -3444,6 +3629,25 @@ namespace CustomerApi.Infrastructure.Persistence.Migrations
                         .IsRequired();
 
                     b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("CustomerApi.Domain.Entities.UserRole", b =>
+                {
+                    b.HasOne("CustomerApi.Domain.Entities.Role", "Role")
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CustomerApi.Domain.Entities.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Role");
+
+                    b.Navigation("User");
                 });
 #pragma warning restore 612, 618
         }

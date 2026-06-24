@@ -29,6 +29,7 @@ public static class DependencyInjection
         services.AddAppIdentity();
         services.AddScoped<IJwtTokenService, Services.JwtTokenService>();
         services.AddScoped<IProductImageStorage, Services.ProductImageStorage>();
+        services.AddScoped<ISiteAssetStorage, Services.SiteAssetStorage>();
 
         return services;
     }

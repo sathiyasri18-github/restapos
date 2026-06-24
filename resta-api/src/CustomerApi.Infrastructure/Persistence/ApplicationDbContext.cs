@@ -34,6 +34,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
     public DbSet<Language> Languages => Set<Language>();
     public DbSet<SchemaMigration> SchemaMigrations => Set<SchemaMigration>();
     public DbSet<Menu> Menus => Set<Menu>();
+    public DbSet<MetaType> MetaTypes => Set<MetaType>();
+    public DbSet<Meta> Metas => Set<Meta>();
     public DbSet<MoneyTransfer> MoneyTransfers => Set<MoneyTransfer>();
     public DbSet<Notification> Notifications => Set<Notification>();
     public DbSet<PasswordReset> PasswordResets => Set<PasswordReset>();

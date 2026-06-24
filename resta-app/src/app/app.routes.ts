@@ -41,9 +41,9 @@ export const routes: Routes = [
           import('./page/service-call-dashboard/service-call-dashboard.component').then(m => m.ServiceCallDashboardComponent)
       },
       {
-        path: 'category-type',
+        path: 'meta-type',
         loadComponent: () =>
-          import('./page/category-type/category-type-component').then(m => m.CategoryTypeComponent)
+          import('./page/meta-type/meta-type-component').then(m => m.MetaTypeComponent)
       },
       {
         path: 'voucher-entry',
