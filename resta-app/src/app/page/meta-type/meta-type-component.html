@@ -1,0 +1,435 @@
+<!-- meta-type-component.html -->
+
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<div class="ct-wrapper">
+
+  <div class="split-container">
+
+    <!-- ═══ LEFT: Meta Type ═══════════════════════════════════════════════ -->
+    <div class="split-panel panel-type">
+      <div class="panel-toolbar">
+        <div class="toolbar-left">
+          <i class="pi pi-tags toolbar-icon"></i>
+          <span class="toolbar-title">Meta Type</span>
+          <span class="record-badge" [class.has-filter]="hasMetaTypeSearch">
+            {{ metaTypes.length }}
+            @if (hasMetaTypeSearch) { / {{ metaTypeTotalRecords }} }
+          </span>
+        </div>
+        <div class="toolbar-actions">
+          <button pButton type="button" icon="pi pi-plus" label="Add"
+            class="toolbar-btn btn-add" pTooltip="Add meta type" tooltipPosition="bottom"
+            (click)="openMetaTypeAddDialog()"></button>
+          <button pButton type="button" icon="pi pi-pencil" label="Edit"
+            class="toolbar-btn btn-edit" pTooltip="Edit selected" tooltipPosition="bottom"
+            [disabled]="!selectedMetaType" (click)="onMetaTypeEditSelected()"></button>
+          <button pButton type="button" icon="pi pi-trash" label="Delete"
+            class="toolbar-btn btn-delete" pTooltip="Delete selected" tooltipPosition="bottom"
+            [disabled]="!selectedMetaType" (click)="onMetaTypeDeleteSelected($event)"></button>
+          <div class="toolbar-sep"></div>
+          <app-grid-report-toolbar [config]="metaTypesReportConfig" [disabled]="metaTypeLoading" />
+        </div>
+      </div>
+
+      <div class="search-bar">
+        <span class="search-label"><i class="pi pi-search"></i> Search</span>
+        <div class="search-fields">
+          <div class="search-field">
+            <label for="type-search">Code / Name</label>
+            <input id="type-search" pInputText type="text"
+              [(ngModel)]="metaTypeSearchTerm"
+              (ngModelChange)="onMetaTypeSearchChange()"
+              placeholder="Search types…" />
+          </div>
+          @if (hasMetaTypeSearch) {
+            <button class="clear-btn" (click)="onClearMetaTypeSearch()">
+              <i class="pi pi-filter-slash"></i> Clear
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="table-container">
+        <p-table
+          [value]="metaTypes"
+          selectionMode="single"
+          [(selection)]="selectedMetaType"
+          (selectionChange)="onMetaTypeSelect()"
+          dataKey="metaTypeId"
+          [scrollable]="true"
+          scrollHeight="flex"
+          [loading]="metaTypeLoading"
+          [sortField]="'metaTypeName'"
+          [sortOrder]="1"
+          [paginator]="true"
+          [rows]="15"
+          [rowsPerPageOptions]="[10, 15, 25, 50]"
+          [showCurrentPageReport]="true"
+          currentPageReportTemplate="{first}–{last} of {totalRecords}"
+          styleClass="ct-table type-table"
+        >
+          <ng-template pTemplate="header">
+            <tr>
+              <th class="col-index">#</th>
+              <th class="col-code" pSortableColumn="metaTypeCode">
+                Code <p-sortIcon field="metaTypeCode" />
+              </th>
+              <th class="col-name" pSortableColumn="metaTypeName">
+                Name <p-sortIcon field="metaTypeName" />
+              </th>
+              <th class="col-actions">Actions</th>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="body" let-item let-rowIndex="rowIndex">
+            <tr
+              [pSelectableRow]="item"
+              [class.row-selected]="selectedMetaType?.metaTypeId === item.metaTypeId"
+              (dblclick)="openMetaTypeEditDialog(item)"
+            >
+              <td class="col-index">
+                @if (selectedMetaType?.metaTypeId === item.metaTypeId) {
+                  <i class="pi pi-caret-right row-indicator"></i>
+                } @else {
+                  <span class="row-number">{{ rowIndex + 1 }}</span>
+                }
+              </td>
+              <td class="col-code"><span class="code-cell">{{ item.metaTypeCode }}</span></td>
+              <td class="col-name"><span class="name-cell">{{ item.metaTypeName }}</span></td>
+              <td class="col-actions">
+                <div class="action-btns">
+                  <button class="icon-btn edit-icon"
+                    (click)="openMetaTypeEditDialog(item); $event.stopPropagation()"
+                    pTooltip="Edit" tooltipPosition="left">
+                    <i class="pi pi-pencil"></i>
+                  </button>
+                  <button class="icon-btn delete-icon"
+                    (click)="confirmMetaTypeDelete(item, $event)"
+                    pTooltip="Delete" tooltipPosition="left">
+                    <i class="pi pi-trash"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="4">
+                <div class="empty-state compact">
+                  <i class="pi pi-tags empty-icon"></i>
+                  @if (hasMetaTypeSearch) {
+                    <p class="empty-title">No types found</p>
+                    <button pButton type="button" icon="pi pi-filter-slash"
+                      label="Clear" class="p-button-outlined p-button-sm"
+                      (click)="onClearMetaTypeSearch()"></button>
+                  } @else {
+                    <p class="empty-title">No meta types</p>
+                    <button pButton type="button" icon="pi pi-plus"
+                      label="Add Type" class="p-button-sm btn-add"
+                      (click)="openMetaTypeAddDialog()"></button>
+                  }
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="loadingbody">
+            @for (i of [1,2,3,4,5]; track i) {
+              <tr>
+                <td class="col-index"><p-skeleton width="24px" height="14px" /></td>
+                <td class="col-code"><p-skeleton height="14px" /></td>
+                <td class="col-name"><p-skeleton height="14px" /></td>
+                <td class="col-actions"><p-skeleton width="60px" height="14px" /></td>
+              </tr>
+            }
+          </ng-template>
+        </p-table>
+      </div>
+
+      <div class="status-bar">
+        <span class="record-count"><strong>{{ metaTypes.length }}</strong> types</span>
+        @if (selectedMetaType) {
+          <span class="selected-info">
+            <i class="pi pi-check-circle"></i>
+            <strong>{{ selectedMetaType.metaTypeName }}</strong>
+          </span>
+        }
+        <span class="hint-text">Click a row to load metas</span>
+      </div>
+    </div>
+
+    <!-- ═══ Vertical divider ══════════════════════════════════════════════════ -->
+    <div class="split-divider" aria-hidden="true"></div>
+
+    <!-- ═══ RIGHT: Meta ═════════════════════════════════════════════════ -->
+    <div class="split-panel panel-category" [class.panel-disabled]="!hasSelectedMetaType">
+      <div class="panel-toolbar">
+        <div class="toolbar-left">
+          <i class="pi pi-sitemap toolbar-icon"></i>
+          <span class="toolbar-title">Meta</span>
+          @if (hasSelectedMetaType) {
+            <span class="type-context-badge">{{ selectedMetaType!.metaTypeName }}</span>
+          }
+          <span class="record-badge" [class.has-filter]="hasMetaSearch">
+            {{ metas.length }}
+            @if (hasMetaSearch) { / {{ metaTotalRecords }} }
+          </span>
+        </div>
+        <div class="toolbar-actions">
+          <button pButton type="button" icon="pi pi-plus" label="Add"
+            class="toolbar-btn btn-add" pTooltip="Add meta" tooltipPosition="bottom"
+            [disabled]="!hasSelectedMetaType" (click)="openMetaAddDialog()"></button>
+          <button pButton type="button" icon="pi pi-pencil" label="Edit"
+            class="toolbar-btn btn-edit" pTooltip="Edit selected" tooltipPosition="bottom"
+            [disabled]="!selectedMeta" (click)="onMetaEditSelected()"></button>
+          <button pButton type="button" icon="pi pi-trash" label="Delete"
+            class="toolbar-btn btn-delete" pTooltip="Delete selected" tooltipPosition="bottom"
+            [disabled]="!selectedMeta" (click)="onMetaDeleteSelected($event)"></button>
+          <div class="toolbar-sep"></div>
+          <app-grid-report-toolbar [config]="metasReportConfig" [disabled]="!hasSelectedMetaType || metaLoading" />
+        </div>
+      </div>
+
+      <div class="search-bar">
+        <span class="search-label"><i class="pi pi-search"></i> Search</span>
+        <div class="search-fields">
+          <div class="search-field">
+            <label for="cat-search">Name</label>
+            <input id="cat-search" pInputText type="text"
+              [(ngModel)]="metaSearchTerm"
+              (ngModelChange)="onMetaSearchChange()"
+              [disabled]="!hasSelectedMetaType"
+              placeholder="Search metas…" />
+          </div>
+          @if (hasMetaSearch) {
+            <button class="clear-btn" (click)="onClearMetaSearch()" [disabled]="!hasSelectedMetaType">
+              <i class="pi pi-filter-slash"></i> Clear
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="table-container">
+        @if (!hasSelectedMetaType) {
+          <div class="panel-placeholder">
+            <i class="pi pi-arrow-left placeholder-icon"></i>
+            <p class="placeholder-title">Select a meta type</p>
+            <p class="placeholder-sub">Choose a type on the left to view and manage its metas.</p>
+          </div>
+        } @else {
+          <p-table
+            [value]="metas"
+            selectionMode="single"
+            [(selection)]="selectedMeta"
+            dataKey="metaId"
+            [scrollable]="true"
+            scrollHeight="flex"
+            [loading]="metaLoading"
+            [sortField]="'metaName'"
+            [sortOrder]="1"
+            [paginator]="true"
+            [rows]="15"
+            [rowsPerPageOptions]="[10, 15, 25, 50]"
+            [showCurrentPageReport]="true"
+            currentPageReportTemplate="{first}–{last} of {totalRecords}"
+            styleClass="ct-table cat-table"
+          >
+            <ng-template pTemplate="header">
+              <tr>
+                <th class="col-index">#</th>
+                <th class="col-name" pSortableColumn="metaName">
+                  Name <p-sortIcon field="metaName" />
+                </th>
+                <th class="col-created">Created</th>
+                <th class="col-modified">Modified</th>
+                <th class="col-actions">Actions</th>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="body" let-item let-rowIndex="rowIndex">
+              <tr
+                [pSelectableRow]="item"
+                [class.row-selected]="selectedMeta?.metaId === item.metaId"
+                (dblclick)="openMetaEditDialog(item)"
+              >
+                <td class="col-index">
+                  @if (selectedMeta?.metaId === item.metaId) {
+                    <i class="pi pi-caret-right row-indicator"></i>
+                  } @else {
+                    <span class="row-number">{{ rowIndex + 1 }}</span>
+                  }
+                </td>
+                <td class="col-name"><span class="name-cell">{{ item.metaName }}</span></td>
+                <td class="col-created muted-cell">{{ formatDate(item.createdDate) }}</td>
+                <td class="col-modified muted-cell">{{ formatDate(item.modifiedDate) }}</td>
+                <td class="col-actions">
+                  <div class="action-btns">
+                    <button class="icon-btn edit-icon"
+                      (click)="openMetaEditDialog(item); $event.stopPropagation()"
+                      pTooltip="Edit" tooltipPosition="left">
+                      <i class="pi pi-pencil"></i>
+                    </button>
+                    <button class="icon-btn delete-icon"
+                      (click)="confirmMetaDelete(item, $event)"
+                      pTooltip="Delete" tooltipPosition="left">
+                      <i class="pi pi-trash"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="5">
+                  <div class="empty-state compact">
+                    <i class="pi pi-sitemap empty-icon"></i>
+                    @if (hasMetaSearch) {
+                      <p class="empty-title">No metas found</p>
+                      <button pButton type="button" icon="pi pi-filter-slash"
+                        label="Clear" class="p-button-outlined p-button-sm"
+                        (click)="onClearMetaSearch()"></button>
+                    } @else {
+                      <p class="empty-title">No metas yet</p>
+                      <button pButton type="button" icon="pi pi-plus"
+                        label="Add Meta" class="p-button-sm btn-add"
+                        (click)="openMetaAddDialog()"></button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            </ng-template>
+
+            <ng-template pTemplate="loadingbody">
+              @for (i of [1,2,3,4,5]; track i) {
+                <tr>
+                  <td class="col-index"><p-skeleton width="24px" height="14px" /></td>
+                  <td class="col-name"><p-skeleton height="14px" /></td>
+                  <td class="col-created"><p-skeleton height="14px" /></td>
+                  <td class="col-modified"><p-skeleton height="14px" /></td>
+                  <td class="col-actions"><p-skeleton width="60px" height="14px" /></td>
+                </tr>
+              }
+            </ng-template>
+          </p-table>
+        }
+      </div>
+
+      <div class="status-bar">
+        @if (hasSelectedMetaType) {
+          <span class="record-count"><strong>{{ metas.length }}</strong> metas</span>
+          @if (selectedMeta) {
+            <span class="selected-info">
+              <i class="pi pi-check-circle"></i>
+              <strong>{{ selectedMeta.metaName }}</strong>
+            </span>
+          }
+          <span class="hint-text">Double-click to edit</span>
+        }
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Meta Type dialog -->
+<p-dialog
+  [header]="metaTypeDialogTitle"
+  [(visible)]="metaTypeDialogVisible"
+  [modal]="true"
+  [style]="{ width: '480px' }"
+  [closable]="true"
+  [draggable]="true"
+  styleClass="ct-dialog"
+  (onHide)="onMetaTypeDialogHide()"
+>
+
+  <div class="dialog-form">
+    <div class="form-section">
+      <div class="section-title"><i class="pi pi-tags"></i> Meta Type Details</div>
+      <div class="form-grid-2">
+        <div class="form-field full-span" [class.has-error]="metaTypeFormErrors.metaTypeCode">
+          <label>Code <span class="required">*</span></label>
+          <input pInputText type="text"
+            [(ngModel)]="metaTypeFormData.metaTypeCode"
+            (ngModelChange)="metaTypeFormErrors.metaTypeCode = undefined"
+            placeholder="e.g. RAW, FIN"
+            style="text-transform: uppercase"
+            [class.input-error]="metaTypeFormErrors.metaTypeCode" />
+          @if (metaTypeFormErrors.metaTypeCode) {
+            <span class="field-error"><i class="pi pi-exclamation-circle"></i> {{ metaTypeFormErrors.metaTypeCode }}</span>
+          }
+        </div>
+        <div class="form-field full-span" [class.has-error]="metaTypeFormErrors.metaTypeName">
+          <label>Name <span class="required">*</span></label>
+          <input pInputText type="text"
+            [(ngModel)]="metaTypeFormData.metaTypeName"
+            (ngModelChange)="metaTypeFormErrors.metaTypeName = undefined"
+            placeholder="Meta type name"
+            [class.input-error]="metaTypeFormErrors.metaTypeName" />
+          @if (metaTypeFormErrors.metaTypeName) {
+            <span class="field-error"><i class="pi pi-exclamation-circle"></i> {{ metaTypeFormErrors.metaTypeName }}</span>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button pButton type="button" icon="pi pi-times" label="Cancel"
+        class="p-button-outlined btn-cancel" (click)="metaTypeDialogVisible = false"></button>
+      <button pButton type="button" icon="pi pi-check" label="Save"
+        class="btn-ok" [loading]="metaTypeSaving" (click)="onMetaTypeSave()"></button>
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Meta dialog -->
+<p-dialog
+  [header]="metaDialogTitle"
+  [(visible)]="metaDialogVisible"
+  [modal]="true"
+  [style]="{ width: '480px' }"
+  [closable]="true"
+  [draggable]="true"
+  styleClass="ct-dialog"
+  (onHide)="onMetaDialogHide()"
+>
+  <div class="dialog-form">
+    <div class="form-section">
+      <div class="section-title"><i class="pi pi-sitemap"></i> Meta Details</div>
+      @if (selectedMetaType) {
+        <div class="context-field">
+          <label>Meta Type</label>
+          <span class="context-value">{{ selectedMetaType.metaTypeName }}</span>
+        </div>
+      }
+      <div class="form-grid-2">
+        <div class="form-field full-span" [class.has-error]="metaFormErrors.metaName">
+          <label>Name <span class="required">*</span></label>
+          <input pInputText type="text"
+            [(ngModel)]="metaFormData.metaName"
+            (ngModelChange)="metaFormErrors.metaName = undefined"
+            placeholder="Meta name"
+            [class.input-error]="metaFormErrors.metaName" />
+          @if (metaFormErrors.metaName) {
+            <span class="field-error"><i class="pi pi-exclamation-circle"></i> {{ metaFormErrors.metaName }}</span>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button pButton type="button" icon="pi pi-times" label="Cancel"
+        class="p-button-outlined btn-cancel" (click)="metaDialogVisible = false"></button>
+      <button pButton type="button" icon="pi pi-check" label="Save"
+        class="btn-ok" [loading]="metaSaving" (click)="onMetaSave()"></button>
+    </div>
+  </ng-template>
+</p-dialog>
+
