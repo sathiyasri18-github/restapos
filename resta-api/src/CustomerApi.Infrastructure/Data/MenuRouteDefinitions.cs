@@ -17,7 +17,7 @@ public static class MenuRouteDefinitions
     public static IReadOnlyList<MenuRouteEntry> All { get; } =
     [
         // Top-level
-        new(1, null, "DASHBOARD", "Dashboard", "/service-call-dashboard", "pi pi-chart-line", 1),
+        new(1, null, "DASHBOARD", "Dashboard", "/dashboard", "pi pi-chart-line", 1),
         new(2, null, "MASTERS", "Masters", null, "pi pi-list", 10),
         new(3, null, "PURCHASE", "Purchase", null, "pi pi-shopping-cart", 20),
         new(4, null, "SALES", "Sales", null, "pi pi-chart-bar", 30),

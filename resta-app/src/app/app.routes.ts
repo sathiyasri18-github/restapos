@@ -33,12 +33,11 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./layout/layout').then(m => m.Layout),
     children: [
-      { path: '', redirectTo: 'service-call-dashboard', pathMatch: 'full' },
-      { path: 'dashboard', redirectTo: 'service-call-dashboard', pathMatch: 'full' },
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       {
-        path: 'service-call-dashboard',
+        path: 'dashboard',
         loadComponent: () =>
-          import('./page/service-call-dashboard/service-call-dashboard.component').then(m => m.ServiceCallDashboardComponent)
+          import('./page/dashboard/dashboard.component').then(m => m.DashboardComponent)
       },
       {
         path: 'meta-type',

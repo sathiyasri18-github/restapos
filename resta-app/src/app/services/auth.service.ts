@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap } from 'rxjs';
 import { apiUrl } from '../core/api-config';
+import { MENU_CACHE_KEY } from './menu.service';
 const TOKEN_KEY = 'auth_token';
 const USER_KEY = 'auth_user';
 
@@ -114,9 +115,14 @@ export class AuthService {
     return !!this.getToken();
   }
 
-  logout(): void {
+  clearSession(): void {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
+    localStorage.removeItem(MENU_CACHE_KEY);
+  }
+
+  logout(): void {
+    this.clearSession();
     this.router.navigate(['/sign-in']);
   }
 }

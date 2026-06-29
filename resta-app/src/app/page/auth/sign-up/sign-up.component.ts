@@ -1,8 +1,10 @@
 import { Component } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
+import { catchError, of, switchMap } from 'rxjs';
 import { AppModule } from '../../../module/app.module';
 import { AuthService } from '../../../services/auth.service';
+import { MenuService } from '../../../services/menu.service';
 
 @Component({
   selector: 'app-sign-up',
@@ -22,6 +24,7 @@ export class SignUpComponent {
 
   constructor(
     private auth: AuthService,
+    private menuService: MenuService,
     private router: Router,
     private messageService: MessageService
   ) {}
@@ -42,10 +45,12 @@ export class SignUpComponent {
       email: this.email.trim() || null,
       password: this.password,
       confirmPassword: this.confirmPassword
-    }).subscribe({
+    }).pipe(
+      switchMap(() => this.menuService.fetchAndCacheMyTree().pipe(catchError(() => of(null))))
+    ).subscribe({
       next: () => {
         this.messageService.add({ severity: 'success', summary: 'Account created', detail: 'You are now signed in.' });
-        this.router.navigate(['/service-call-dashboard']);
+        this.router.navigate(['/dashboard']);
       },
       error: (err) => {
         this.isLoading = false;

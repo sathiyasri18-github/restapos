@@ -8,181 +8,319 @@
       @if (isEditMode && header.returnPurchaseId) {
         <span class="rp-ref-badge">#{{ header.returnPurchaseId }}</span>
       }
+      @if (sourcePurchase) {
+        <span class="rp-source-badge" title="Source purchase">
+          Purchase: {{ sourcePurchase.purchaseCode || ('#' + sourcePurchase.purchaseId) }}
+        </span>
+      }
     </div>
     <div class="rp-toolbar-actions">
-      <button pButton type="button" icon="pi pi-arrow-left" label="Back"
-        class="rp-toolbar-btn btn-back" (click)="onBack()"></button>
-      <button pButton type="button" icon="pi pi-save" label="Save"
-        class="rp-toolbar-btn btn-save" [loading]="isSaving" [disabled]="isLoading" (click)="onSave()"></button>
+      <button pButton type="button" icon="pi pi-plus" label="New"
+        class="rp-toolbar-btn btn-new" (click)="onNewReturn()"></button>
     </div>
   </div>
 
-  @if (isLoading) {
-    <div class="rp-loading">
-      <p-skeleton width="100%" height="120px" styleClass="mb-3" />
-      <p-skeleton width="100%" height="280px" />
-    </div>
-  } @else {
-    <div class="rp-body">
-      <!-- Header -->
-      <div class="form-section">
-        <div class="section-title"><i class="pi pi-file-edit"></i> Return Header</div>
-        <div class="form-grid-2">
-          <div class="form-field" [class.has-error]="formErrors.referenceNo">
-            <label>Reference No <span class="required">*</span></label>
-            <input pInputText [(ngModel)]="header.referenceNo" placeholder="Reference number" />
-            @if (formErrors.referenceNo) {
-              <span class="field-error">{{ formErrors.referenceNo }}</span>
-            }
-          </div>
-          <div class="form-field">
-            <label>Supplier</label>
-            <p-select [options]="supplierOptions" optionLabel="label" optionValue="value"
-              [(ngModel)]="header.supplierId" placeholder="Select supplier" [filter]="true"
-              [showClear]="true" appendTo="body" [disabled]="!lookupsLoaded" />
-          </div>
-          <div class="form-field" [class.has-error]="formErrors.warehouseId">
-            <label>Warehouse <span class="required">*</span></label>
-            <p-select [options]="warehouseOptions" optionLabel="label" optionValue="value"
-              [(ngModel)]="header.warehouseId" placeholder="Select warehouse" [filter]="true"
-              appendTo="body" [disabled]="!lookupsLoaded" />
-            @if (formErrors.warehouseId) {
-              <span class="field-error">{{ formErrors.warehouseId }}</span>
-            }
-          </div>
-          <div class="form-field" [class.has-error]="formErrors.userId">
-            <label>User ID <span class="required">*</span></label>
-            <input pInputText type="number" [(ngModel)]="header.userId" placeholder="User ID" />
-            @if (formErrors.userId) {
-              <span class="field-error">{{ formErrors.userId }}</span>
-            }
-          </div>
-          <div class="form-field" [class.has-error]="formErrors.accountId">
-            <label>Account ID <span class="required">*</span></label>
-            <input pInputText type="number" [(ngModel)]="header.accountId" placeholder="Account ID" />
-            @if (formErrors.accountId) {
-              <span class="field-error">{{ formErrors.accountId }}</span>
-            }
-          </div>
-          <div class="form-field">
-            <label>Order Tax Rate (%)</label>
-            <input pInputText type="number" [(ngModel)]="header.orderTaxRate"
-              (ngModelChange)="onOrderTaxRateChange()" placeholder="0" />
-          </div>
-          <div class="form-field">
-            <label>Order Tax</label>
-            <input pInputText type="number" [(ngModel)]="header.orderTax" placeholder="0.00" />
-          </div>
-          <div class="form-field">
-            <label>Document</label>
-            <input pInputText [(ngModel)]="header.document" placeholder="Document reference" />
-          </div>
-          <div class="form-field full-span">
-            <label>Return Note</label>
-            <textarea pTextarea [(ngModel)]="header.returnNote" rows="2" placeholder="Return note"></textarea>
-          </div>
-          <div class="form-field full-span">
-            <label>Staff Note</label>
-            <textarea pTextarea [(ngModel)]="header.staffNote" rows="2" placeholder="Staff note"></textarea>
+  <div class="rp-content" [class.rp-loading]="isLoading">
+    @if (isLoading) {
+      <div class="rp-loading-overlay">
+        <i class="pi pi-spin pi-spinner"></i>
+        <span>Loading…</span>
+      </div>
+    }
+
+    <div class="form-section">
+      <div class="section-title"><i class="pi pi-file-edit"></i> Return Header</div>
+      <div class="form-grid-2">
+        <div class="form-field" [class.has-error]="formErrors.referenceNo">
+          <label>Reference No <span class="required">*</span></label>
+          <input pInputText [(ngModel)]="header.referenceNo" placeholder="Reference number" />
+          @if (formErrors.referenceNo) {
+            <span class="field-error">{{ formErrors.referenceNo }}</span>
+          }
+        </div>
+
+        <div class="form-field" [class.has-error]="formErrors.warehouseId">
+          <label>Warehouse <span class="required">*</span></label>
+          <p-select [options]="warehouseOptions" optionLabel="label" optionValue="value"
+            [(ngModel)]="header.warehouseId" placeholder="Select warehouse" [filter]="true"
+            appendTo="body" [disabled]="!lookupsLoaded" />
+          @if (formErrors.warehouseId) {
+            <span class="field-error">{{ formErrors.warehouseId }}</span>
+          }
+        </div>
+
+        <div class="form-field">
+          <label>Source Purchase</label>
+          <div class="rp-source-purchase-field">
+            <input pInputText readonly class="rp-readonly-input"
+              [value]="sourcePurchase ? (sourcePurchase.purchaseCode || ('#' + sourcePurchase.purchaseId)) : ''"
+              placeholder="Select purchase to return against" />
+            <button pButton type="button" icon="pi pi-search" label="Select Purchase"
+              class="p-button-sm btn-select-purchase" (click)="openPurchaseDialog()"></button>
           </div>
         </div>
-      </div>
 
-      <!-- Lines -->
-      <div class="form-section">
-        <div class="rp-lines-header">
-          <div class="section-title"><i class="pi pi-list"></i> Return Lines</div>
+        <div class="form-field full-span">
+          <button pButton type="button" icon="pi pi-sliders-h" label="More Details"
+            class="p-button-outlined p-button-sm btn-more-details"
+            (click)="openDetailsDialog()"></button>
+          <span class="field-hint">Supplier, user, account, tax, notes and other optional fields</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="rp-lines-header">
+        <div class="section-title rp-lines-title">
+          <i class="pi pi-list"></i> Return Lines
+          @if (sourcePurchase) {
+            <span class="rp-lines-hint">From purchase {{ sourcePurchase.purchaseCode || ('#' + sourcePurchase.purchaseId) }}</span>
+          }
+        </div>
+        @if (lines.length) {
           <div class="rp-lines-actions">
-            <button pButton type="button" icon="pi pi-plus" label="Add Line"
-              class="rp-line-btn btn-add" (click)="addLine()"></button>
             <button pButton type="button" icon="pi pi-trash" label="Remove Selected"
               class="rp-line-btn btn-delete" [disabled]="!selectedLines.length"
               (click)="removeSelectedLines()"></button>
           </div>
-        </div>
-        @if (formErrors.lines) {
-          <div class="rp-lines-error">{{ formErrors.lines }}</div>
         }
-        <div class="rp-table-wrap">
-          <p-table [value]="lines" [(selection)]="selectedLines" dataKey="rowKey"
-            [scrollable]="true" scrollHeight="flex" styleClass="rp-table">
-            <ng-template pTemplate="header">
-              <tr>
-                <th class="col-check"><p-tableHeaderCheckbox /></th>
-                <th class="col-index">#</th>
-                <th class="col-product">Product</th>
-                <th class="col-qty">Qty</th>
-                <th class="col-unit">Unit ID</th>
-                <th class="col-cost">Net Unit Cost</th>
-                <th class="col-disc">Discount</th>
-                <th class="col-rate">Tax Rate</th>
-                <th class="col-tax">Tax</th>
-                <th class="col-total">Total</th>
-              </tr>
-            </ng-template>
-            <ng-template pTemplate="body" let-line let-rowIndex="rowIndex">
-              <tr [pSelectableRow]="line">
-                <td class="col-check"><p-tableCheckbox [value]="line" /></td>
-                <td class="col-index">{{ rowIndex + 1 }}</td>
-                <td class="col-product">
-                  <p-select [options]="productOptions" optionLabel="label" optionValue="value"
-                    [(ngModel)]="line.productId" placeholder="Product" [filter]="true"
-                    appendTo="body" [disabled]="!lookupsLoaded"
-                    (ngModelChange)="onProductChange(line)" styleClass="rp-cell-select" />
-                </td>
-                <td class="col-qty">
-                  <input pInputText type="number" [(ngModel)]="line.qty"
-                    (ngModelChange)="onLineFieldChange(line)" class="rp-cell-input" />
-                </td>
-                <td class="col-unit">
-                  <input pInputText type="number" [(ngModel)]="line.purchaseUnitId"
-                    (ngModelChange)="onLineFieldChange(line)" class="rp-cell-input" />
-                </td>
-                <td class="col-cost">
-                  <input pInputText type="number" [(ngModel)]="line.netUnitCost"
-                    (ngModelChange)="onLineFieldChange(line)" class="rp-cell-input" />
-                </td>
-                <td class="col-disc">
-                  <input pInputText type="number" [(ngModel)]="line.discount"
-                    (ngModelChange)="onLineFieldChange(line)" class="rp-cell-input" />
-                </td>
-                <td class="col-rate">
-                  <input pInputText type="number" [(ngModel)]="line.taxRate"
-                    (ngModelChange)="onLineFieldChange(line)" class="rp-cell-input" />
-                </td>
-                <td class="col-tax amount-cell">{{ formatMoney(line.tax) }}</td>
-                <td class="col-total amount-cell">{{ formatMoney(line.total) }}</td>
-              </tr>
-            </ng-template>
-            <ng-template pTemplate="emptymessage">
-              <tr>
-                <td colspan="10">
-                  <div class="empty-state compact">
-                    <p class="empty-title">No lines</p>
-                    <button pButton icon="pi pi-plus" label="Add Line" class="p-button-sm btn-add"
-                      (click)="addLine()"></button>
-                  </div>
-                </td>
-              </tr>
-            </ng-template>
-          </p-table>
-        </div>
       </div>
+      @if (formErrors.lines) {
+        <div class="rp-lines-error">{{ formErrors.lines }}</div>
+      }
+      <div class="rp-table-wrap">
+        <p-table [value]="lines" [(selection)]="selectedLines" dataKey="rowKey"
+          selectionMode="multiple" [scrollable]="true" scrollHeight="280px" styleClass="rp-table">
+          <ng-template pTemplate="header">
+            <tr>
+              <th class="col-check"><p-tableHeaderCheckbox /></th>
+              <th class="col-index">#</th>
+              <th class="col-product">Product Name</th>
+              <th class="col-purchased-qty">Purchased Qty</th>
+              <th class="col-qty">Return Qty</th>
+              <th class="col-cost">Net Unit Cost</th>
+              <th class="col-disc">Discount</th>
+              <th class="col-tax">Tax</th>
+              <th class="col-total">Total</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-line let-rowIndex="rowIndex">
+            <tr [pSelectableRow]="line">
+              <td class="col-check"><p-tableCheckbox [value]="line" /></td>
+              <td class="col-index">{{ rowIndex + 1 }}</td>
+              <td class="col-product">
+                <span class="rp-product-name">{{ line.productName || getProductName(line.productId) }}</span>
+              </td>
+              <td class="col-purchased-qty rp-readonly">{{ line.purchasedQty || '—' }}</td>
+              <td class="col-qty">
+                <input pInputText type="number" [(ngModel)]="line.qty"
+                  (ngModelChange)="onLineFieldChange(line)" class="rp-cell-input" min="0"
+                  [max]="line.purchasedQty > 0 ? line.purchasedQty : null" />
+              </td>
+              <td class="col-cost">
+                <input pInputText type="number" [(ngModel)]="line.netUnitCost"
+                  (ngModelChange)="onLineFieldChange(line)" class="rp-cell-input" />
+              </td>
+              <td class="col-disc">
+                <input pInputText type="number" [(ngModel)]="line.discount"
+                  (ngModelChange)="onLineFieldChange(line)" class="rp-cell-input" />
+              </td>
+              <td class="col-tax amount-cell">{{ formatMoney(line.tax) }}</td>
+              <td class="col-total amount-cell">{{ formatMoney(line.total) }}</td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="9">
+                <div class="empty-state compact">
+                  <p class="empty-title">No return lines</p>
+                  <p class="empty-sub">Select a purchase to load its line items for return.</p>
+                  <button pButton icon="pi pi-search" label="Select Purchase" class="p-button-sm btn-select-purchase"
+                    (click)="openPurchaseDialog()"></button>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </div>
 
-      <!-- Totals -->
-      <div class="form-section rp-totals-section">
-        <div class="section-title"><i class="pi pi-calculator"></i> Totals</div>
-        <div class="rp-totals-grid">
-          <div class="rp-total-item"><span>Items</span><strong>{{ itemCount }}</strong></div>
-          <div class="rp-total-item"><span>Total Qty</span><strong>{{ totalQty }}</strong></div>
-          <div class="rp-total-item"><span>Total Cost</span><strong>{{ formatMoney(totalCost) }}</strong></div>
-          <div class="rp-total-item"><span>Total Discount</span><strong>{{ formatMoney(totalDiscount) }}</strong></div>
-          <div class="rp-total-item"><span>Line Tax</span><strong>{{ formatMoney(lineTaxTotal) }}</strong></div>
-          <div class="rp-total-item"><span>Order Tax</span><strong>{{ formatMoney(header.orderTax) }}</strong></div>
-          <div class="rp-total-item"><span>Total Tax</span><strong>{{ formatMoney(totalTax) }}</strong></div>
-          <div class="rp-total-item rp-grand"><span>Grand Total</span><strong>{{ formatMoney(grandTotal) }}</strong></div>
+    <div class="form-section rp-totals-section">
+      <div class="section-title"><i class="pi pi-calculator"></i> Totals</div>
+      <div class="rp-totals-grid">
+        <div class="rp-total-item"><span>Items</span><strong>{{ itemCount }}</strong></div>
+        <div class="rp-total-item"><span>Total Qty</span><strong>{{ totalQty }}</strong></div>
+        <div class="rp-total-item"><span>Total Cost</span><strong>{{ formatMoney(totalCost) }}</strong></div>
+        <div class="rp-total-item"><span>Total Discount</span><strong>{{ formatMoney(totalDiscount) }}</strong></div>
+        <div class="rp-total-item"><span>Line Tax</span><strong>{{ formatMoney(lineTaxTotal) }}</strong></div>
+        <div class="rp-total-item"><span>Order Tax</span><strong>{{ formatMoney(header.orderTax) }}</strong></div>
+        <div class="rp-total-item"><span>Total Tax</span><strong>{{ formatMoney(totalTax) }}</strong></div>
+        <div class="rp-total-item rp-grand"><span>Grand Total</span><strong>{{ formatMoney(grandTotal) }}</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="rp-bottom-toolbar">
+    <button pButton type="button" icon="pi pi-save" label="Purchase Return"
+      class="bottom-btn btn-save-return" [loading]="isSaving" [disabled]="isSaving"
+      (click)="onSave()"></button>
+    <button pButton type="button" icon="pi pi-search" label="Search Purchase Return"
+      class="bottom-btn btn-search-return" [disabled]="isLoading"
+      (click)="openPurchaseReturnSearch()"></button>
+  </div>
+</div>
+
+<!-- More details dialog -->
+<p-dialog header="Return Details" [(visible)]="detailsDialogVisible" [modal]="true"
+  [style]="{ width: '520px' }" styleClass="rp-dialog">
+  <div class="dialog-form">
+    <div class="form-section">
+      <div class="form-grid-2">
+        <div class="form-field">
+          <label>Supplier</label>
+          <p-select [options]="supplierOptions" optionLabel="label" optionValue="value"
+            [(ngModel)]="header.supplierId" placeholder="Select supplier" [filter]="true"
+            [showClear]="true" appendTo="body" [disabled]="!lookupsLoaded" />
+        </div>
+        <div class="form-field" [class.has-error]="formErrors.userId">
+          <label>User ID <span class="required">*</span></label>
+          <input pInputText type="number" [(ngModel)]="header.userId" placeholder="User ID" />
+          @if (formErrors.userId) {
+            <span class="field-error">{{ formErrors.userId }}</span>
+          }
+        </div>
+        <div class="form-field" [class.has-error]="formErrors.accountId">
+          <label>Account ID <span class="required">*</span></label>
+          <input pInputText type="number" [(ngModel)]="header.accountId" placeholder="Account ID" />
+          @if (formErrors.accountId) {
+            <span class="field-error">{{ formErrors.accountId }}</span>
+          }
+        </div>
+        <div class="form-field">
+          <label>Order Tax Rate (%)</label>
+          <input pInputText type="number" [(ngModel)]="header.orderTaxRate"
+            (ngModelChange)="onOrderTaxRateChange()" placeholder="0" />
+        </div>
+        <div class="form-field">
+          <label>Order Tax</label>
+          <input pInputText type="number" [(ngModel)]="header.orderTax" placeholder="0.00" />
+        </div>
+        <div class="form-field full-span">
+          <label>Document</label>
+          <input pInputText [(ngModel)]="header.document" placeholder="Document reference" />
+        </div>
+        <div class="form-field full-span">
+          <label>Return Note</label>
+          <textarea pTextarea [(ngModel)]="header.returnNote" rows="2" placeholder="Return note"></textarea>
+        </div>
+        <div class="form-field full-span">
+          <label>Staff Note</label>
+          <textarea pTextarea [(ngModel)]="header.staffNote" rows="2" placeholder="Staff note"></textarea>
         </div>
       </div>
     </div>
-  }
-</div>
+  </div>
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button pButton label="Close" class="p-button-outlined btn-cancel"
+        (click)="detailsDialogVisible = false"></button>
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Select purchase dialog -->
+<p-dialog header="Select Purchase" [(visible)]="purchaseDialogVisible" [modal]="true"
+  [style]="{ width: '760px' }" styleClass="rp-dialog">
+  <div class="dialog-search-bar">
+    <span class="search-label"><i class="pi pi-search"></i> Search</span>
+    <div class="search-fields">
+      <input pInputText type="text" [(ngModel)]="purchaseSearchTerm"
+        (ngModelChange)="onPurchaseSearchChange()" placeholder="Code, order no, supplier, purchase ID…" />
+      @if (hasPurchaseSearch) {
+        <button class="clear-btn" (click)="onClearPurchaseSearch()">
+          <i class="pi pi-filter-slash"></i> Clear
+        </button>
+      }
+    </div>
+  </div>
+  <p-table [value]="filteredPurchases" selectionMode="single" [(selection)]="selectedPurchaseInDialog"
+    dataKey="purchaseId" [scrollable]="true" scrollHeight="320px" [loading]="purchaseListLoading"
+    styleClass="rp-dialog-table">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Code</th>
+        <th>Date</th>
+        <th>Supplier</th>
+        <th class="col-amount">Total</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-purchase>
+      <tr [pSelectableRow]="purchase" (dblclick)="selectedPurchaseInDialog = purchase; confirmPurchaseSelection()">
+        <td>{{ purchase.purchaseCode || '—' }}</td>
+        <td class="muted-cell">{{ formatDate(purchase.date) }}</td>
+        <td class="muted-cell">{{ purchase.supplierName || getSupplierName(purchase.supplierId) }}</td>
+        <td class="amount-cell">{{ formatMoney(purchase.totalAmount) }}</td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="4"><div class="empty-state compact"><p class="empty-title">No purchases found</p></div></td></tr>
+    </ng-template>
+  </p-table>
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button pButton label="Cancel" class="p-button-outlined btn-cancel"
+        (click)="purchaseDialogVisible = false"></button>
+      <button pButton label="Select" icon="pi pi-check" class="btn-ok"
+        [disabled]="!selectedPurchaseInDialog" (click)="confirmPurchaseSelection()"></button>
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Search purchase return dialog -->
+<p-dialog header="Search Purchase Return" [(visible)]="purchaseReturnSearchVisible" [modal]="true"
+  [style]="{ width: '760px' }" styleClass="rp-dialog">
+  <div class="dialog-search-bar">
+    <span class="search-label"><i class="pi pi-search"></i> Search</span>
+    <div class="search-fields">
+      <input pInputText type="text" [(ngModel)]="purchaseReturnSearchTerm"
+        (ngModelChange)="onPurchaseReturnSearchChange()" placeholder="Reference, supplier, return ID…" />
+      @if (hasPurchaseReturnSearch) {
+        <button class="clear-btn" (click)="onClearPurchaseReturnSearch()">
+          <i class="pi pi-filter-slash"></i> Clear
+        </button>
+      }
+    </div>
+  </div>
+  <p-table [value]="filteredPurchaseReturns" selectionMode="single"
+    [(selection)]="selectedPurchaseReturnInDialog" dataKey="returnPurchaseId"
+    [scrollable]="true" scrollHeight="320px" [loading]="purchaseReturnListLoading"
+    styleClass="rp-dialog-table">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Reference</th>
+        <th>Supplier</th>
+        <th>Warehouse</th>
+        <th class="col-amount">Grand Total</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-ret>
+      <tr [pSelectableRow]="ret" (dblclick)="confirmPurchaseReturnSelection()">
+        <td>{{ ret.referenceNo || ('#' + ret.returnPurchaseId) }}</td>
+        <td class="muted-cell">{{ getSupplierName(ret.supplierId) }}</td>
+        <td class="muted-cell">{{ getWarehouseName(ret.warehouseId) }}</td>
+        <td class="amount-cell">{{ formatMoney(ret.grandTotal) }}</td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="4"><div class="empty-state compact"><p class="empty-title">No purchase returns found</p></div></td></tr>
+    </ng-template>
+  </p-table>
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button pButton label="Cancel" class="p-button-outlined btn-cancel"
+        (click)="purchaseReturnSearchVisible = false"></button>
+      <button pButton label="Open" icon="pi pi-folder-open" class="btn-ok"
+        [disabled]="!selectedPurchaseReturnInDialog" (click)="confirmPurchaseReturnSelection()"></button>
+    </div>
+  </ng-template>
+</p-dialog>

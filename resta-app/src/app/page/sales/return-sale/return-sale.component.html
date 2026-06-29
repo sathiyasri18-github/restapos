@@ -3,17 +3,20 @@
 <div class="rs-wrapper">
   <div class="rs-toolbar">
     <div class="toolbar-left">
-      <button pButton type="button" icon="pi pi-arrow-left" label="Back"
-        class="toolbar-btn btn-back" (click)="onBack()"></button>
       <i class="pi pi-undo toolbar-icon"></i>
       <span class="toolbar-title">{{ pageTitle }}</span>
       @if (isEditMode && header.saleReturnId) {
         <span class="rs-ref-badge">#{{ header.saleReturnId }}</span>
       }
+      @if (sourceSale) {
+        <span class="rs-source-badge" title="Source sale">
+          Sale: {{ sourceSale.referenceNo || ('#' + sourceSale.saleId) }}
+        </span>
+      }
     </div>
     <div class="toolbar-actions">
-      <button pButton type="button" icon="pi pi-check" label="Save"
-        class="toolbar-btn btn-save" [loading]="isSaving" [disabled]="isLoading" (click)="onSave()"></button>
+      <button pButton type="button" icon="pi pi-plus" label="New"
+        class="toolbar-btn btn-new" (click)="onNewReturn()"></button>
     </div>
   </div>
 
@@ -21,12 +24,12 @@
     @if (isLoading) {
       <div class="rs-loading-overlay">
         <i class="pi pi-spin pi-spinner"></i>
-        <span>Loading return sale…</span>
+        <span>Loading…</span>
       </div>
     }
 
     <div class="form-section">
-      <div class="section-title"><i class="pi pi-file-edit"></i> Return Sale Header</div>
+      <div class="section-title"><i class="pi pi-file-edit"></i> Return Header</div>
       <div class="form-grid-2">
         <div class="form-field" [class.has-error]="formErrors.referenceNo">
           <label>Reference No <span class="required">*</span></label>
@@ -35,6 +38,7 @@
             <span class="field-error">{{ formErrors.referenceNo }}</span>
           }
         </div>
+
         <div class="form-field" [class.has-error]="formErrors.customerId">
           <label>Customer <span class="required">*</span></label>
           <p-select [options]="customerOptions" optionLabel="label" optionValue="value"
@@ -44,6 +48,7 @@
             <span class="field-error">{{ formErrors.customerId }}</span>
           }
         </div>
+
         <div class="form-field" [class.has-error]="formErrors.warehouseId">
           <label>Warehouse <span class="required">*</span></label>
           <p-select [options]="warehouseOptions" optionLabel="label" optionValue="value"
@@ -53,6 +58,132 @@
             <span class="field-error">{{ formErrors.warehouseId }}</span>
           }
         </div>
+
+        <div class="form-field">
+          <label>Source Sale</label>
+          <div class="rs-source-sale-field">
+            <input pInputText readonly class="rs-readonly-input"
+              [value]="sourceSale ? (sourceSale.referenceNo || ('#' + sourceSale.saleId)) : ''"
+              placeholder="Select sale to return against" />
+            <button pButton type="button" icon="pi pi-search" label="Select Sale"
+              class="p-button-sm btn-select-sale" (click)="openSaleDialog()"></button>
+          </div>
+        </div>
+
+        <div class="form-field full-span">
+          <button pButton type="button" icon="pi pi-sliders-h" label="More Details"
+            class="p-button-outlined p-button-sm btn-more-details"
+            (click)="openDetailsDialog()"></button>
+          <span class="field-hint">User, account, tax, notes and other optional fields</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="rs-lines-header">
+        <div class="section-title rs-lines-title">
+          <i class="pi pi-list"></i> Return Lines
+          @if (sourceSale) {
+            <span class="rs-lines-hint">From sale {{ sourceSale.referenceNo || ('#' + sourceSale.saleId) }}</span>
+          }
+        </div>
+        @if (lines.length) {
+          <div class="rs-lines-actions">
+            <button pButton type="button" icon="pi pi-trash" label="Remove Selected"
+              class="p-button-sm btn-remove-lines" [disabled]="!selectedLines.length"
+              (click)="removeSelectedLines()"></button>
+          </div>
+        }
+      </div>
+      @if (formErrors.lines) {
+        <div class="rs-lines-error">{{ formErrors.lines }}</div>
+      }
+      <div class="rs-line-table-wrap">
+        <p-table [value]="lines" [(selection)]="selectedLines" dataKey="rowKey"
+          selectionMode="multiple" [scrollable]="true" scrollHeight="280px" styleClass="rs-table">
+          <ng-template pTemplate="header">
+            <tr>
+              <th class="col-check"><p-tableHeaderCheckbox /></th>
+              <th class="col-index">#</th>
+              <th class="col-product">Product Name</th>
+              <th class="col-sold-qty">Sold Qty</th>
+              <th class="col-qty">Return Qty</th>
+              <th class="col-price">Net Unit Price</th>
+              <th class="col-disc">Discount</th>
+              <th class="col-tax">Tax</th>
+              <th class="col-total">Total</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-line let-rowIndex="rowIndex">
+            <tr [pSelectableRow]="line">
+              <td class="col-check"><p-tableCheckbox [value]="line" /></td>
+              <td class="col-index">{{ rowIndex + 1 }}</td>
+              <td class="col-product">
+                <span class="rs-product-name">{{ line.productName || getProductName(line.productId) }}</span>
+              </td>
+              <td class="col-sold-qty rs-readonly">{{ line.soldQty || '—' }}</td>
+              <td class="col-qty">
+                <input pInputText type="number" [(ngModel)]="line.qty"
+                  (ngModelChange)="onLineFieldChange(line)" class="rs-cell-input" min="0"
+                  [max]="line.soldQty > 0 ? line.soldQty : null" />
+              </td>
+              <td class="col-price">
+                <input pInputText type="number" [(ngModel)]="line.netUnitPrice"
+                  (ngModelChange)="onLineFieldChange(line)" class="rs-cell-input" />
+              </td>
+              <td class="col-disc">
+                <input pInputText type="number" [(ngModel)]="line.discount"
+                  (ngModelChange)="onLineFieldChange(line)" class="rs-cell-input" />
+              </td>
+              <td class="col-tax amount-cell">{{ formatMoney(line.tax) }}</td>
+              <td class="col-total amount-cell">{{ formatMoney(line.total) }}</td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="9">
+                <div class="empty-state compact">
+                  <p class="empty-title">No return lines</p>
+                  <p class="empty-sub">Select a sale to load its line items for return.</p>
+                  <button pButton icon="pi pi-search" label="Select Sale" class="p-button-sm btn-select-sale"
+                    (click)="openSaleDialog()"></button>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </div>
+
+    <div class="form-section rs-totals-section">
+      <div class="section-title"><i class="pi pi-calculator"></i> Totals</div>
+      <div class="rs-totals-grid">
+        <div class="rs-total-item"><span class="rs-total-label">Items</span><span class="rs-total-value">{{ itemCount }}</span></div>
+        <div class="rs-total-item"><span class="rs-total-label">Total Qty</span><span class="rs-total-value">{{ totalQty }}</span></div>
+        <div class="rs-total-item"><span class="rs-total-label">Total Price</span><span class="rs-total-value">{{ formatMoney(totalPrice) }}</span></div>
+        <div class="rs-total-item"><span class="rs-total-label">Total Discount</span><span class="rs-total-value">{{ formatMoney(totalDiscount) }}</span></div>
+        <div class="rs-total-item"><span class="rs-total-label">Line Tax</span><span class="rs-total-value">{{ formatMoney(lineTaxTotal) }}</span></div>
+        <div class="rs-total-item rs-grand-total"><span class="rs-total-label">Grand Total</span><span class="rs-total-value">{{ formatMoney(grandTotal) }}</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="rs-bottom-toolbar">
+    <button pButton type="button" icon="pi pi-save" label="Sale Return"
+      class="bottom-btn btn-save-return" [loading]="isSaving" [disabled]="isLoading"
+      (click)="onSave()"></button>
+    <button pButton type="button" icon="pi pi-search" label="Search Sales Return"
+      class="bottom-btn btn-search-return" [disabled]="isLoading"
+      (click)="openSaleReturnSearch()"></button>
+  </div>
+</div>
+
+<!-- More details dialog -->
+<p-dialog header="Return Details" [(visible)]="detailsDialogVisible" [modal]="true"
+  [style]="{ width: '520px' }" styleClass="rs-dialog">
+  <div class="dialog-form">
+    <div class="form-section">
+      <div class="form-grid-2">
         <div class="form-field" [class.has-error]="formErrors.userId">
           <label>User ID <span class="required">*</span></label>
           <input pInputText type="number" [(ngModel)]="header.userId" placeholder="User ID" />
@@ -87,7 +218,7 @@
           <label>Order Tax</label>
           <input pInputText type="number" [(ngModel)]="header.orderTax" placeholder="0.00" />
         </div>
-        <div class="form-field">
+        <div class="form-field full-span">
           <label>Document</label>
           <input pInputText [(ngModel)]="header.document" placeholder="Document reference" />
         </div>
@@ -101,97 +232,108 @@
         </div>
       </div>
     </div>
-
-    <div class="form-section">
-      <div class="rs-lines-header">
-        <div class="section-title rs-lines-title"><i class="pi pi-list"></i> Product Return Lines</div>
-        <div class="rs-lines-actions">
-          <button pButton type="button" icon="pi pi-plus" label="Add Line"
-            class="p-button-sm btn-add-line" (click)="addLine()"></button>
-          <button pButton type="button" icon="pi pi-trash" label="Remove Selected"
-            class="p-button-sm btn-remove-lines" [disabled]="!selectedLines.length"
-            (click)="removeSelectedLines()"></button>
-        </div>
-      </div>
-      @if (formErrors.lines) {
-        <div class="rs-lines-error">{{ formErrors.lines }}</div>
-      }
-      <div class="rs-line-table-wrap">
-        <p-table [value]="lines" [(selection)]="selectedLines" dataKey="rowKey"
-          selectionMode="multiple" [scrollable]="true" scrollHeight="320px" styleClass="rs-table">
-          <ng-template pTemplate="header">
-            <tr>
-              <th class="col-check"><p-tableHeaderCheckbox /></th>
-              <th class="col-index">#</th>
-              <th class="col-product">Product</th>
-              <th class="col-qty">Qty</th>
-              <th class="col-unit">Unit ID</th>
-              <th class="col-price">Net Unit Price</th>
-              <th class="col-disc">Discount</th>
-              <th class="col-rate">Tax Rate</th>
-              <th class="col-tax">Tax</th>
-              <th class="col-total">Total</th>
-            </tr>
-          </ng-template>
-          <ng-template pTemplate="body" let-line let-rowIndex="rowIndex">
-            <tr [pSelectableRow]="line">
-              <td class="col-check"><p-tableCheckbox [value]="line" /></td>
-              <td class="col-index">{{ rowIndex + 1 }}</td>
-              <td class="col-product">
-                <p-select [options]="productOptions" optionLabel="label" optionValue="value"
-                  [(ngModel)]="line.productId" placeholder="Product" [filter]="true"
-                  appendTo="body" [disabled]="!lookupsLoaded"
-                  (ngModelChange)="onProductChange(line)" styleClass="rs-cell-select" />
-              </td>
-              <td class="col-qty">
-                <input pInputText type="number" [(ngModel)]="line.qty"
-                  (ngModelChange)="onLineFieldChange(line)" class="rs-cell-input" />
-              </td>
-              <td class="col-unit">
-                <input pInputText type="number" [(ngModel)]="line.saleUnitId"
-                  (ngModelChange)="onLineFieldChange(line)" class="rs-cell-input" />
-              </td>
-              <td class="col-price">
-                <input pInputText type="number" [(ngModel)]="line.netUnitPrice"
-                  (ngModelChange)="onLineFieldChange(line)" class="rs-cell-input" />
-              </td>
-              <td class="col-disc">
-                <input pInputText type="number" [(ngModel)]="line.discount"
-                  (ngModelChange)="onLineFieldChange(line)" class="rs-cell-input" />
-              </td>
-              <td class="col-rate">
-                <input pInputText type="number" [(ngModel)]="line.taxRate"
-                  (ngModelChange)="onLineFieldChange(line)" class="rs-cell-input" />
-              </td>
-              <td class="col-tax amount-cell">{{ formatMoney(line.tax) }}</td>
-              <td class="col-total amount-cell">{{ formatMoney(line.total) }}</td>
-            </tr>
-          </ng-template>
-          <ng-template pTemplate="emptymessage">
-            <tr>
-              <td colspan="10">
-                <div class="empty-state compact">
-                  <p class="empty-title">No lines</p>
-                  <button pButton icon="pi pi-plus" label="Add Line" class="p-button-sm btn-add-line"
-                    (click)="addLine()"></button>
-                </div>
-              </td>
-            </tr>
-          </ng-template>
-        </p-table>
-      </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button pButton label="Close" class="p-button-outlined btn-cancel"
+        (click)="detailsDialogVisible = false"></button>
     </div>
+  </ng-template>
+</p-dialog>
 
-    <div class="form-section rs-totals-section">
-      <div class="section-title"><i class="pi pi-calculator"></i> Totals</div>
-      <div class="rs-totals-grid">
-        <div class="rs-total-item"><span class="rs-total-label">Items</span><span class="rs-total-value">{{ itemCount }}</span></div>
-        <div class="rs-total-item"><span class="rs-total-label">Total Qty</span><span class="rs-total-value">{{ totalQty }}</span></div>
-        <div class="rs-total-item"><span class="rs-total-label">Total Price</span><span class="rs-total-value">{{ formatMoney(totalPrice) }}</span></div>
-        <div class="rs-total-item"><span class="rs-total-label">Total Discount</span><span class="rs-total-value">{{ formatMoney(totalDiscount) }}</span></div>
-        <div class="rs-total-item"><span class="rs-total-label">Line Tax</span><span class="rs-total-value">{{ formatMoney(lineTaxTotal) }}</span></div>
-        <div class="rs-total-item rs-grand-total"><span class="rs-total-label">Grand Total</span><span class="rs-total-value">{{ formatMoney(grandTotal) }}</span></div>
-      </div>
+<!-- Select sale dialog -->
+<p-dialog header="Select Sale" [(visible)]="saleDialogVisible" [modal]="true"
+  [style]="{ width: '720px' }" styleClass="rs-dialog">
+  <div class="dialog-search-bar">
+    <span class="search-label"><i class="pi pi-search"></i> Search</span>
+    <div class="search-fields">
+      <input pInputText type="text" [(ngModel)]="saleSearchTerm"
+        (ngModelChange)="onSaleSearchChange()" placeholder="Reference, customer, sale ID…" />
+      @if (hasSaleSearch) {
+        <button class="clear-btn" (click)="onClearSaleSearch()">
+          <i class="pi pi-filter-slash"></i> Clear
+        </button>
+      }
     </div>
   </div>
-</div>
+  <p-table [value]="filteredSales" selectionMode="single" [(selection)]="selectedSaleInDialog"
+    dataKey="saleId" [scrollable]="true" scrollHeight="320px" [loading]="saleListLoading"
+    styleClass="rs-dialog-table">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Reference</th>
+        <th>Customer</th>
+        <th>Warehouse</th>
+        <th class="col-amount">Grand Total</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-sale>
+      <tr [pSelectableRow]="sale" (dblclick)="confirmSaleSelection()">
+        <td>{{ sale.referenceNo || '—' }}</td>
+        <td class="muted-cell">{{ getCustomerName(sale.customerId) }}</td>
+        <td class="muted-cell">{{ getWarehouseName(sale.warehouseId) }}</td>
+        <td class="amount-cell">{{ formatMoney(sale.grandTotal) }}</td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="4"><div class="empty-state compact"><p class="empty-title">No sales found</p></div></td></tr>
+    </ng-template>
+  </p-table>
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button pButton label="Cancel" class="p-button-outlined btn-cancel"
+        (click)="saleDialogVisible = false"></button>
+      <button pButton label="Select" icon="pi pi-check" class="btn-ok"
+        [disabled]="!selectedSaleInDialog" (click)="confirmSaleSelection()"></button>
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Search sales return dialog -->
+<p-dialog header="Search Sales Return" [(visible)]="saleReturnSearchVisible" [modal]="true"
+  [style]="{ width: '720px' }" styleClass="rs-dialog">
+  <div class="dialog-search-bar">
+    <span class="search-label"><i class="pi pi-search"></i> Search</span>
+    <div class="search-fields">
+      <input pInputText type="text" [(ngModel)]="saleReturnSearchTerm"
+        (ngModelChange)="onSaleReturnSearchChange()" placeholder="Reference, customer, return ID…" />
+      @if (hasSaleReturnSearch) {
+        <button class="clear-btn" (click)="onClearSaleReturnSearch()">
+          <i class="pi pi-filter-slash"></i> Clear
+        </button>
+      }
+    </div>
+  </div>
+  <p-table [value]="filteredSaleReturns" selectionMode="single"
+    [(selection)]="selectedSaleReturnInDialog" dataKey="saleReturnId"
+    [scrollable]="true" scrollHeight="320px" [loading]="saleReturnListLoading"
+    styleClass="rs-dialog-table">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>Reference</th>
+        <th>Customer</th>
+        <th>Warehouse</th>
+        <th class="col-amount">Grand Total</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-ret>
+      <tr [pSelectableRow]="ret" (dblclick)="confirmSaleReturnSelection()">
+        <td>{{ ret.referenceNo || ('#' + ret.saleReturnId) }}</td>
+        <td class="muted-cell">{{ getCustomerName(ret.customerId) }}</td>
+        <td class="muted-cell">{{ getWarehouseName(ret.warehouseId) }}</td>
+        <td class="amount-cell">{{ formatMoney(ret.grandTotal) }}</td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr><td colspan="4"><div class="empty-state compact"><p class="empty-title">No sales returns found</p></div></td></tr>
+    </ng-template>
+  </p-table>
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button pButton label="Cancel" class="p-button-outlined btn-cancel"
+        (click)="saleReturnSearchVisible = false"></button>
+      <button pButton label="Open" icon="pi pi-folder-open" class="btn-ok"
+        [disabled]="!selectedSaleReturnInDialog" (click)="confirmSaleReturnSelection()"></button>
+    </div>
+  </ng-template>
+</p-dialog>
