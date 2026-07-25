@@ -31,25 +31,38 @@ export class Sidebar implements OnInit {
   menuLoadError = false;
 
   ngOnInit(): void {
+    const cached = this.menuService.getCachedMyTree();
+    if (cached != null) {
+      this.applyMenuTree(cached);
+      this.isLoadingMenus = false;
+    }
     this.loadMenus();
   }
 
   loadMenus(): void {
-    this.isLoadingMenus = true;
+    if (!this.menuItems.length) {
+      this.isLoadingMenus = true;
+    }
     this.menuLoadError = false;
 
-    this.menuService.getMyTree().subscribe({
+    this.menuService.loadMyTree().subscribe({
       next: (res) => {
-        const tree = Array.isArray(res) ? res : Array.isArray(res?.items) ? res.items : [];
-        this.menuItems = this.mapTree(tree);
+        this.applyMenuTree(res);
         this.isLoadingMenus = false;
       },
       error: () => {
-        this.menuItems = [];
-        this.menuLoadError = true;
+        if (!this.menuItems.length) {
+          this.menuItems = [];
+          this.menuLoadError = true;
+        }
         this.isLoadingMenus = false;
       }
     });
+  }
+
+  private applyMenuTree(res: unknown): void {
+    const tree = Array.isArray(res) ? res : Array.isArray((res as { items?: unknown[] })?.items) ? (res as { items: MenuTreeNode[] }).items : [];
+    this.menuItems = this.mapTree(tree);
   }
 
   private mapTree(nodes: MenuTreeNode[]): SidebarMenu[] {

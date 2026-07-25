@@ -1,0 +1,145 @@
+<p-toast position="top-right" />
+
+<div class="dash-wrapper">
+
+  <div class="dash-toolbar">
+    <div class="toolbar-left">
+      <i class="pi pi-chart-line toolbar-icon"></i>
+      <span class="toolbar-title">Business Dashboard</span>
+      @if (dashboard) {
+        <span class="record-badge">{{ dateRangeLabel }}</span>
+      }
+    </div>
+    <div class="toolbar-actions">
+      <button pButton type="button" icon="pi pi-shopping-bag" label="Sales"
+        class="toolbar-btn btn-link" (click)="goToSales()"></button>
+      <button pButton type="button" icon="pi pi-shopping-cart" label="Purchases"
+        class="toolbar-btn btn-link" (click)="goToPurchases()"></button>
+      <button pButton type="button" icon="pi pi-refresh" label="Refresh"
+        class="toolbar-btn btn-refresh" [loading]="isLoading" (click)="loadDashboard()"></button>
+    </div>
+  </div>
+
+  <div class="filter-bar">
+    <div class="search-field">
+      <label>From Date</label>
+      <p-datepicker [(ngModel)]="fromDate" (ngModelChange)="onDateChange()"
+        dateFormat="dd/mm/yy" appendTo="body" placeholder="From" />
+    </div>
+    <div class="search-field">
+      <label>To Date</label>
+      <p-datepicker [(ngModel)]="toDate" (ngModelChange)="onDateChange()"
+        dateFormat="dd/mm/yy" appendTo="body" placeholder="To" />
+    </div>
+    <button class="clear-btn" type="button" (click)="onClearDates()">
+      <i class="pi pi-calendar"></i> This month
+    </button>
+  </div>
+
+  <div class="dash-body">
+    @if (isLoading && !dashboard) {
+      <div class="kpi-grid">
+        @for (i of [1,2,3,4,5]; track i) {
+          <div class="kpi-card skeleton"><p-skeleton height="88px" /></div>
+        }
+      </div>
+    } @else if (dashboard) {
+
+      <section class="section-block">
+        <h3 class="section-heading">Activity summary</h3>
+        <div class="kpi-grid">
+          @for (card of kpiCards; track card.key) {
+            <div class="kpi-card" [class]="'tone-' + card.tone">
+              <div class="kpi-head">
+                <i class="pi" [class]="card.icon"></i>
+                <span>{{ card.title }}</span>
+              </div>
+              <div class="kpi-amount">{{ formatMoney(card.amount) }}</div>
+              <div class="kpi-meta">{{ card.count }} transaction{{ card.count === 1 ? '' : 's' }}</div>
+            </div>
+          }
+        </div>
+      </section>
+
+      <section class="section-block">
+        <h3 class="section-heading">Net figures</h3>
+        <div class="summary-grid">
+          @for (card of summaryCards; track card.key) {
+            <div class="summary-card" [class]="'tone-' + card.tone">
+              <div class="kpi-head">
+                <i class="pi" [class]="card.icon"></i>
+                <span>{{ card.title }}</span>
+              </div>
+              <div class="kpi-amount">{{ formatMoney(card.amount) }}</div>
+              @if (card.subtitle) {
+                <div class="kpi-sub">{{ card.subtitle }}</div>
+              }
+              @if (card.count > 0) {
+                <div class="kpi-meta">{{ card.count }} net transaction{{ card.count === 1 ? '' : 's' }}</div>
+              }
+            </div>
+          }
+        </div>
+      </section>
+
+      <div class="panels-row">
+        <section class="panel chart-panel">
+          <h3 class="section-heading">Expenses by category</h3>
+          @if (expenseByCategory.length) {
+            @for (item of expenseByCategory; track item.categoryName) {
+              <div class="chart-row">
+                <span class="chart-label" [title]="item.categoryName">{{ item.categoryName }}</span>
+                <div class="chart-bar-track">
+                  <div class="chart-bar-fill expense"
+                    [style.width.%]="getBarWidth(item.amount, expenseByCategory)"></div>
+                </div>
+                <span class="chart-amount">{{ formatMoney(item.amount) }}</span>
+              </div>
+            }
+          } @else {
+            <p class="empty-note">No expenses in this period.</p>
+          }
+        </section>
+
+        <section class="panel table-panel">
+          <h3 class="section-heading">Daily breakdown</h3>
+          <p-table [value]="dailyTrend" [scrollable]="true" scrollHeight="280px"
+            styleClass="dash-table compact-table">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Date</th>
+                <th class="num">Sales</th>
+                <th class="num">Purchases</th>
+                <th class="num">Expenses</th>
+                <th class="num">Net</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-row>
+              <tr>
+                <td>{{ formatDisplayDate(row.date) }}</td>
+                <td class="num">
+                  <span class="cell-amount">{{ formatMoney(row.salesAmount) }}</span>
+                  <span class="cell-count">{{ row.salesCount }} txn</span>
+                </td>
+                <td class="num">
+                  <span class="cell-amount">{{ formatMoney(row.purchaseAmount) }}</span>
+                  <span class="cell-count">{{ row.purchaseCount }} txn</span>
+                </td>
+                <td class="num">
+                  <span class="cell-amount">{{ formatMoney(row.expenseAmount) }}</span>
+                  <span class="cell-count">{{ row.expenseCount }} txn</span>
+                </td>
+                <td class="num" [class.positive]="getDailyNet(row) >= 0" [class.negative]="getDailyNet(row) < 0">
+                  {{ formatMoney(getDailyNet(row)) }}
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr><td colspan="5" class="empty-note">No transactions in the selected date range.</td></tr>
+            </ng-template>
+          </p-table>
+        </section>
+      </div>
+    }
+  </div>
+</div>

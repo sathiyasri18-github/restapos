@@ -786,7 +786,7 @@ export class ServiceCallComponent implements OnInit, OnDestroy {
   }
 
   goToDashboard(): void {
-    this.router.navigate(['/service-call-dashboard']);
+    this.router.navigate(['/dashboard']);
   }
 
   get serviceCallReportConfig(): GridReportConfig {

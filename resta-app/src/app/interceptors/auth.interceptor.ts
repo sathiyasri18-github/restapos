@@ -14,8 +14,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   return next(outgoing).pipe(
     catchError((err: HttpErrorResponse) => {
       if (err.status === 401 && authed) {
-        localStorage.removeItem('auth_token');
-        localStorage.removeItem('auth_user');
+        auth.clearSession();
         window.location.href = '/sign-in';
       }
       return throwError(() => err);

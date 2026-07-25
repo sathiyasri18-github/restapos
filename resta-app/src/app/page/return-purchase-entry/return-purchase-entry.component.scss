@@ -72,10 +72,24 @@
     border: 1px solid rgba(255, 255, 255, 0.3) !important;
   }
 
-  &.btn-save {
-    background: var(--accent-green) !important;
+  &.btn-new {
+    background: rgba(255, 255, 255, 0.15) !important;
     color: #fff !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
   }
+}
+
+.rp-source-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 20px;
+  background: rgba(34, 197, 94, 0.25);
+  color: #dcfce7;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .rp-loading {
@@ -83,11 +97,120 @@
   flex: 1;
 }
 
-.rp-body {
+.rp-content {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
-  padding: 0;
+  position: relative;
+  padding-bottom: 8px;
+
+  &.rp-loading {
+    pointer-events: none;
+    opacity: 0.7;
+  }
+}
+
+.rp-loading-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--color-primary);
+  font-size: 13px;
+  font-weight: 600;
+
+  i { font-size: 1.5rem; }
+}
+
+.rp-bottom-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: var(--bg-white);
+  border-top: 2px solid var(--border-color);
+  flex-shrink: 0;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.bottom-btn {
+  font-size: 13px !important;
+  padding: 0 20px !important;
+  height: 36px !important;
+  border-radius: 4px !important;
+  font-weight: 700 !important;
+  border: none !important;
+
+  &.btn-save-return {
+    background: var(--accent-green) !important;
+    color: #fff !important;
+    min-width: 180px;
+  }
+
+  &.btn-search-return {
+    background: var(--color-primary) !important;
+    color: #fff !important;
+    min-width: 220px;
+  }
+}
+
+.rp-source-purchase-field {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .rp-readonly-input {
+    flex: 1;
+    background: var(--bg-page) !important;
+    cursor: default;
+  }
+}
+
+.btn-select-purchase {
+  background: var(--color-primary) !important;
+  border: none !important;
+  color: #fff !important;
+  flex-shrink: 0;
+}
+
+.btn-more-details {
+  width: fit-content;
+}
+
+.field-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.rp-lines-hint {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-transform: none;
+  letter-spacing: 0;
+  margin-left: 8px;
+}
+
+.rp-product-name {
+  display: block;
+  font-weight: 600;
+  color: var(--text-dark);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rp-readonly {
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
 }
 
 .form-section {
@@ -252,7 +375,8 @@
 .col-check { width: 40px !important; text-align: center !important; }
 .col-index { width: 44px !important; text-align: center !important; }
 .col-product { min-width: 180px !important; }
-.col-qty { width: 72px !important; }
+.col-purchased-qty { width: 100px !important; text-align: right !important; }
+.col-qty { width: 88px !important; }
 .col-unit { width: 72px !important; }
 .col-cost { width: 96px !important; }
 .col-disc { width: 80px !important; }
@@ -326,6 +450,7 @@
   align-items: center;
   padding: 24px 16px;
   gap: 8px;
+  text-align: center;
 }
 
 .empty-title {
@@ -333,6 +458,126 @@
   font-weight: 600;
   color: var(--text-dark);
   margin: 0;
+}
+
+.empty-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+// ─── Dialogs ──────────────────────────────────────────────────────────────────
+::ng-deep .rp-dialog {
+  .p-dialog-header {
+    background: var(--color-primary) !important;
+    padding: 12px 16px !important;
+
+    .p-dialog-title {
+      font-size: 14px !important;
+      font-weight: 700 !important;
+      color: #fff !important;
+    }
+
+    .p-dialog-header-icon {
+      color: rgba(255, 255, 255, 0.75) !important;
+      &:hover { color: #fff !important; }
+    }
+  }
+
+  .p-dialog-content {
+    padding: 0 !important;
+    background: var(--bg-page) !important;
+  }
+
+  .p-dialog-footer {
+    padding: 10px 16px !important;
+    border-top: 1px solid var(--border-color) !important;
+    background: var(--bg-white) !important;
+  }
+}
+
+.dialog-form .form-section {
+  border-bottom: none;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  width: 100%;
+}
+
+.dialog-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: var(--bg-white);
+  border-bottom: 1px solid var(--border-color);
+
+  .search-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-label);
+    white-space: nowrap;
+
+    i { margin-right: 4px; }
+  }
+
+  .search-fields {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+
+    input { flex: 1; height: 32px !important; font-size: 12.5px !important; }
+  }
+
+  .clear-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: var(--bg-page);
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    cursor: pointer;
+    white-space: nowrap;
+
+    &:hover { background: var(--row-hover); }
+  }
+}
+
+::ng-deep .rp-dialog-table {
+  .p-datatable-thead > tr > th {
+    background: var(--table-header-bg) !important;
+    color: var(--table-header-text) !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    padding: 8px 12px !important;
+  }
+
+  .p-datatable-tbody > tr > td {
+    font-size: 12px !important;
+    padding: 8px 12px !important;
+  }
+
+  .col-amount { text-align: right !important; }
+}
+
+.muted-cell { color: var(--text-muted); }
+
+.btn-ok {
+  background: var(--accent-green) !important;
+  border: none !important;
+  color: #fff !important;
+}
+
+.btn-cancel {
+  font-size: 12px !important;
 }
 
 @media (max-width: 900px) {

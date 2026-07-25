@@ -49,7 +49,7 @@ export interface PurchaseListParams {
 @Injectable({ providedIn: 'root' })
 export class PurchaseService {
 
-  private readonly apiUrl = apiUrl('Purchases');
+  private readonly apiUrl = apiUrl('Purchase');
 
   constructor(private http: HttpClient) {}
 

@@ -1,8 +1,10 @@
 import { Component } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { MessageService } from 'primeng/api';
+import { catchError, of, switchMap } from 'rxjs';
 import { AppModule } from '../../../module/app.module';
 import { AuthService } from '../../../services/auth.service';
+import { MenuService } from '../../../services/menu.service';
 
 @Component({
   selector: 'app-sign-in',
@@ -19,6 +21,7 @@ export class SignInComponent {
 
   constructor(
     private auth: AuthService,
+    private menuService: MenuService,
     private router: Router,
     private messageService: MessageService
   ) {}
@@ -30,10 +33,12 @@ export class SignInComponent {
     if (Object.keys(this.errors).length) return;
 
     this.isLoading = true;
-    this.auth.signIn({ userName: this.userName.trim(), password: this.password }).subscribe({
+    this.auth.signIn({ userName: this.userName.trim(), password: this.password }).pipe(
+      switchMap(() => this.menuService.fetchAndCacheMyTree().pipe(catchError(() => of(null))))
+    ).subscribe({
       next: () => {
         this.messageService.add({ severity: 'success', summary: 'Welcome', detail: 'Signed in successfully.' });
-        this.router.navigate(['/service-call-dashboard']);
+        this.router.navigate(['/dashboard']);
       },
       error: (err) => {
         this.isLoading = false;
