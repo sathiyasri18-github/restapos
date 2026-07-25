@@ -66,6 +66,7 @@ public static class MenuRouteDefinitions
 
         // Accounting
         new(701, 7, "VOUCHER_ENTRY", "Voucher Entry", "/voucher-entry", "pi pi-wallet", 10),
+        new(705, 7, "EXPENSE", "Expense", "/expense", "pi pi-credit-card", 50),
         new(702, 7, "CUST_CREDIT_NOTE", "Customer Credit/Debit Note", "/customer-credit-debit-note", "pi pi-file-edit", 20),
         new(703, 7, "SUPP_CREDIT_NOTE", "Supplier Credit/Debit Note", "/supplier-credit-debit-note", "pi pi-truck", 30),
         new(704, 7, "PAYMENT_REMINDER", "Payment Reminder", "/payment-reminder", "pi pi-bell", 40),

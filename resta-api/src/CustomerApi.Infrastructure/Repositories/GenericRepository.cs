@@ -19,11 +19,16 @@ public class GenericRepository<T>(ApplicationDbContext context) : IGenericReposi
         return await _dbSet.FindAsync([id], ct);
     }
 
-    public async Task<PagedResult<T>> GetAllAsync(int pageNumber, int pageSize, CancellationToken ct = default)
+    public async Task<PagedResult<T>> GetAllAsync(int pageNumber, int pageSize, bool sortDesc = false, CancellationToken ct = default)
     {
         var query = _dbSet.AsNoTracking();
         var totalCount = await query.CountAsync(ct);
-        var items = await query
+
+        IQueryable<T> ordered = HasIntegerId && sortDesc
+            ? query.OrderByDescending(e => EF.Property<int>(e, "Id"))
+            : query;
+
+        var items = await ordered
             .Skip((pageNumber - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(ct);

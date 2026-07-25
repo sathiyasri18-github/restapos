@@ -64,6 +64,8 @@ public static class MenuRouteSync
         CancellationToken ct)
     {
         const string sql = """
+            DBCC CHECKIDENT ('[RoleMenu]', RESEED);
+
             INSERT INTO [RoleMenu] ([RoleId],[MenuId],[CanView],[CanAdd],[CanEdit],[CanDelete],[CreatedDate],[ModifiedDate])
             SELECT r.[Id], m.[Id], 1, 1, 1, 1, GETDATE(), GETDATE()
             FROM [Role] r

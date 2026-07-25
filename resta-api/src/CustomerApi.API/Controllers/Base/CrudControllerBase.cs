@@ -11,9 +11,10 @@ public abstract class CrudControllerBase<T>(IGenericRepository<T> repository) : 
     public async Task<IActionResult> GetAll(
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 20,
+        [FromQuery] bool sortDesc = false,
         CancellationToken ct = default)
     {
-        var result = await repository.GetAllAsync(pageNumber, pageSize, ct);
+        var result = await repository.GetAllAsync(pageNumber, pageSize, sortDesc, ct);
         return Ok(result);
     }
 

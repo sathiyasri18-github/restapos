@@ -146,7 +146,7 @@
         </button>
         <button type="button" class="tool-btn" pTooltip="Barcode"><i class="pi pi-barcode"></i></button>
         <button type="button" class="tool-btn" pTooltip="Print" (click)="printBill()"><i class="pi pi-print"></i></button>
-        <button type="button" class="tool-btn" pTooltip="Calendar"><i class="pi pi-calendar"></i></button>
+        <button type="button" class="tool-btn" pTooltip="Calendar" (click)="openSalesCalendar()"><i class="pi pi-calendar"></i></button>
         <button type="button" class="tool-btn notify" pTooltip="Notifications">
           <i class="pi pi-bell"></i><span class="badge">2</span>
         </button>
@@ -215,7 +215,7 @@
   <button type="button" class="pay razorpay" [disabled]="isSubmitting" (click)="onPayment('razorpay')">Razorpay</button>
   <button type="button" class="pay credit" [disabled]="isSubmitting" (click)="onPayment('credit')">Credit Sale</button>
   <button type="button" class="pay multiple" [disabled]="isSubmitting" (click)="onPayment('multiple')">Multiple Payment</button>
-  <button type="button" class="pay instalment" [disabled]="isSubmitting" (click)="onPayment('installment')">Instalment</button>
+  <button type="button" class="pay instalment" [disabled]="isSubmitting" (click)="openSearchSales()">Search Sales</button>
   <button type="button" class="pay deposit" [disabled]="isSubmitting" (click)="onPayment('deposit')">Deposit</button>
   <button type="button" class="pay points" [disabled]="isSubmitting" (click)="onPayment('points')">Points</button>
   <button type="button" class="pay more" (click)="moreMenuVisible = !moreMenuVisible">More <i class="pi pi-chevron-down"></i></button>
@@ -339,6 +339,193 @@
   }
 </p-dialog>
 
+<!-- Search Sales Dialog -->
+<p-dialog header="Search Sales" [(visible)]="searchSalesDialogVisible" [modal]="true"
+  [style]="{ width: '820px' }" [closable]="true" [draggable]="true" styleClass="search-sales-dialog">
+
+  <div class="ss-filter-bar">
+    <div class="ss-filter-field">
+      <label>Customer</label>
+      <p-select
+        [options]="customerOptions"
+        optionLabel="label"
+        optionValue="value"
+        [(ngModel)]="searchSalesCustomerId"
+        placeholder="All customers"
+        [showClear]="true"
+        [filter]="true"
+        filterPlaceholder="Search…"
+        appendTo="body"
+        styleClass="ss-select" />
+    </div>
+    <div class="ss-filter-field">
+      <label>Reference No</label>
+      <input pInputText type="text"
+        [(ngModel)]="searchSalesRefNo"
+        placeholder="e.g. SALE-001"
+        class="ss-input"
+        (keydown.enter)="runSearchSales()" />
+    </div>
+    <div class="ss-filter-field">
+      <label>Date From</label>
+      <p-datepicker
+        [(ngModel)]="searchSalesDateFrom"
+        [showClear]="true"
+        dateFormat="dd/mm/yy"
+        placeholder="DD/MM/YYYY"
+        appendTo="body"
+        styleClass="ss-date" />
+    </div>
+    <div class="ss-filter-field">
+      <label>Date To</label>
+      <p-datepicker
+        [(ngModel)]="searchSalesDateTo"
+        [showClear]="true"
+        dateFormat="dd/mm/yy"
+        placeholder="DD/MM/YYYY"
+        appendTo="body"
+        styleClass="ss-date" />
+    </div>
+    <div class="ss-filter-actions">
+      <button pButton type="button" icon="pi pi-search" label="Search"
+        class="p-button-sm ss-btn-search"
+        [loading]="searchSalesLoading"
+        (click)="runSearchSales()">
+      </button>
+      <button pButton type="button" icon="pi pi-filter-slash"
+        class="p-button-outlined p-button-sm ss-btn-clear"
+        pTooltip="Clear filters" tooltipPosition="top"
+        [disabled]="!searchSalesRefNo && !searchSalesCustomerId && !searchSalesDateFrom && !searchSalesDateTo"
+        (click)="clearSearchSalesFilters()">
+      </button>
+    </div>
+  </div>
+
+  @if (searchSalesLoading) {
+    <div class="recent-loading"><i class="pi pi-spin pi-spinner"></i> Searching…</div>
+  } @else if (!searchSalesResults.length) {
+    <p class="recent-empty">
+      @if (searchSalesRefNo || searchSalesCustomerId || searchSalesDateFrom || searchSalesDateTo) {
+        No sales match your criteria. Try adjusting the filters.
+      } @else {
+        Enter criteria above and click Search, or leave blank to see the latest sales.
+      }
+    </p>
+  } @else {
+    <div class="recent-table-wrap">
+      <table class="recent-table">
+        <thead>
+          <tr>
+            <th>Reference</th>
+            <th>Sales Date</th>
+            <th>Customer</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th>Payment</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (s of searchSalesResults; track s.saleId) {
+            <tr
+              [class.row-selected]="selectedSearchSale?.saleId === s.saleId"
+              (click)="selectSearchSale(s)"
+              (dblclick)="loadSelectedSearchSale()"
+            >
+              <td>{{ s.referenceNo || '—' }}</td>
+              <td>{{ formatSaleDate(s.createdDate) }}</td>
+              <td>{{ getCustomerName(s.customerId) }}</td>
+              <td class="amount">{{ formatMoney(s.grandTotal) }}</td>
+              <td>{{ getSaleStatusLabel(s.saleStatus) }}</td>
+              <td>{{ getPaymentStatusLabel(s.paymentStatus) }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <p class="recent-hint">
+      Showing {{ searchSalesResults.length }} of {{ searchSalesTotalCount }} results.
+      Click to select, double-click or Load to open in POS.
+    </p>
+  }
+
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Close" class="p-button-outlined"
+      (click)="searchSalesDialogVisible = false"></button>
+    <button pButton type="button" label="Load Selected" icon="pi pi-download"
+      [loading]="recentBinding"
+      [disabled]="!selectedSearchSale || searchSalesLoading"
+      (click)="loadSelectedSearchSale()"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- Sales Calendar Dialog -->
+<p-dialog header="Sales Calendar" [(visible)]="calendarDialogVisible" [modal]="true"
+  [style]="{ width: '780px' }" [closable]="true" [draggable]="true" styleClass="calendar-sales-dialog">
+
+  <div class="cal-layout">
+    <div class="cal-picker">
+      <p-datepicker
+        [(ngModel)]="calendarSelectedDate"
+        [inline]="true"
+        (ngModelChange)="onCalendarDateChange()"
+        dateFormat="dd/mm/yy" />
+    </div>
+
+    <div class="cal-results">
+      <div class="cal-results-header">
+        <span class="cal-date-label">{{ formatCalendarDate(calendarSelectedDate) }}</span>
+        <span class="cal-count">{{ calendarSalesTotalCount }} sale(s)</span>
+      </div>
+
+      @if (calendarLoading) {
+        <div class="recent-loading"><i class="pi pi-spin pi-spinner"></i> Loading…</div>
+      } @else if (!calendarSales.length) {
+        <p class="recent-empty">No sales on this date.</p>
+      } @else {
+        <div class="recent-table-wrap cal-table-wrap">
+          <table class="recent-table">
+            <thead>
+              <tr>
+                <th>Reference</th>
+                <th>Time</th>
+                <th>Customer</th>
+                <th>Total</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (s of calendarSales; track s.saleId) {
+                <tr
+                  [class.row-selected]="selectedCalendarSale?.saleId === s.saleId"
+                  (click)="selectCalendarSale(s)"
+                  (dblclick)="loadSelectedCalendarSale()"
+                >
+                  <td>{{ s.referenceNo || '—' }}</td>
+                  <td>{{ formatSaleTime(s.createdDate) }}</td>
+                  <td>{{ getCustomerName(s.customerId) }}</td>
+                  <td class="amount">{{ formatMoney(s.grandTotal) }}</td>
+                  <td>{{ getSaleStatusLabel(s.saleStatus) }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <p class="recent-hint">Click to select, double-click or Load to open in POS.</p>
+      }
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Close" class="p-button-outlined"
+      (click)="calendarDialogVisible = false"></button>
+    <button pButton type="button" label="Load Selected" icon="pi pi-download"
+      [loading]="recentBinding"
+      [disabled]="!selectedCalendarSale || calendarLoading"
+      (click)="loadSelectedCalendarSale()"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- Recent Transactions Dialog -->
 <p-dialog header="Recent Transactions" [(visible)]="recentDialogVisible" [modal]="true"
   [style]="{ width: '720px' }" [closable]="!recentBinding">
   @if (recentLoading) {

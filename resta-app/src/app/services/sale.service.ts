@@ -68,11 +68,30 @@ export class SaleService {
 
   constructor(private http: HttpClient) {}
 
-  getAll(params: { pageNumber?: number; pageSize?: number } = {}): Observable<any> {
+  getAll(params: { pageNumber?: number; pageSize?: number; sortDesc?: boolean } = {}): Observable<any> {
     let p = new HttpParams();
     if (params.pageNumber) p = p.set('pageNumber', String(params.pageNumber));
     if (params.pageSize) p = p.set('pageSize', String(params.pageSize));
+    if (params.sortDesc) p = p.set('sortDesc', 'true');
     return this.http.get<any>(this.apiUrl, { params: p });
+  }
+
+  search(params: {
+    pageNumber?: number;
+    pageSize?: number;
+    referenceNo?: string;
+    customerId?: number;
+    dateFrom?: string;
+    dateTo?: string;
+  } = {}): Observable<any> {
+    let p = new HttpParams();
+    if (params.pageNumber) p = p.set('pageNumber', String(params.pageNumber));
+    if (params.pageSize) p = p.set('pageSize', String(params.pageSize));
+    if (params.referenceNo?.trim()) p = p.set('referenceNo', params.referenceNo.trim());
+    if (params.customerId) p = p.set('customerId', String(params.customerId));
+    if (params.dateFrom) p = p.set('dateFrom', params.dateFrom);
+    if (params.dateTo) p = p.set('dateTo', params.dateTo);
+    return this.http.get<any>(`${this.apiUrl}/search`, { params: p });
   }
 
   getById(id: number): Observable<any> {

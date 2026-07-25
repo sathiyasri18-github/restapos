@@ -1,0 +1,343 @@
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<div class="exp-wrapper">
+
+  <div class="exp-toolbar">
+    <div class="toolbar-left">
+      <i class="pi pi-credit-card toolbar-icon"></i>
+      <span class="toolbar-title">Expense</span>
+      <span class="record-badge" [class.has-filter]="hasActiveFilters">
+        {{ filteredExpenses.length }}
+        @if (hasActiveFilters) { / {{ expenses.length }} }
+      </span>
+    </div>
+
+    <div class="toolbar-actions">
+      <button pButton type="button" icon="pi pi-plus" label="Add"
+        class="toolbar-btn btn-add"
+        pTooltip="Add new expense" tooltipPosition="bottom"
+        (click)="openAddDialog()">
+      </button>
+
+      <button pButton type="button" icon="pi pi-pencil" label="Edit"
+        class="toolbar-btn btn-edit"
+        pTooltip="Edit selected expense" tooltipPosition="bottom"
+        [disabled]="!selectedExpense"
+        (click)="onEditSelected()">
+      </button>
+
+      <button pButton type="button" icon="pi pi-trash" label="Delete"
+        class="toolbar-btn btn-delete"
+        pTooltip="Delete selected expense" tooltipPosition="bottom"
+        [disabled]="!selectedExpense"
+        (click)="onDeleteSelected($event)">
+      </button>
+
+      <div class="toolbar-sep"></div>
+
+      <app-grid-report-toolbar [config]="expenseReportConfig" [disabled]="isLoading" />
+    </div>
+  </div>
+
+  <div class="search-bar">
+    <span class="search-label">
+      <i class="pi pi-search"></i>
+      Search
+    </span>
+    <div class="search-fields">
+      <div class="search-field">
+        <label for="exp-search">Reference / Category / Note</label>
+        <input id="exp-search" pInputText type="text"
+          [(ngModel)]="searchTerm"
+          (ngModelChange)="onSearchChange()"
+          placeholder="Search expenses…" />
+      </div>
+
+      @if (hasActiveFilters) {
+        <button class="clear-btn" (click)="onClearSearch()">
+          <i class="pi pi-filter-slash"></i>
+          Clear
+        </button>
+      }
+    </div>
+  </div>
+
+  <div class="table-container">
+    <p-table
+      [value]="filteredExpenses"
+      selectionMode="single"
+      [(selection)]="selectedExpense"
+      dataKey="expenseId"
+      [scrollable]="true"
+      scrollHeight="flex"
+      [loading]="isLoading || isLookupLoading"
+      [sortField]="'createdDate'"
+      [sortOrder]="-1"
+      [paginator]="true"
+      [rows]="20"
+      [rowsPerPageOptions]="[10, 20, 50, 100]"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="Showing {first}–{last} of {totalRecords}"
+      styleClass="exp-table"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th class="col-index">#</th>
+          <th class="col-refno" pSortableColumn="referenceNo">
+            Reference No <p-sortIcon field="referenceNo" />
+          </th>
+          <th class="col-category">Category</th>
+          <th class="col-warehouse">Warehouse</th>
+          <th class="col-account">Account</th>
+          <th class="col-amount" pSortableColumn="amount">
+            Amount <p-sortIcon field="amount" />
+          </th>
+          <th class="col-date" pSortableColumn="createdDate">
+            Date <p-sortIcon field="createdDate" />
+          </th>
+          <th class="col-note">Note</th>
+          <th class="col-actions" pFrozenColumn alignFrozen="right">Actions</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-exp let-rowIndex="rowIndex">
+        <tr
+          [pSelectableRow]="exp"
+          [class.row-selected]="selectedExpense?.expenseId === exp.expenseId"
+          (dblclick)="openEditDialog(exp)"
+        >
+          <td class="col-index">
+            @if (selectedExpense?.expenseId === exp.expenseId) {
+              <i class="pi pi-caret-right row-indicator"></i>
+            } @else {
+              <span class="row-number">{{ rowIndex + 1 }}</span>
+            }
+          </td>
+          <td class="col-refno">
+            <span class="refno-badge">{{ exp.referenceNo }}</span>
+          </td>
+          <td class="col-category">{{ categoryLabel(exp.expenseCategoryId) }}</td>
+          <td class="col-warehouse">{{ warehouseLabel(exp.warehouseId) }}</td>
+          <td class="col-account">{{ accountLabel(exp.accountId) }}</td>
+          <td class="col-amount">
+            <span class="amount-cell">{{ formatAmount(exp.amount) }}</span>
+          </td>
+          <td class="col-date muted-cell">{{ formatDate(exp.createdDate) }}</td>
+          <td class="col-note muted-cell">
+            @if (exp.note) {
+              <span [pTooltip]="exp.note" tooltipPosition="left" class="note-text">{{ exp.note }}</span>
+            } @else {
+              —
+            }
+          </td>
+          <td class="col-actions" pFrozenColumn alignFrozen="right">
+            <div class="action-btns">
+              <button class="icon-btn edit-icon"
+                (click)="openEditDialog(exp); $event.stopPropagation()"
+                pTooltip="Edit" tooltipPosition="left">
+                <i class="pi pi-pencil"></i>
+              </button>
+              <button class="icon-btn delete-icon"
+                (click)="confirmDelete(exp, $event)"
+                pTooltip="Delete" tooltipPosition="left">
+                <i class="pi pi-trash"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="9">
+            <div class="empty-state">
+              <i class="pi pi-credit-card empty-icon"></i>
+              @if (hasActiveFilters) {
+                <p class="empty-title">No expenses found</p>
+                <p class="empty-sub">No expenses match your search criteria.</p>
+                <button pButton type="button" icon="pi pi-filter-slash"
+                  label="Clear Search" class="p-button-outlined p-button-sm"
+                  (click)="onClearSearch()">
+                </button>
+              } @else {
+                <p class="empty-title">No expenses yet</p>
+                <p class="empty-sub">Get started by recording your first expense.</p>
+                <button pButton type="button" icon="pi pi-plus"
+                  label="Add Expense" class="p-button-sm btn-add"
+                  (click)="openAddDialog()">
+                </button>
+              }
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="loadingbody">
+        @for (i of [1,2,3,4,5,6,7]; track i) {
+          <tr>
+            <td class="col-index"><p-skeleton width="24px" height="14px" /></td>
+            <td class="col-refno"><p-skeleton width="110px" height="20px" borderRadius="10px" /></td>
+            <td class="col-category"><p-skeleton height="14px" /></td>
+            <td class="col-warehouse"><p-skeleton height="14px" /></td>
+            <td class="col-account"><p-skeleton height="14px" /></td>
+            <td class="col-amount"><p-skeleton width="70px" height="14px" /></td>
+            <td class="col-date"><p-skeleton width="80px" height="14px" /></td>
+            <td class="col-note"><p-skeleton height="14px" /></td>
+            <td class="col-actions"><p-skeleton width="60px" height="14px" /></td>
+          </tr>
+        }
+      </ng-template>
+    </p-table>
+  </div>
+
+  <div class="status-bar">
+    <span class="record-count">
+      Showing <strong>{{ filteredExpenses.length }}</strong> of <strong>{{ expenses.length }}</strong> expenses
+    </span>
+    @if (selectedExpense) {
+      <span class="selected-info">
+        <i class="pi pi-check-circle"></i>
+        Selected: <strong>{{ selectedExpense.referenceNo }}</strong>
+        &nbsp;—&nbsp; <strong>{{ formatAmount(selectedExpense.amount) }}</strong>
+      </span>
+    }
+    <span class="hint-text">Double-click a row to edit</span>
+  </div>
+
+</div>
+
+<p-dialog
+  [header]="dialogTitle"
+  [(visible)]="dialogVisible"
+  [modal]="true"
+  [style]="{ width: '620px' }"
+  [closable]="true"
+  [draggable]="true"
+  styleClass="exp-dialog"
+  (onHide)="onDialogHide()"
+>
+  <div class="dialog-form">
+
+    <div class="form-section">
+      <div class="section-title">
+        <i class="pi pi-credit-card"></i>
+        Expense Details
+      </div>
+
+      <div class="form-grid-2">
+
+        <div class="form-field full-span" [class.has-error]="formErrors.referenceNo">
+          <label>Reference No <span class="required">*</span></label>
+          <div class="input-with-btn">
+            <input pInputText type="text"
+              [(ngModel)]="formData.referenceNo"
+              (ngModelChange)="formErrors.referenceNo = undefined"
+              placeholder="e.g. EXP-20240101-12345"
+              [class.input-error]="formErrors.referenceNo" />
+            <button pButton type="button" icon="pi pi-refresh"
+              class="p-button-outlined p-button-sm gen-btn"
+              pTooltip="Auto-generate" tooltipPosition="top"
+              (click)="generateRefNo()">
+            </button>
+          </div>
+          @if (formErrors.referenceNo) {
+            <span class="field-error"><i class="pi pi-exclamation-circle"></i> {{ formErrors.referenceNo }}</span>
+          }
+        </div>
+
+        <div class="form-field" [class.has-error]="formErrors.expenseCategoryId">
+          <label>Category <span class="required">*</span></label>
+          <p-select
+            [options]="categoryOptions"
+            optionLabel="label"
+            optionValue="value"
+            [(ngModel)]="formData.expenseCategoryId"
+            (ngModelChange)="formErrors.expenseCategoryId = undefined"
+            placeholder="Select category"
+            [filter]="true"
+            filterPlaceholder="Search categories…"
+            appendTo="body"
+            [class.input-error]="formErrors.expenseCategoryId" />
+          @if (formErrors.expenseCategoryId) {
+            <span class="field-error"><i class="pi pi-exclamation-circle"></i> {{ formErrors.expenseCategoryId }}</span>
+          }
+        </div>
+
+        <div class="form-field" [class.has-error]="formErrors.warehouseId">
+          <label>Warehouse <span class="required">*</span></label>
+          <p-select
+            [options]="warehouseOptions"
+            optionLabel="label"
+            optionValue="value"
+            [(ngModel)]="formData.warehouseId"
+            (ngModelChange)="formErrors.warehouseId = undefined"
+            placeholder="Select warehouse"
+            [filter]="true"
+            filterPlaceholder="Search warehouses…"
+            appendTo="body"
+            [class.input-error]="formErrors.warehouseId" />
+          @if (formErrors.warehouseId) {
+            <span class="field-error"><i class="pi pi-exclamation-circle"></i> {{ formErrors.warehouseId }}</span>
+          }
+        </div>
+
+        <div class="form-field" [class.has-error]="formErrors.accountId">
+          <label>Account <span class="required">*</span></label>
+          <p-select
+            [options]="accountOptions"
+            optionLabel="label"
+            optionValue="value"
+            [(ngModel)]="formData.accountId"
+            (ngModelChange)="formErrors.accountId = undefined"
+            placeholder="Select account"
+            [filter]="true"
+            filterPlaceholder="Search accounts…"
+            appendTo="body"
+            [class.input-error]="formErrors.accountId" />
+          @if (formErrors.accountId) {
+            <span class="field-error"><i class="pi pi-exclamation-circle"></i> {{ formErrors.accountId }}</span>
+          }
+        </div>
+
+        <div class="form-field" [class.has-error]="formErrors.amount">
+          <label>Amount <span class="required">*</span></label>
+          <input pInputText type="number" min="0" step="0.01"
+            [(ngModel)]="formData.amount"
+            (ngModelChange)="formErrors.amount = undefined"
+            placeholder="0.00"
+            [class.input-error]="formErrors.amount" />
+          @if (formErrors.amount) {
+            <span class="field-error"><i class="pi pi-exclamation-circle"></i> {{ formErrors.amount }}</span>
+          }
+        </div>
+
+        <div class="form-field full-span">
+          <label>Note</label>
+          <textarea pTextarea
+            [(ngModel)]="formData.note"
+            placeholder="Optional note…"
+            rows="3"
+            style="resize: vertical;">
+          </textarea>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button pButton type="button" icon="pi pi-times" label="Cancel"
+        class="p-button-outlined btn-cancel"
+        (click)="dialogVisible = false">
+      </button>
+      <button pButton type="button" icon="pi pi-check" label="Save"
+        class="btn-ok"
+        [loading]="isSaving"
+        (click)="onSave()">
+      </button>
+    </div>
+  </ng-template>
+</p-dialog>

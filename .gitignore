@@ -9,3 +9,4 @@ dist/
 /resta-api/src/CustomerApi.Infrastructure/obj
 /resta-api/src/CustomerApi.Infrastructure/bin
 /restapos-images.tar
+/resta-api/.vs

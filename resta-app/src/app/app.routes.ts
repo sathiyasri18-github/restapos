@@ -241,6 +241,11 @@ export const routes: Routes = [
           import('./page/expense-category/expense-category.component').then(m => m.ExpenseCategoryComponent)
       },
       {
+        path: 'expense',
+        loadComponent: () =>
+          import('./page/expense/expense.component').then(m => m.ExpenseComponent)
+      },
+      {
         path: 'customer',
         loadComponent: () =>
           import('./page/customer/customer/customer.component').then(m => m.CustomerComponent)

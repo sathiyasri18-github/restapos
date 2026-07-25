@@ -116,6 +116,23 @@ export class PosComponent implements OnInit, OnDestroy {
   recentDialogVisible = false;
   recentLoading = false;
   recentBinding = false;
+
+  searchSalesDialogVisible = false;
+  searchSalesLoading = false;
+  searchSalesResults: RecentSaleRow[] = [];
+  selectedSearchSale: RecentSaleRow | null = null;
+  searchSalesRefNo = '';
+  searchSalesCustomerId: number | null = null;
+  searchSalesDateFrom: Date | null = null;
+  searchSalesDateTo: Date | null = null;
+  searchSalesTotalCount = 0;
+
+  calendarDialogVisible = false;
+  calendarLoading = false;
+  calendarSelectedDate: Date = new Date();
+  calendarSales: RecentSaleRow[] = [];
+  selectedCalendarSale: RecentSaleRow | null = null;
+  calendarSalesTotalCount = 0;
   moreMenuVisible = false;
   calculatorDialogVisible = false;
   drafts: PosDraft[] = [];
@@ -145,6 +162,7 @@ export class PosComponent implements OnInit, OnDestroy {
   private readonly beepSound = new Audio('assets/barcode-beep-sound.m4a');
   siteTitle = 'Resta POS';
   currency = '';
+  defaultWarehouse: { name: string; address: string; phone: string } | null = null;
 
   constructor(
     private posService: PosService,
@@ -333,7 +351,13 @@ export class PosComponent implements OnInit, OnDestroy {
     if (!res) return;
     const list = this.posService.extractItems(res);
     if (list.length) {
-      this.defaultWarehouseId = Number(list[0].warehouseId ?? list[0].id ?? 0);
+      const w = list[0];
+      this.defaultWarehouseId = Number(w.warehouseId ?? w.id ?? 0);
+      this.defaultWarehouse = {
+        name: String(w.name ?? ''),
+        address: String(w.address ?? ''),
+        phone: String(w.phone ?? ''),
+      };
     }
   }
 
@@ -726,6 +750,9 @@ export class PosComponent implements OnInit, OnDestroy {
           summary: 'Sale Complete',
           detail: `${this.formatMoney(this.grandTotal)} — ${method.toUpperCase()}`,
         });
+        if (method === 'cash') {
+          this.printBill();
+        }
         this.clearCart();
       },
       error: () => {
@@ -829,11 +856,115 @@ export class PosComponent implements OnInit, OnDestroy {
     this.saleNote = '';
   }
 
+  openSearchSales(): void {
+    this.searchSalesResults = [];
+    this.selectedSearchSale = null;
+    this.searchSalesRefNo = '';
+    this.searchSalesCustomerId = null;
+    this.searchSalesDateFrom = null;
+    this.searchSalesDateTo = null;
+    this.searchSalesTotalCount = 0;
+    this.searchSalesDialogVisible = true;
+    this.runSearchSales();
+  }
+
+  runSearchSales(): void {
+    this.searchSalesLoading = true;
+    this.selectedSearchSale = null;
+    const params: Parameters<typeof this.saleService.search>[0] = { pageSize: 25 };
+    if (this.searchSalesRefNo.trim()) params.referenceNo = this.searchSalesRefNo.trim();
+    if (this.searchSalesCustomerId) params.customerId = this.searchSalesCustomerId;
+    if (this.searchSalesDateFrom) params.dateFrom = this.toIsoDate(this.searchSalesDateFrom);
+    if (this.searchSalesDateTo) params.dateTo = this.toIsoDate(this.searchSalesDateTo);
+
+    this.saleService.search(params).subscribe({
+      next: (res: any) => {
+        const raw = this.posService.extractItems(res);
+        this.searchSalesResults = raw.map((x: any) => this.mapRecentSale(x));
+        this.searchSalesTotalCount = res?.totalCount ?? this.searchSalesResults.length;
+        this.searchSalesLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.searchSalesLoading = false;
+        this.messageService.add({ severity: 'error', summary: 'Search Failed', detail: 'Could not search sales.' });
+      },
+    });
+  }
+
+  clearSearchSalesFilters(): void {
+    this.searchSalesRefNo = '';
+    this.searchSalesCustomerId = null;
+    this.searchSalesDateFrom = null;
+    this.searchSalesDateTo = null;
+    this.runSearchSales();
+  }
+
+  selectSearchSale(sale: RecentSaleRow): void {
+    this.selectedSearchSale = sale;
+  }
+
+  loadSelectedSearchSale(): void {
+    if (!this.selectedSearchSale) return;
+    this.searchSalesDialogVisible = false;
+    this.bindRecentSaleToPos(this.selectedSearchSale);
+  }
+
+  openSalesCalendar(): void {
+    this.calendarSelectedDate = new Date();
+    this.selectedCalendarSale = null;
+    this.calendarSales = [];
+    this.calendarSalesTotalCount = 0;
+    this.calendarDialogVisible = true;
+    this.loadCalendarSales();
+  }
+
+  onCalendarDateChange(): void {
+    this.selectedCalendarSale = null;
+    this.loadCalendarSales();
+  }
+
+  selectCalendarSale(sale: RecentSaleRow): void {
+    this.selectedCalendarSale = sale;
+  }
+
+  loadSelectedCalendarSale(): void {
+    if (!this.selectedCalendarSale) return;
+    this.calendarDialogVisible = false;
+    this.bindRecentSaleToPos(this.selectedCalendarSale);
+  }
+
+  private loadCalendarSales(): void {
+    this.calendarLoading = true;
+    const date = this.toIsoDate(this.calendarSelectedDate);
+    this.saleService.search({ pageSize: 50, dateFrom: date, dateTo: date }).subscribe({
+      next: (res: any) => {
+        const raw = this.posService.extractItems(res);
+        this.calendarSales = raw.map((x: any) => this.mapRecentSale(x));
+        this.calendarSalesTotalCount = res?.totalCount ?? this.calendarSales.length;
+        this.calendarLoading = false;
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.calendarLoading = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Calendar',
+          detail: 'Could not load sales for the selected date.',
+        });
+      },
+    });
+  }
+
+  private toIsoDate(d: Date): string {
+    return d.toISOString().slice(0, 10);
+  }
+
   openRecentTransactions(): void {
     this.recentLoading = true;
     this.selectedRecentSale = null;
     this.recentDialogVisible = true;
-    this.saleService.getAll({ pageSize: 30 }).subscribe({
+    this.saleService.getAll({ pageSize: 25, sortDesc: true }).subscribe({
       next: (res: any) => {
         const raw = this.posService.extractItems(res);
         this.recentSales = raw
@@ -956,6 +1087,17 @@ export class PosComponent implements OnInit, OnDestroy {
     return Number.isNaN(d.getTime()) ? '—' : d.toLocaleString();
   }
 
+  formatSaleTime(value: string | null | undefined): string {
+    if (!value) return '—';
+    const d = new Date(value);
+    return Number.isNaN(d.getTime()) ? '—' : d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  formatCalendarDate(value: Date | null | undefined): string {
+    if (!value) return '—';
+    return value.toLocaleDateString('en-IN', { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
   private mapRecentSale(x: any): RecentSaleRow {
     return {
       saleId: Number(x.saleId ?? x.id ?? 0),
@@ -1005,20 +1147,32 @@ export class PosComponent implements OnInit, OnDestroy {
     }
     try {
       const user = this.auth.getUser();
+      const now = new Date();
+      const billNo = String(Date.now()).slice(-5);
+      const memoNo = `${now.getDate()}/${billNo}`;
+      const displayTotal = Math.round(this.grandTotal);
       this.posBillPrintService.print({
         siteTitle: this.siteTitle,
+        storeSubtitle: this.defaultWarehouse?.name || undefined,
+        storeAddress: this.defaultWarehouse?.address || undefined,
+        storePhone: this.defaultWarehouse?.phone || undefined,
         currency: this.currency,
-        referenceNo: `BILL-${Date.now()}`,
+        referenceNo: memoNo,
+        orderNo: billNo,
         customerName: this.customerLabel,
         customerPhone: this.selectedCustomer?.phoneNumber || undefined,
         cashierName: user?.displayName || user?.userName || undefined,
         saleNote: this.saleNote,
+        paxCount: 1,
+        paymentMethod: this.paymentMethod,
+        tenderAmount: displayTotal,
         lines: this.cart.map(line => ({
           name: line.name,
           code: line.code,
           qty: line.qty,
           price: line.price,
           subtotal: this.lineSubtotal(line),
+          taxRate: line.taxRate,
         })),
         itemCount: this.itemCount,
         totalUnits: this.totalUnits,
@@ -1027,6 +1181,7 @@ export class PosComponent implements OnInit, OnDestroy {
         couponDiscount: this.couponDiscount,
         lineTaxTotal: this.lineTaxTotal,
         orderTax: this.orderTax,
+        orderTaxPercent: this.orderTaxPercent,
         totalTax: this.totalTax,
         shippingCost: this.shippingCost,
         grandTotal: this.grandTotal,
