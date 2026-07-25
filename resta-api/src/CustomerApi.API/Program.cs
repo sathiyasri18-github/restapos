@@ -36,7 +36,16 @@ builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddJwtAuthentication(builder.Configuration);
 
 builder.Services.AddCors(o => o.AddPolicy("AllowAll", p =>
-    p.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader()));
+    p.SetIsOriginAllowed(origin =>
+            origin is "https://muruenterprises.info"
+                or "https://www.muruenterprises.info"
+                or "http://localhost:8080"
+                or "http://localhost:4200"
+                or "http://127.0.0.1:8080"
+                or "http://127.0.0.1:4200")
+        .AllowAnyMethod()
+        .AllowAnyHeader()
+        .AllowCredentials()));
 
 var app = builder.Build();
 
@@ -48,6 +57,7 @@ using (var scope = app.Services.CreateScope())
     await DatabaseInitializer.InitializeAsync(db, configuration, logger);
 }
 
+app.UseCors("AllowAll");
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Docker")
@@ -55,8 +65,6 @@ if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Docke
     var provider = app.Services.GetRequiredService<IApiVersionDescriptionProvider>();
     app.UseSwaggerWithVersioning(provider);
 }
-
-app.UseCors("AllowAll");
 
 var webRoot = app.Environment.WebRootPath ?? Path.Combine(app.Environment.ContentRootPath, "wwwroot");
 Directory.CreateDirectory(Path.Combine(webRoot, "uploads", "products"));

@@ -31,14 +31,13 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Docker
       ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__DefaultConnection: ${ConnectionStrings__DefaultConnection}
       Jwt__Key: ${JWT_KEY:-RestaPos_Docker_SigningKey_Min32Chars!}
       Jwt__Issuer: ${JWT_ISSUER:-CustomerApi}
       Jwt__Audience: ${JWT_AUDIENCE:-SystemService}
     ports:
       - "${API_PORT:-8081}:8080"
-    depends_on:
-      sqlserver:
-        condition: service_healthy
+    # External SQL via ConnectionStrings__DefaultConnection — do not wait on local sqlserver.
     restart: unless-stopped
 
   resta-app:

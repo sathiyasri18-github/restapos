@@ -1,0 +1,56 @@
+# Append to /etc/caddy/Caddyfile on the Ubuntu host (do not replace existing sites).
+# Hostnames and ports below do not overlap cloudlive24.com / tnctv.in blocks.
+#
+# DNS A records (all â†’ your server IP 194.163.139.218):
+#   muruenterprises.info
+#   www.muruenterprises.info
+#   api.muruenterprises.info
+#
+# Matches docker-compose.client.yml defaults:
+#   WEB_PORT=8080  â†’ resta-app
+#   API_PORT=8081  â†’ resta-api
+#
+# Install / repair HTTPS (run on Ubuntu host):
+#   sudo cp Caddyfile.muruenterprises.example /tmp/muru.caddy
+#   # Or append these site blocks into /etc/caddy/Caddyfile if missing
+#   grep -q muruenterprises.info /etc/caddy/Caddyfile || sudo tee -a /etc/caddy/Caddyfile < Caddyfile.muruenterprises.example
+#   sudo ufw allow 80,443/tcp
+#   sudo caddy validate --config /etc/caddy/Caddyfile
+#   sudo systemctl restart caddy
+#   sudo journalctl -u caddy -n 80 --no-pager | grep -iE 'muru|certificate|acme|error'
+#
+# If HTTPS still fails: Let's Encrypt could not issue a cert for these names.
+# Confirm DNS points here, ports 80/443 are open publicly, then restart caddy again.
+
+muruenterprises.info {
+	reverse_proxy 127.0.0.1:8080
+	encode gzip
+}
+
+www.muruenterprises.info {
+	redir https://muruenterprises.info{uri} permanent
+}
+
+api.muruenterprises.info {
+	@preflight method OPTIONS
+	handle @preflight {
+		header Access-Control-Allow-Origin "https://muruenterprises.info"
+		header Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
+		header Access-Control-Allow-Headers "Authorization, Content-Type, X-Api-Version"
+		header Access-Control-Allow-Credentials "true"
+		header Access-Control-Max-Age "86400"
+		respond 204
+	}
+
+	header {
+		Access-Control-Allow-Origin "https://muruenterprises.info"
+		Access-Control-Allow-Credentials "true"
+		Vary Origin
+	}
+
+	reverse_proxy 127.0.0.1:8081
+	request_body {
+		max_size 11MB
+	}
+	encode gzip
+}
