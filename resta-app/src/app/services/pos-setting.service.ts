@@ -3,6 +3,8 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { apiUrl } from '../core/api-config';
 
+export type PosTaxMode = 'Inclusive' | 'Exclusive';
+
 export interface PosSetting {
   posSettingId: number;
   customerId: number;
@@ -10,6 +12,8 @@ export interface PosSetting {
   billerId: number;
   productNumber: number;
   keybordActive: boolean;
+  /** Default POS tax calculation mode. */
+  taxMode: PosTaxMode;
   stripePublicKey: string;
   stripeSecretKey: string;
 }
@@ -20,6 +24,7 @@ export interface CreatePosSettingDto {
   billerId: number;
   productNumber: number;
   keybordActive: boolean;
+  taxMode: PosTaxMode;
   stripePublicKey: string | null;
   stripeSecretKey: string;
 }
@@ -31,6 +36,7 @@ export interface UpdatePosSettingDto {
   billerId: number;
   productNumber: number;
   keybordActive: boolean;
+  taxMode: PosTaxMode;
   stripePublicKey: string | null;
   stripeSecretKey: string;
 }

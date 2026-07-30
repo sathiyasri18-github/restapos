@@ -8,6 +8,7 @@ import {
   CreatePosSettingDto,
   PosSetting,
   PosSettingService,
+  PosTaxMode,
   UpdatePosSettingDto
 } from '../../../services/pos-setting.service';
 import { WarehouseService } from '../../../services/warehouse.service';
@@ -33,6 +34,7 @@ function emptyForm(): PosSetting {
     billerId: 0,
     productNumber: 3,
     keybordActive: false,
+    taxMode: 'Inclusive',
     stripePublicKey: '',
     stripeSecretKey: '',
   };
@@ -55,6 +57,11 @@ export class PosSettingComponent implements OnInit {
   customerOptions: SelectOption[] = [];
   warehouseOptions: SelectOption[] = [];
   billerOptions: SelectOption[] = [];
+
+  readonly taxModeOptions: { label: string; value: PosTaxMode }[] = [
+    { label: 'Inclusive GST', value: 'Inclusive' },
+    { label: 'Exclusive GST', value: 'Exclusive' },
+  ];
 
   private originalStripeSecretKey = '';
 
@@ -134,6 +141,7 @@ export class PosSettingComponent implements OnInit {
   }
 
   private mapPosSetting(x: any): PosSetting {
+    const mode = String(x.taxMode ?? 'Inclusive');
     return {
       posSettingId: x.posSettingId ?? x.id ?? 0,
       customerId: x.customerId ?? 0,
@@ -141,6 +149,7 @@ export class PosSettingComponent implements OnInit {
       billerId: x.billerId ?? 0,
       productNumber: x.productNumber ?? 3,
       keybordActive: x.keybordActive ?? false,
+      taxMode: mode.toLowerCase() === 'exclusive' ? 'Exclusive' : 'Inclusive',
       stripePublicKey: x.stripePublicKey ?? '',
       stripeSecretKey: x.stripeSecretKey ?? '',
     };
@@ -231,6 +240,7 @@ export class PosSettingComponent implements OnInit {
       billerId: f.billerId,
       productNumber: f.productNumber,
       keybordActive: f.keybordActive,
+      taxMode: f.taxMode || 'Inclusive',
       stripePublicKey: f.stripePublicKey?.trim() || null,
       stripeSecretKey: f.stripeSecretKey.trim(),
     };
@@ -244,6 +254,7 @@ export class PosSettingComponent implements OnInit {
       billerId: f.billerId,
       productNumber: f.productNumber,
       keybordActive: f.keybordActive,
+      taxMode: f.taxMode || 'Inclusive',
       stripePublicKey: f.stripePublicKey?.trim() || null,
       stripeSecretKey: this.resolveStripeSecretKey(),
     };

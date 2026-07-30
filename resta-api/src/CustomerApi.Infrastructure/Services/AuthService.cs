@@ -19,6 +19,9 @@ public class AuthService(
         if (user is null || user.IsDeleted)
             throw new UnauthorizedAccessException("Invalid username or password.");
 
+        if (!user.IsApproved)
+            throw new UnauthorizedAccessException("Account is pending SuperAdmin approval.");
+
         if (!user.IsActive)
             throw new UnauthorizedAccessException("Account is inactive.");
 
@@ -33,7 +36,7 @@ public class AuthService(
         return await BuildResponseAsync(user, ct);
     }
 
-    public async Task<AuthResponse> SignUpAsync(SignUpRequest request, CancellationToken ct = default)
+    public async Task<SignUpResponse> SignUpAsync(SignUpRequest request, CancellationToken ct = default)
     {
         if (request.Password != request.ConfirmPassword)
             throw new ArgumentException("Passwords do not match.");
@@ -45,20 +48,30 @@ public class AuthService(
             && await userManager.FindByEmailAsync(request.Email) is not null)
             throw new InvalidOperationException("An account with that email already exists.");
 
-        var defaultRole = await db.Roles
-            .Where(r => r.IsActive)
-            .OrderBy(r => r.Id)
-            .FirstOrDefaultAsync(ct);
+        var signUpRole = await db.Roles
+            .Where(r => r.IsActive && r.Name != null
+                && r.Name.ToLower() == UserAccessBootstrap.DefaultSignUpRoleName.ToLower())
+            .FirstOrDefaultAsync(ct)
+            ?? await db.Roles
+                .Where(r => r.IsActive
+                    && r.Name != null
+                    && r.Name.ToLower() != UserAccessBootstrap.SuperAdminRoleName.ToLower()
+                    && r.Name.ToLower() != "admin")
+                .OrderBy(r => r.Id)
+                .FirstOrDefaultAsync(ct)
+            ?? throw new InvalidOperationException("No default sign-up role is configured.");
 
         var user = new User
         {
-            UserName     = request.UserName,
-            Email        = request.Email ?? string.Empty,
-            PhoneNumber  = string.Empty,
-            RoleId       = defaultRole?.Id ?? 1,
-            IsActive     = true,
-            IsDeleted    = false,
-            CreatedDate  = DateTime.UtcNow,
+            UserName = request.UserName.Trim(),
+            Email = request.Email?.Trim() ?? string.Empty,
+            CompanyName = request.DisplayName?.Trim(),
+            PhoneNumber = string.Empty,
+            RoleId = signUpRole.Id,
+            IsActive = false,
+            IsApproved = false,
+            IsDeleted = false,
+            CreatedDate = DateTime.UtcNow,
             ModifiedDate = DateTime.UtcNow,
         };
 
@@ -69,7 +82,17 @@ public class AuthService(
             throw new InvalidOperationException(message);
         }
 
-        return await BuildResponseAsync(user, ct);
+        db.UserRoles.Add(new UserRole
+        {
+            UserId = user.Id,
+            RoleId = signUpRole.Id,
+            CreatedDate = DateTime.UtcNow
+        });
+        await db.SaveChangesAsync(ct);
+
+        return new SignUpResponse(
+            "Account created. A SuperAdmin must approve your account before you can sign in.",
+            PendingApproval: true);
     }
 
     public async Task<ForgotPasswordResponse> ForgotPasswordAsync(
@@ -89,8 +112,8 @@ public class AuthService(
 
         db.PasswordResets.Add(new PasswordReset
         {
-            Email       = request.Email,
-            Token       = hashed,
+            Email = request.Email,
+            Token = hashed,
             CreatedDate = DateTime.UtcNow,
         });
 
@@ -156,7 +179,8 @@ public class AuthService(
 
         if (!result.Succeeded)
         {
-            var isWrongPassword = result.Errors.Any(e => e.Code.Contains("PasswordMismatch", StringComparison.OrdinalIgnoreCase));
+            var isWrongPassword = result.Errors.Any(e =>
+                e.Code.Contains("PasswordMismatch", StringComparison.OrdinalIgnoreCase));
             if (isWrongPassword)
                 throw new UnauthorizedAccessException("Current password is incorrect.");
 
@@ -205,20 +229,22 @@ public class AuthService(
                 .ToListAsync(ct);
 
         var expiresAt = jwtTokenService.GetExpiresAt();
-        var token     = jwtTokenService.GenerateToken(user, roleNames);
+        var token = jwtTokenService.GenerateToken(user, roleNames);
 
-        var displayName = user.UserName ?? string.Empty;
+        var displayName = string.IsNullOrWhiteSpace(user.CompanyName)
+            ? (user.UserName ?? string.Empty)
+            : user.CompanyName!;
 
         var dto = new AuthUserDto(
-            UserId:      user.Id,
-            UserName:    displayName,
+            UserId: user.Id,
+            UserName: user.UserName ?? string.Empty,
             DisplayName: displayName,
-            Email:       string.IsNullOrWhiteSpace(user.Email) ? null : user.Email,
-            Roles:       roleNames.AsReadOnly());
+            Email: string.IsNullOrWhiteSpace(user.Email) ? null : user.Email,
+            Roles: roleNames.AsReadOnly());
 
         return new AuthResponse(
             AccessToken: token,
-            ExpiresAt:   expiresAt.ToString("O"),
-            User:        dto);
+            ExpiresAt: expiresAt.ToString("O"),
+            User: dto);
     }
 }

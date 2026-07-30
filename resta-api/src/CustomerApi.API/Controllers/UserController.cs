@@ -1,7 +1,9 @@
 using Asp.Versioning;
 using CustomerApi.Application.Common;
+using CustomerApi.Application.Common.Interfaces;
 using CustomerApi.Domain.Entities;
 using CustomerApi.Infrastructure.Persistence;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,12 +15,14 @@ namespace CustomerApi.API.Controllers;
 [Route("api/v{version:apiVersion}/User")]
 public class UserController(
     ApplicationDbContext db,
-    UserManager<User> userManager) : ControllerBase
+    UserManager<User> userManager,
+    ICurrentUserService currentUser) : ControllerBase
 {
     [HttpGet]
     public async Task<IActionResult> GetAll(
         [FromQuery] string? search = null,
         [FromQuery] bool? isActive = null,
+        [FromQuery] bool? isApproved = null,
         [FromQuery] int pageNumber = 1,
         [FromQuery] int pageSize = 20,
         CancellationToken ct = default)
@@ -28,6 +32,7 @@ public class UserController(
 
         var query = db.Users.AsNoTracking().Where(u => !u.IsDeleted);
         if (isActive.HasValue) query = query.Where(u => u.IsActive == isActive.Value);
+        if (isApproved.HasValue) query = query.Where(u => u.IsApproved == isApproved.Value);
         if (!string.IsNullOrWhiteSpace(search))
         {
             var term = search.Trim();
@@ -48,9 +53,37 @@ public class UserController(
         var roleMap = await LoadUserRoleMapAsync(userIds, ct);
         var items = users.Select(u =>
         {
-            var (roleIds, roleNames) = roleMap.GetValueOrDefault(u.Id, ([u.RoleId], []));
-            return AdminMapper.ToUserDto(u, roleIds, roleNames);
+            if (roleMap.TryGetValue(u.Id, out var mapped) && mapped.RoleNames.Count > 0)
+                return AdminMapper.ToUserDto(u, mapped.RoleIds, mapped.RoleNames);
+
+            IReadOnlyList<int> roleIds =
+                roleMap.TryGetValue(u.Id, out var existing) && existing.RoleIds.Count > 0
+                    ? existing.RoleIds
+                    : u.RoleId > 0 ? [u.RoleId] : [];
+            return AdminMapper.ToUserDto(u, roleIds, []);
         }).ToList();
+
+        // Resolve missing role names for RoleId fallback in one query
+        var missingNameIds = items
+            .Where(i => i.RoleNames.Count == 0 && i.RoleIds.Count > 0)
+            .SelectMany(i => i.RoleIds)
+            .Distinct()
+            .ToList();
+        if (missingNameIds.Count > 0)
+        {
+            var names = await db.Roles.AsNoTracking()
+                .Where(r => missingNameIds.Contains(r.Id))
+                .ToDictionaryAsync(r => r.Id, r => r.Name ?? string.Empty, ct);
+
+            items = items.Select(i =>
+            {
+                if (i.RoleNames.Count > 0) return i;
+                var roleNames = i.RoleIds.Select(id => names.GetValueOrDefault(id, string.Empty))
+                    .Where(n => !string.IsNullOrEmpty(n))
+                    .ToList();
+                return i with { RoleNames = roleNames };
+            }).ToList();
+        }
 
         return Ok(new PagedResult<UserDto>
         {
@@ -86,9 +119,11 @@ public class UserController(
         {
             UserName = request.UserName.Trim(),
             Email = request.Email?.Trim() ?? string.Empty,
+            PhoneNumber = string.Empty, // [User].[Phone] is NOT NULL
             CompanyName = request.DisplayName?.Trim(),
             RoleId = roleIds.FirstOrDefault(),
             IsActive = request.IsActive,
+            IsApproved = true, // Admin-created users are auto-approved
             IsDeleted = false,
             CreatedDate = DateTime.UtcNow,
             ModifiedDate = DateTime.UtcNow
@@ -132,6 +167,26 @@ public class UserController(
         return Ok(AdminMapper.ToUserDto(user, ids, names));
     }
 
+    /// <summary>Approve a pending self-registered user (SuperAdmin only).</summary>
+    [HttpPost("{id:int}/approve")]
+    [Authorize]
+    public async Task<IActionResult> Approve(int id, CancellationToken ct)
+    {
+        if (!await CurrentUserIsSuperAdminAsync(ct))
+            return Forbid();
+
+        var user = await db.Users.FirstOrDefaultAsync(u => u.Id == id && !u.IsDeleted, ct);
+        if (user is null) return NotFound();
+
+        user.IsApproved = true;
+        user.IsActive = true;
+        user.ModifiedDate = DateTime.UtcNow;
+        await db.SaveChangesAsync(ct);
+
+        var (ids, names) = await LoadUserRolesAsync(id, user.RoleId, ct);
+        return Ok(AdminMapper.ToUserDto(user, ids, names));
+    }
+
     [HttpDelete("{id:int}")]
     public async Task<IActionResult> Delete(int id, CancellationToken ct)
     {
@@ -143,6 +198,29 @@ public class UserController(
         user.ModifiedDate = DateTime.UtcNow;
         await db.SaveChangesAsync(ct);
         return NoContent();
+    }
+
+    private async Task<bool> CurrentUserIsSuperAdminAsync(CancellationToken ct)
+    {
+        if (currentUser.UserId is not int userId) return false;
+
+        var roleIds = await db.UserRoles.AsNoTracking()
+            .Where(ur => ur.UserId == userId)
+            .Select(ur => ur.RoleId)
+            .ToListAsync(ct);
+
+        var primaryRoleId = await db.Users.AsNoTracking()
+            .Where(u => u.Id == userId)
+            .Select(u => u.RoleId)
+            .FirstOrDefaultAsync(ct);
+        if (primaryRoleId > 0 && !roleIds.Contains(primaryRoleId))
+            roleIds.Add(primaryRoleId);
+
+        return await db.Roles.AsNoTracking().AnyAsync(
+            r => roleIds.Contains(r.Id)
+                 && r.Name != null
+                 && r.Name.ToLower() == UserAccessBootstrap.SuperAdminRoleName.ToLower(),
+            ct);
     }
 
     private static List<int> NormalizeRoleIds(IReadOnlyList<int>? roleIds) =>

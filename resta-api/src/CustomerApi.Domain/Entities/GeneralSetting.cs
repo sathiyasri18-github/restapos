@@ -17,4 +17,10 @@ public class GeneralSetting
     public DateTime? CreatedDate { get; set; }
     public DateTime? ModifiedDate { get; set; }
     public string CurrencyPosition { get; set; } = null!;
+    /// <summary>Shop / store address printed on POS cash bills.</summary>
+    public string? CompanyAddress { get; set; }
+    /// <summary>Shop phone printed on POS cash bills.</summary>
+    public string? CompanyPhone { get; set; }
+    /// <summary>GSTIN printed on POS cash bills.</summary>
+    public string? GstNumber { get; set; }
 }

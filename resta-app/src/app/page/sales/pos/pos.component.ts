@@ -6,6 +6,7 @@ import { AppModule } from '../../../module/app.module';
 import { apiAssetUrl } from '../../../core/api-config';
 import { AuthService } from '../../../services/auth.service';
 import { BrandService } from '../../../services/brand.service';
+import { Biller, BillerService } from '../../../services/biller.service';
 import {
   CreateCustomerDto,
   Customer,
@@ -28,12 +29,14 @@ import {
 import { CreateSaleDto, SaleService } from '../../../services/sale.service';
 import { WarehouseService } from '../../../services/warehouse.service';
 import { GeneralSettingService } from '../../../services/general-setting.service';
+import { PosSettingService, PosTaxMode } from '../../../services/pos-setting.service';
 import { PosBillPrintService } from './pos-bill-print.service';
 import { PosCalculatorComponent } from './pos-calculator.component';
 
 type FilterTab = 'category' | 'brand' | 'featured';
 type EditField = 'discount' | 'coupon' | 'tax' | 'shipping';
 type DiscountMode = 'percent' | 'amount';
+type TaxMode = PosTaxMode;
 type PaymentMethod =
   | 'cash' | 'card' | 'razorpay' | 'credit' | 'multiple'
   | 'installment' | 'deposit' | 'points';
@@ -94,8 +97,17 @@ export class PosComponent implements OnInit, OnDestroy {
   orderDiscountInput = 0;
   couponDiscount = 0;
   orderTaxPercent = 0;
+  taxMode: TaxMode = 'Inclusive';
   shippingCost = 0;
   saleNote = '';
+
+  /** Temporarily hide Multiple Payment / Deposit / Points. Set true to restore. */
+  readonly showAdvancedPayments = false;
+
+  /** Compact single-panel layout for phones/tablets; toggle via mobile toolbar button. */
+  mobileView = false;
+  /** In mobile view: which panel is visible. */
+  mobilePanel: 'cart' | 'products' = 'products';
 
   defaultWarehouseId = 0;
   isLoading = true;
@@ -108,6 +120,7 @@ export class PosComponent implements OnInit, OnDestroy {
   editField: EditField = 'discount';
   editFieldValue = 0;
   editDiscountMode: DiscountMode = 'percent';
+  editTaxMode: TaxMode = 'Inclusive';
   paymentDialogVisible = false;
   paymentMethod: PaymentMethod = 'cash';
   paymentSplits: PosPaymentSplit[] = [{ method: 'Cash', amount: 0 }, { method: 'Card', amount: 0 }];
@@ -161,8 +174,17 @@ export class PosComponent implements OnInit, OnDestroy {
   private sidebarWasCollapsed = false;
   private readonly beepSound = new Audio('assets/barcode-beep-sound.m4a');
   siteTitle = 'Resta POS';
+  companyAddress = '';
+  companyPhone = '';
+  gstNumber = '';
   currency = '';
   defaultWarehouse: { name: string; address: string; phone: string } | null = null;
+
+  billers: Biller[] = [];
+  billerOptions: SelectOption[] = [];
+  selectedBillerId = 0;
+  billerDialogVisible = false;
+  pendingBillerId = 0;
 
   constructor(
     private posService: PosService,
@@ -173,6 +195,7 @@ export class PosComponent implements OnInit, OnDestroy {
     private warehouseService: WarehouseService,
     private categoryService: ProductCategoryService,
     private brandService: BrandService,
+    private billerService: BillerService,
     private auth: AuthService,
     private layout: LayoutService,
     private messageService: MessageService,
@@ -180,6 +203,7 @@ export class PosComponent implements OnInit, OnDestroy {
     private router: Router,
     private cdr: ChangeDetectorRef,
     private generalSettingService: GeneralSettingService,
+    private posSettingService: PosSettingService,
     private posBillPrintService: PosBillPrintService
   ) {}
 
@@ -192,6 +216,29 @@ export class PosComponent implements OnInit, OnDestroy {
     this.loadData();
     this.drafts = this.posService.getDrafts();
     this.loadPrintSettings();
+    this.loadPosSettings();
+  }
+
+  private loadPosSettings(): void {
+    this.posSettingService.getAll({ pageSize: 1 }).pipe(catchError(() => of(null))).subscribe({
+      next: (res: any) => {
+        const row = res ? this.posService.extractItems(res)[0] : null;
+        if (!row) return;
+        const mode = String(row.taxMode ?? 'Inclusive');
+        this.taxMode = mode.toLowerCase() === 'exclusive' ? 'Exclusive' : 'Inclusive';
+        this.editTaxMode = this.taxMode;
+
+        const billerId = Number(row.billerId ?? 0);
+        if (billerId > 0) {
+          this.selectedBillerId = billerId;
+        }
+        const warehouseId = Number(row.warehouseId ?? 0);
+        if (warehouseId > 0) {
+          this.defaultWarehouseId = warehouseId;
+        }
+        this.cdr.detectChanges();
+      },
+    });
   }
 
   private loadPrintSettings(): void {
@@ -201,8 +248,34 @@ export class PosComponent implements OnInit, OnDestroy {
         if (!row) return;
         if (row.siteTitle) this.siteTitle = String(row.siteTitle);
         if (row.currency) this.currency = String(row.currency);
+        this.companyAddress = String(row.companyAddress ?? '');
+        this.companyPhone = String(row.companyPhone ?? '');
+        this.gstNumber = String(row.gstNumber ?? '');
+        this.cdr.detectChanges();
       },
     });
+  }
+
+  get selectedBiller(): Biller | undefined {
+    return this.billers.find(b => b.billerId === this.selectedBillerId);
+  }
+
+  get selectedBillerLabel(): string {
+    const b = this.selectedBiller;
+    if (!b) return 'Select biller';
+    return b.companyName?.trim() || b.name || `Biller #${b.billerId}`;
+  }
+
+  openBillerDialog(): void {
+    this.pendingBillerId = this.selectedBillerId;
+    this.billerDialogVisible = true;
+  }
+
+  applyBillerSelection(): void {
+    if (this.pendingBillerId > 0) {
+      this.selectedBillerId = this.pendingBillerId;
+    }
+    this.billerDialogVisible = false;
   }
 
   ngOnDestroy(): void {
@@ -250,7 +323,7 @@ export class PosComponent implements OnInit, OnDestroy {
   get lineTaxTotal(): number {
     return this.round(this.cart.reduce((s, l) => {
       const base = l.price * l.qty;
-      return s + base * l.taxRate / 100;
+      return s + this.taxFromAmount(base, l.taxRate);
     }, 0));
   }
 
@@ -263,7 +336,7 @@ export class PosComponent implements OnInit, OnDestroy {
       return 0;
     }
     const pct = Math.min(this.orderTaxPercent, 100);
-    return this.round(this.taxableSubtotal * pct / 100);
+    return this.round(this.taxFromAmount(this.taxableSubtotal, pct));
   }
 
   get totalTax(): number {
@@ -271,11 +344,27 @@ export class PosComponent implements OnInit, OnDestroy {
   }
 
   get totalBeforeGrand(): number {
-    return this.round(this.subtotal + this.totalTax + this.shippingCost - this.orderDiscount - this.couponDiscount);
+    // Inclusive: prices already include tax — do not add tax again.
+    // Exclusive: tax is charged on top of prices.
+    const taxPart = this.taxMode === 'Exclusive' ? this.totalTax : 0;
+    return this.round(this.subtotal + taxPart + this.shippingCost - this.orderDiscount - this.couponDiscount);
   }
 
   get grandTotal(): number {
     return Math.max(0, this.totalBeforeGrand);
+  }
+
+  get taxModeLabel(): string {
+    return this.taxMode === 'Inclusive' ? 'Inclusive GST' : 'Exclusive GST';
+  }
+
+  /** Extract or add tax from an amount depending on taxMode. */
+  private taxFromAmount(amount: number, rate: number): number {
+    if (amount <= 0 || rate <= 0) return 0;
+    if (this.taxMode === 'Inclusive') {
+      return amount * rate / (100 + rate);
+    }
+    return amount * rate / 100;
   }
 
   get customerLabel(): string {
@@ -291,10 +380,11 @@ export class PosComponent implements OnInit, OnDestroy {
       warehouses: this.warehouseService.getAll({ pageSize: 500 }).pipe(catchError(() => of(null))),
       categories: this.categoryService.getAll({ pageSize: 500 }).pipe(catchError(() => of(null))),
       brands: this.brandService.getAll({ pageSize: 500 }).pipe(catchError(() => of(null))),
+      billers: this.billerService.getAll({ pageSize: 500 }).pipe(catchError(() => of(null))),
     }).subscribe({
-      next: ({ products, customers, groups, warehouses, categories, brands }) => {
+      next: ({ products, customers, groups, warehouses, categories, brands, billers }) => {
         const raw = products ? this.posService.extractItems(products) : [];
-        this.finishLoadData(raw, customers, groups, warehouses, categories, brands);
+        this.finishLoadData(raw, customers, groups, warehouses, categories, brands, billers);
       },
       error: () => {
         this.isLoading = false;
@@ -350,22 +440,69 @@ export class PosComponent implements OnInit, OnDestroy {
   private bindWarehouses(res: any): void {
     if (!res) return;
     const list = this.posService.extractItems(res);
-    if (list.length) {
-      const w = list[0];
-      this.defaultWarehouseId = Number(w.warehouseId ?? w.id ?? 0);
-      this.defaultWarehouse = {
-        name: String(w.name ?? ''),
-        address: String(w.address ?? ''),
-        phone: String(w.phone ?? ''),
-      };
+    if (!list.length) return;
+
+    const preferred = this.defaultWarehouseId > 0
+      ? list.find((w: any) => Number(w.warehouseId ?? w.id ?? 0) === this.defaultWarehouseId)
+      : null;
+    const w = preferred ?? list[0];
+    this.defaultWarehouseId = Number(w.warehouseId ?? w.id ?? 0);
+    this.defaultWarehouse = {
+      name: String(w.name ?? ''),
+      address: String(w.address ?? ''),
+      phone: String(w.phone ?? ''),
+    };
+  }
+
+  private bindBillers(res: any): void {
+    if (!res) return;
+    this.billers = this.posService.extractItems(res)
+      .map((x: any) => this.mapBiller(x))
+      .filter((b: Biller) => b.billerId > 0 && b.isActive !== false);
+    this.billerOptions = this.billers.map(b => ({
+      label: b.companyName?.trim() || b.name || `Biller #${b.billerId}`,
+      value: b.billerId,
+    }));
+    if (this.selectedBillerId > 0 && !this.billers.some(b => b.billerId === this.selectedBillerId)) {
+      this.selectedBillerId = 0;
+    }
+    if (!this.selectedBillerId && this.billers.length) {
+      this.selectedBillerId = this.billers[0].billerId;
     }
   }
 
-  private finishLoadData(raw: any[], customers: any, groups: any, warehouses: any, categories: any, brands: any): void {
+  private mapBiller(x: any): Biller {
+    return {
+      billerId: Number(x.billerId ?? x.id ?? 0),
+      name: String(x.name ?? ''),
+      image: x.image ?? null,
+      companyName: String(x.companyName ?? ''),
+      vatNumber: x.vatNumber ?? null,
+      email: String(x.email ?? ''),
+      phoneNumber: String(x.phoneNumber ?? ''),
+      address: String(x.address ?? ''),
+      city: String(x.city ?? ''),
+      state: x.state ?? null,
+      postalCode: x.postalCode ?? null,
+      country: x.country ?? null,
+      isActive: x.isActive !== false,
+    };
+  }
+
+  private finishLoadData(
+    raw: any[],
+    customers: any,
+    groups: any,
+    warehouses: any,
+    categories: any,
+    brands: any,
+    billers: any
+  ): void {
     this.products = raw.map(x => this.posService.mapProduct(x)).filter(p => p.productId > 0);
     this.bindCustomers(customers);
     this.bindGroups(groups);
     this.bindWarehouses(warehouses);
+    this.bindBillers(billers);
     this.categories = categories
       ? this.posService.extractItems(categories).map((x: any) => ({
       id: Number(x.categoryId ?? x.id ?? 0),
@@ -542,6 +679,7 @@ export class PosComponent implements OnInit, OnDestroy {
       this.editDiscountMode = this.orderDiscountMode;
       this.editFieldValue = this.orderDiscountInput;
     } else if (field === 'tax') {
+      this.editTaxMode = this.taxMode;
       this.editFieldValue = this.orderTaxPercent;
     } else {
       this.editFieldValue = field === 'coupon' ? this.couponDiscount
@@ -560,7 +698,10 @@ export class PosComponent implements OnInit, OnDestroy {
           : v;
         break;
       case 'coupon': this.couponDiscount = v; break;
-      case 'tax': this.orderTaxPercent = Math.min(v, 100); break;
+      case 'tax':
+        this.taxMode = this.editTaxMode;
+        this.orderTaxPercent = Math.min(v, 100);
+        break;
       case 'shipping': this.shippingCost = v; break;
     }
     this.editDialogVisible = false;
@@ -576,6 +717,11 @@ export class PosComponent implements OnInit, OnDestroy {
 
   previewEditTax(): number {
     const v = Math.min(Math.max(0, this.editFieldValue ?? 0), 100);
+    const mode = this.editTaxMode;
+    if (v <= 0 || this.taxableSubtotal <= 0) return 0;
+    if (mode === 'Inclusive') {
+      return this.round(this.taxableSubtotal * v / (100 + v));
+    }
     return this.round(this.taxableSubtotal * v / 100);
   }
 
@@ -696,7 +842,7 @@ export class PosComponent implements OnInit, OnDestroy {
       cashRegisterId: null,
       customerId: this.selectedCustomerId,
       warehouseId: this.defaultWarehouseId,
-      billerId: userId,
+      billerId: this.selectedBillerId > 0 ? this.selectedBillerId : userId,
       item: totals.item,
       totalQty: totals.totalQty,
       totalDiscount: totals.totalDiscount,
@@ -722,8 +868,11 @@ export class PosComponent implements OnInit, OnDestroy {
         const saleId = Number((res?.data ?? res)?.saleId ?? (res?.data ?? res)?.id ?? 0);
         if (!saleId) throw new Error('Missing sale id');
         const creates = this.cart.map(line => {
-          const sub = line.price * line.qty;
-          const tax = this.round(sub * line.taxRate / 100);
+          const gross = this.round(line.price * line.qty);
+          const tax = this.round(this.taxFromAmount(gross, line.taxRate));
+          const net = this.taxMode === 'Inclusive'
+            ? this.round(gross - tax)
+            : this.round(line.price);
           const dto: CreateProductSaleDto = {
             saleId,
             productId: line.productId,
@@ -732,11 +881,13 @@ export class PosComponent implements OnInit, OnDestroy {
             imeiNumber: null,
             qty: line.qty,
             saleUnitId: line.saleUnitId || 1,
-            netUnitPrice: line.price,
+            netUnitPrice: this.taxMode === 'Inclusive'
+              ? this.round(net / Math.max(line.qty, 1))
+              : line.price,
             discount: 0,
             taxRate: line.taxRate,
             tax,
-            total: this.round(sub + tax),
+            total: this.taxMode === 'Inclusive' ? gross : this.round(gross + tax),
           };
           return this.productSaleService.create(dto);
         });
@@ -791,6 +942,7 @@ export class PosComponent implements OnInit, OnDestroy {
       couponDiscount: this.couponDiscount,
       orderTax: this.orderTax,
       orderTaxPercent: this.orderTaxPercent,
+      taxMode: this.taxMode,
       shippingCost: this.shippingCost,
       saleNote: this.saleNote,
     };
@@ -818,6 +970,9 @@ export class PosComponent implements OnInit, OnDestroy {
       this.orderDiscountInput = 0;
     }
     this.couponDiscount = draft.couponDiscount;
+    if (draft.taxMode === 'Exclusive' || draft.taxMode === 'Inclusive') {
+      this.taxMode = draft.taxMode;
+    }
     if (draft.orderTaxPercent != null) {
       this.orderTaxPercent = draft.orderTaxPercent;
     } else if (draft.orderTax > 0) {
@@ -1140,6 +1295,19 @@ export class PosComponent implements OnInit, OnDestroy {
     }
   }
 
+  toggleMobileView(): void {
+    this.mobileView = !this.mobileView;
+    if (this.mobileView) {
+      this.mobilePanel = 'products';
+    }
+    this.cdr.detectChanges();
+  }
+
+  showMobilePanel(panel: 'cart' | 'products'): void {
+    this.mobilePanel = panel;
+    this.cdr.detectChanges();
+  }
+
   printBill(): void {
     if (!this.cart.length) {
       this.messageService.add({ severity: 'info', summary: 'Print', detail: 'Add products to the cart first.' });
@@ -1153,9 +1321,10 @@ export class PosComponent implements OnInit, OnDestroy {
       const displayTotal = Math.round(this.grandTotal);
       this.posBillPrintService.print({
         siteTitle: this.siteTitle,
-        storeSubtitle: this.defaultWarehouse?.name || undefined,
-        storeAddress: this.defaultWarehouse?.address || undefined,
-        storePhone: this.defaultWarehouse?.phone || undefined,
+        storeAddress: this.companyAddress || undefined,
+        storePhone: this.companyPhone || undefined,
+        gstin: this.gstNumber || undefined,
+        billerName: this.selectedBillerLabel !== 'Select biller' ? this.selectedBillerLabel : undefined,
         currency: this.currency,
         referenceNo: memoNo,
         orderNo: billNo,
@@ -1182,6 +1351,7 @@ export class PosComponent implements OnInit, OnDestroy {
         lineTaxTotal: this.lineTaxTotal,
         orderTax: this.orderTax,
         orderTaxPercent: this.orderTaxPercent,
+        taxMode: this.taxMode,
         totalTax: this.totalTax,
         shippingCost: this.shippingCost,
         grandTotal: this.grandTotal,

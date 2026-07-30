@@ -98,6 +98,27 @@
                   [(ngModel)]="formData.developedBy"
                   placeholder="Developer or company name" />
               </div>
+
+              <div class="form-field full-span">
+                <label>Shop Address</label>
+                <input pInputText type="text"
+                  [(ngModel)]="formData.companyAddress"
+                  placeholder="Printed on POS cash bill" />
+              </div>
+
+              <div class="form-field">
+                <label>Shop Phone</label>
+                <input pInputText type="text"
+                  [(ngModel)]="formData.companyPhone"
+                  placeholder="Phone for cash bill" />
+              </div>
+
+              <div class="form-field">
+                <label>GSTIN</label>
+                <input pInputText type="text"
+                  [(ngModel)]="formData.gstNumber"
+                  placeholder="GST number for cash bill" />
+              </div>
             </div>
           </div>
 

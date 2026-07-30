@@ -15,6 +15,7 @@ export interface PosBillPrintData {
   storeAddress?: string;
   storePhone?: string;
   gstin?: string;
+  billerName?: string;
   currency: string;
   referenceNo: string;
   orderNo?: string;
@@ -34,6 +35,7 @@ export interface PosBillPrintData {
   lineTaxTotal: number;
   orderTax: number;
   orderTaxPercent?: number;
+  taxMode?: 'Inclusive' | 'Exclusive';
   totalTax: number;
   shippingCost: number;
   grandTotal: number;
@@ -131,6 +133,9 @@ export class PosBillPrintService {
       : '';
     const gstin = data.gstin
       ? `<div class="store-line">GSTIN NO:${this.escapeHtml(data.gstin)}</div>`
+      : '';
+    const biller = data.billerName
+      ? `<div class="store-line">Biller: ${this.escapeHtml(data.billerName)}</div>`
       : '';
     const note = data.saleNote?.trim()
       ? `<div class="note">${this.escapeHtml(data.saleNote.trim())}</div>`
@@ -248,6 +253,7 @@ export class PosBillPrintService {
     ${address}
     ${phone}
     ${gstin}
+    ${biller}
   </div>
   <div class="bill-label">Bill</div>
   <hr class="dash" />
@@ -308,6 +314,7 @@ export class PosBillPrintService {
 
   private computeGstSplits(data: PosBillPrintData): GstSplitRow[] {
     const buckets = new Map<number, number>();
+    const inclusive = data.taxMode !== 'Exclusive';
 
     for (const line of data.lines) {
       const rate = line.taxRate ?? 0;
@@ -317,7 +324,9 @@ export class PosBillPrintService {
 
     const rows: GstSplitRow[] = [];
     for (const [rate, base] of [...buckets.entries()].sort((a, b) => a[0] - b[0])) {
-      const tax = this.round(base * rate / 100);
+      const tax = inclusive
+        ? this.round(base * rate / (100 + rate))
+        : this.round(base * rate / 100);
       rows.push({ halfRate: rate / 2, cgst: this.round(tax / 2), sgst: this.round(tax / 2) });
     }
 

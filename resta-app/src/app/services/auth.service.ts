@@ -21,6 +21,11 @@ export interface AuthResponse {
   user: AuthUser;
 }
 
+export interface SignUpResponse {
+  message: string;
+  pendingApproval: boolean;
+}
+
 export interface SignUpRequest {
   userName: string;
   displayName: string;
@@ -68,10 +73,8 @@ export class AuthService {
     private router: Router
   ) {}
 
-  signUp(dto: SignUpRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.api}/sign-up`, dto).pipe(
-      tap(res => this.persistSession(res))
-    );
+  signUp(dto: SignUpRequest): Observable<SignUpResponse> {
+    return this.http.post<SignUpResponse>(`${this.api}/sign-up`, dto);
   }
 
   signIn(dto: SignInRequest): Observable<AuthResponse> {

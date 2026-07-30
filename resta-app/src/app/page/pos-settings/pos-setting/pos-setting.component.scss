@@ -136,6 +136,13 @@
     label { margin: 0; cursor: pointer; }
   }
 
+  .field-hint {
+    margin: 0;
+    font-size: 11px;
+    color: var(--text-muted, #64748b);
+    font-weight: 500;
+  }
+
   &.has-error input,
   &.has-error ::ng-deep .p-select {
     border-color: var(--accent-red) !important;
@@ -169,6 +176,30 @@
     .p-select-label {
       font-size: 12.5px;
       padding: 6px 10px;
+    }
+  }
+}
+
+.tax-mode-radios {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  padding: 8px 0 2px;
+
+  .radio-option {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-dark, #1e293b);
+    cursor: pointer;
+
+    input {
+      width: 16px;
+      height: 16px;
+      margin: 0;
+      accent-color: var(--toolbar-bg, #7c3aed);
     }
   }
 }

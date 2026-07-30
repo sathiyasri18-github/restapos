@@ -46,6 +46,9 @@ function emptyForm(): GeneralSetting {
     state: null,
     theme: '',
     currencyPosition: '',
+    companyAddress: '',
+    companyPhone: '',
+    gstNumber: '',
   };
 }
 
@@ -174,6 +177,9 @@ export class GeneralSettingComponent implements OnInit {
       state: x.state ?? null,
       theme: x.theme ?? '',
       currencyPosition: x.currencyPosition ?? '',
+      companyAddress: x.companyAddress ?? '',
+      companyPhone: x.companyPhone ?? '',
+      gstNumber: x.gstNumber ?? '',
     };
   }
 
@@ -377,6 +383,9 @@ export class GeneralSettingComponent implements OnInit {
       state: f.state,
       theme: f.theme.trim(),
       currencyPosition: f.currencyPosition.trim(),
+      companyAddress: f.companyAddress?.trim() || null,
+      companyPhone: f.companyPhone?.trim() || null,
+      gstNumber: f.gstNumber?.trim() || null,
     };
   }
 
@@ -395,6 +404,9 @@ export class GeneralSettingComponent implements OnInit {
       state: f.state,
       theme: f.theme.trim(),
       currencyPosition: f.currencyPosition.trim(),
+      companyAddress: f.companyAddress?.trim() || null,
+      companyPhone: f.companyPhone?.trim() || null,
+      gstNumber: f.gstNumber?.trim() || null,
     };
   }
 

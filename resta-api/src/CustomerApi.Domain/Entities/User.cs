@@ -10,6 +10,8 @@ public class User : IdentityUser<int>
     public int? BillerId { get; set; }
     public int? WarehouseId { get; set; }
     public bool IsActive { get; set; }
+    /// <summary>False for self-registered users until a SuperAdmin approves them.</summary>
+    public bool IsApproved { get; set; } = true;
     public bool IsDeleted { get; set; }
     public DateTime? CreatedDate { get; set; }
     public DateTime? ModifiedDate { get; set; }

@@ -9,6 +9,7 @@ export interface AppUser {
   displayName: string;
   email: string | null;
   isActive: boolean;
+  isApproved: boolean;
   lastLoginDate?: Date | null;
   roleIds?: number[];
   roleNames?: string[];
@@ -38,6 +39,7 @@ export interface UpdateUserDto {
 export interface UserListParams {
   search?: string;
   isActive?: boolean;
+  isApproved?: boolean;
   pageNumber?: number;
   pageSize?: number;
 }
@@ -52,6 +54,7 @@ export class UserService {
     let p = new HttpParams();
     if (params.search) p = p.set('search', params.search);
     if (params.isActive != null) p = p.set('isActive', String(params.isActive));
+    if (params.isApproved != null) p = p.set('isApproved', String(params.isApproved));
     if (params.pageNumber) p = p.set('pageNumber', String(params.pageNumber));
     if (params.pageSize) p = p.set('pageSize', String(params.pageSize));
     return this.http.get<any>(this.apiUrl, { params: p });
@@ -67,6 +70,10 @@ export class UserService {
 
   update(id: number, dto: UpdateUserDto): Observable<any> {
     return this.http.put<any>(`${this.apiUrl}/${id}`, dto);
+  }
+
+  approve(id: number): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/${id}/approve`, {});
   }
 
   delete(id: number): Observable<any> {

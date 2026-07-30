@@ -5,7 +5,7 @@ namespace CustomerApi.Application.Common.Interfaces;
 public interface IAuthService
 {
     Task<AuthResponse> SignInAsync(SignInRequest request, CancellationToken ct = default);
-    Task<AuthResponse> SignUpAsync(SignUpRequest request, CancellationToken ct = default);
+    Task<SignUpResponse> SignUpAsync(SignUpRequest request, CancellationToken ct = default);
 
     Task<ForgotPasswordResponse> ForgotPasswordAsync(
         ForgotPasswordRequest request,

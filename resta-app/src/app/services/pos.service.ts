@@ -42,6 +42,7 @@ export interface PosDraft {
   couponDiscount: number;
   orderTax: number;
   orderTaxPercent?: number;
+  taxMode?: 'Inclusive' | 'Exclusive';
   shippingCost: number;
   saleNote: string;
 }

@@ -34,6 +34,11 @@
         <p-select [options]="statusFilterOptions" optionLabel="label" optionValue="value"
           [(ngModel)]="activeFilter" (ngModelChange)="onFilterChange()" placeholder="All" appendTo="body" />
       </div>
+      <div class="search-field">
+        <label>Approval</label>
+        <p-select [options]="approvalFilterOptions" optionLabel="label" optionValue="value"
+          [(ngModel)]="approvalFilter" (ngModelChange)="onFilterChange()" placeholder="All" appendTo="body" />
+      </div>
       @if (hasActiveFilters) {
         <button class="clear-btn" (click)="onClearSearch()"><i class="pi pi-filter-slash"></i> Clear</button>
       }
@@ -50,7 +55,8 @@
           <th pSortableColumn="userName">User Name <p-sortIcon field="userName" /></th>
           <th pSortableColumn="displayName">Display Name <p-sortIcon field="displayName" /></th>
           <th>Email</th>
-          <th>Roles</th>
+          <th>Role</th>
+          <th pSortableColumn="isApproved">Approved <p-sortIcon field="isApproved" /></th>
           <th pSortableColumn="isActive">Active <p-sortIcon field="isActive" /></th>
           <th class="col-actions">Actions</th>
         </tr>
@@ -62,9 +68,19 @@
           <td>{{ u.displayName }}</td>
           <td class="muted-cell">{{ u.email || '—' }}</td>
           <td class="muted-cell">{{ (u.roleNames || []).join(', ') || '—' }}</td>
+          <td>
+            @if (u.isApproved) { Yes }
+            @else { <span class="pending-badge">Pending</span> }
+          </td>
           <td>{{ u.isActive ? 'Yes' : 'No' }}</td>
           <td class="col-actions">
             <div class="action-btns">
+              @if (!u.isApproved && isSuperAdmin) {
+                <button class="icon-btn approve-icon" title="Approve"
+                  (click)="approveUser(u, $event)">
+                  <i class="pi pi-check"></i>
+                </button>
+              }
               <button class="icon-btn edit-icon" (click)="openEditDialog(u); $event.stopPropagation()">
                 <i class="pi pi-pencil"></i>
               </button>
@@ -76,7 +92,7 @@
         </tr>
       </ng-template>
       <ng-template pTemplate="emptymessage">
-        <tr><td colspan="7"><div class="empty-state"><p class="empty-title">No users found</p></div></td></tr>
+        <tr><td colspan="8"><div class="empty-state"><p class="empty-title">No users found</p></div></td></tr>
       </ng-template>
     </p-table>
   </div>

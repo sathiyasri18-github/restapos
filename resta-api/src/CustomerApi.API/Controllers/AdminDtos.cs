@@ -8,6 +8,7 @@ public record UserDto(
     string DisplayName,
     string? Email,
     bool IsActive,
+    bool IsApproved,
     DateTime? LastLoginDate,
     IReadOnlyList<int> RoleIds,
     IReadOnlyList<string> RoleNames);
@@ -131,7 +132,7 @@ public static class AdminMapper
     public static UserDto ToUserDto(User user, IReadOnlyList<int> roleIds, IReadOnlyList<string> roleNames) =>
         new(user.Id, user.UserName ?? string.Empty, DisplayName(user),
             string.IsNullOrWhiteSpace(user.Email) ? null : user.Email,
-            user.IsActive, null, roleIds, roleNames);
+            user.IsActive, user.IsApproved, null, roleIds, roleNames);
 
     public static RoleDto ToRoleDto(Role role) =>
         new(role.Id, role.Name ?? string.Empty, role.Description, role.IsActive);

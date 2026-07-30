@@ -1,5 +1,14 @@
 <div class="layout-wrapper" [class.sidebar-collapsed]="layout.sidebarCollapsed()">
 
+  @if (!layout.sidebarCollapsed()) {
+    <button
+      type="button"
+      class="sidebar-backdrop"
+      aria-label="Close menu"
+      (click)="layout.toggleSidebar()"
+    ></button>
+  }
+
   <app-sidebar class="sidebar"></app-sidebar>
 
   <div class="layout-main">

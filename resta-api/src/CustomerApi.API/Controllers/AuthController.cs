@@ -22,10 +22,10 @@ public class AuthController(IAuthService authService, ICurrentUserService curren
         return Ok(response);
     }
 
-    /// <summary>Register a new user account.</summary>
+    /// <summary>Register a new user account (pending SuperAdmin approval).</summary>
     [HttpPost("sign-up")]
     [AllowAnonymous]
-    [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(SignUpResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> SignUp([FromBody] SignUpRequest request, CancellationToken ct)
     {

@@ -17,6 +17,9 @@ export interface GeneralSetting {
   state: number | null;
   theme: string;
   currencyPosition: string;
+  companyAddress: string;
+  companyPhone: string;
+  gstNumber: string;
 }
 
 export interface CreateGeneralSettingDto {
@@ -32,6 +35,9 @@ export interface CreateGeneralSettingDto {
   state: number | null;
   theme: string;
   currencyPosition: string;
+  companyAddress: string | null;
+  companyPhone: string | null;
+  gstNumber: string | null;
 }
 
 export interface UpdateGeneralSettingDto {
@@ -48,6 +54,9 @@ export interface UpdateGeneralSettingDto {
   state: number | null;
   theme: string;
   currencyPosition: string;
+  companyAddress: string | null;
+  companyPhone: string | null;
+  gstNumber: string | null;
 }
 
 export interface GeneralSettingListParams {

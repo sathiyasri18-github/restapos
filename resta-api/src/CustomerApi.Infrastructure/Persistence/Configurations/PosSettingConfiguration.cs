@@ -15,6 +15,7 @@ public class PosSettingConfiguration : IEntityTypeConfiguration<PosSetting>
         builder.Property(x => x.StripePublicKey).IsRequired(false);
         builder.Property(x => x.StripeSecretKey).HasMaxLength(191);
         builder.Property(x => x.StripeSecretKey).IsRequired();
+        builder.Property(x => x.TaxMode).HasMaxLength(20).HasDefaultValue("Inclusive");
         builder.Property(x => x.CreatedDate).HasDefaultValueSql("GETDATE()");
         builder.Property(x => x.CreatedDate).HasAnnotation("Relational:DefaultConstraintName", "DF_PosSetting_CreatedDate");
         builder.Property(x => x.ModifiedDate).HasDefaultValueSql("GETDATE()");

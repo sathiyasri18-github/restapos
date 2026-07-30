@@ -10,6 +10,7 @@ import {
   UpdateUserDto,
   UserService
 } from '../../services/user.service';
+import { AuthService } from '../../services/auth.service';
 
 type DialogMode = 'add' | 'edit';
 
@@ -31,8 +32,10 @@ function emptyForm(): AppUser & { password: string } {
     displayName: '',
     email: '',
     isActive: true,
+    isApproved: true,
     password: '',
-    roleIds: []
+    roleIds: [],
+    roleNames: []
   };
 }
 
@@ -51,6 +54,7 @@ export class UserComponent implements OnInit, OnDestroy {
 
   searchTerm = '';
   activeFilter: boolean | null = null;
+  approvalFilter: boolean | null = null;
   private search$ = new Subject<void>();
   private destroy$ = new Subject<void>();
 
@@ -62,6 +66,7 @@ export class UserComponent implements OnInit, OnDestroy {
 
   roleOptions: RoleOption[] = [];
   selectedRoleIds: number[] = [];
+  isSuperAdmin = false;
 
   readonly statusFilterOptions = [
     { label: 'All', value: null as boolean | null },
@@ -69,15 +74,24 @@ export class UserComponent implements OnInit, OnDestroy {
     { label: 'Inactive', value: false as boolean | null },
   ];
 
+  readonly approvalFilterOptions = [
+    { label: 'All', value: null as boolean | null },
+    { label: 'Approved', value: true as boolean | null },
+    { label: 'Pending', value: false as boolean | null },
+  ];
+
   constructor(
     private userService: UserService,
     private roleService: RoleService,
+    private authService: AuthService,
     private messageService: MessageService,
     private confirmationService: ConfirmationService,
     private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
+    const roles = (this.authService.getUser()?.roles ?? []).map(r => r.toLowerCase());
+    this.isSuperAdmin = roles.includes('superadmin');
     this.search$.pipe(debounceTime(400), takeUntil(this.destroy$)).subscribe(() => this.loadUsers());
     this.loadLookups();
     this.loadUsers();
@@ -93,7 +107,7 @@ export class UserComponent implements OnInit, OnDestroy {
   }
 
   get hasActiveFilters(): boolean {
-    return !!this.searchTerm.trim() || this.activeFilter !== null;
+    return !!this.searchTerm.trim() || this.activeFilter !== null || this.approvalFilter !== null;
   }
 
   get userReportConfig(): GridReportConfig {
@@ -106,7 +120,8 @@ export class UserComponent implements OnInit, OnDestroy {
         { header: 'User Name', field: 'userName' },
         { header: 'Display Name', field: 'displayName' },
         { header: 'Email', field: 'email' },
-        { header: 'Roles', field: 'roleNames' },
+        { header: 'Role', field: 'roleNames' },
+        { header: 'Approved', field: 'isApproved', format: (v) => formatYesNo(v) },
         { header: 'Active', field: 'isActive', format: (v) => formatYesNo(v) }
       ],
       rows: this.users.map(u => ({
@@ -114,6 +129,7 @@ export class UserComponent implements OnInit, OnDestroy {
         displayName: u.displayName,
         email: u.email,
         roleNames: (u.roleNames ?? []).join(', ') || '—',
+        isApproved: u.isApproved,
         isActive: u.isActive
       }))
     };
@@ -127,6 +143,13 @@ export class UserComponent implements OnInit, OnDestroy {
           label: r.roleName ?? r.name ?? '',
           value: Number(r.roleId ?? r.id ?? 0)
         })).filter(o => o.value > 0);
+        if (this.users.length > 0) {
+          this.users = this.users.map(u => this.mapUser({
+            ...u,
+            roleIds: u.roleIds,
+            roleNames: u.roleNames
+          }));
+        }
         this.cdr.detectChanges();
       }
     });
@@ -134,11 +157,17 @@ export class UserComponent implements OnInit, OnDestroy {
 
   loadUsers(): void {
     this.isLoading = true;
-    const params: { search: string; pageSize: number; isActive?: boolean } = {
+    const params: {
+      search: string;
+      pageSize: number;
+      isActive?: boolean;
+      isApproved?: boolean;
+    } = {
       search: this.searchTerm.trim(),
       pageSize: 200
     };
     if (this.activeFilter !== null) params.isActive = this.activeFilter;
+    if (this.approvalFilter !== null) params.isApproved = this.approvalFilter;
 
     this.userService.getAll(params).subscribe({
       next: (res) => {
@@ -156,16 +185,27 @@ export class UserComponent implements OnInit, OnDestroy {
   }
 
   private mapUser(x: any): AppUser {
-    const roleIds = x.roleIds ?? (x.roleId ? [Number(x.roleId)] : []);
+    const roleIds: number[] = Array.isArray(x.roleIds)
+      ? x.roleIds.map((id: any) => Number(id)).filter((id: number) => id > 0)
+      : (x.roleId ? [Number(x.roleId)] : []);
+    let roleNames: string[] = Array.isArray(x.roleNames)
+      ? x.roleNames.filter((n: any) => !!n)
+      : [];
+    if (roleNames.length === 0 && roleIds.length > 0 && this.roleOptions.length > 0) {
+      roleNames = roleIds
+        .map(id => this.roleOptions.find(o => o.value === id)?.label)
+        .filter((n): n is string => !!n);
+    }
     return {
       userId: Number(x.userId ?? x.id ?? 0),
       userName: x.userName ?? '',
       displayName: x.displayName ?? x.companyName ?? x.userName ?? '',
       email: x.email ?? '',
       isActive: x.isActive !== false,
+      isApproved: x.isApproved !== false,
       lastLoginDate: x.lastLoginDate ? new Date(x.lastLoginDate) : null,
       roleIds,
-      roleNames: x.roleNames ?? []
+      roleNames
     };
   }
 
@@ -181,7 +221,40 @@ export class UserComponent implements OnInit, OnDestroy {
   onClearSearch(): void {
     this.searchTerm = '';
     this.activeFilter = null;
+    this.approvalFilter = null;
     this.loadUsers();
+  }
+
+  approveUser(user: AppUser, event: Event): void {
+    event.stopPropagation();
+    this.confirmationService.confirm({
+      target: event.target as EventTarget,
+      message: `Approve user <strong>${user.userName}</strong>?`,
+      header: 'Approve User',
+      icon: 'pi pi-check-circle',
+      acceptButtonStyleClass: 'p-button-success p-button-sm',
+      rejectButtonStyleClass: 'p-button-outlined p-button-sm',
+      accept: () => {
+        this.userService.approve(user.userId).subscribe({
+          next: (res) => {
+            const updated = this.mapUser(res?.data ?? res);
+            const idx = this.users.findIndex(u => u.userId === updated.userId);
+            if (idx !== -1) {
+              this.users = [...this.users.slice(0, idx), updated, ...this.users.slice(idx + 1)];
+            }
+            this.messageService.add({ severity: 'success', summary: 'Approved', detail: 'User can now sign in.' });
+            this.cdr.detectChanges();
+          },
+          error: (err) => {
+            this.messageService.add({
+              severity: 'error',
+              summary: 'Approve Failed',
+              detail: err?.error?.title ?? err?.error ?? 'Only SuperAdmin can approve users.'
+            });
+          }
+        });
+      }
+    });
   }
 
   openAddDialog(): void {

@@ -22,7 +22,6 @@ public static class MenuRouteDefinitions
         new(3, null, "PURCHASE", "Purchase", null, "pi pi-shopping-cart", 20),
         new(4, null, "SALES", "Sales", null, "pi pi-chart-bar", 30),
         new(5, null, "INVENTORY", "Inventory", null, "pi pi-box", 40),
-        new(6, null, "SERVICE", "Service", null, "pi pi-wrench", 50),
         new(7, null, "ACCOUNTING", "Accounting", null, "pi pi-wallet", 60),
         new(8, null, "USERS", "Users", null, "pi pi-users", 70),
         new(9, null, "SETTINGS", "Settings", null, "pi pi-cog", 80),
@@ -60,16 +59,8 @@ public static class MenuRouteDefinitions
         new(506, 5, "PRODUCT_WAREHOUSE", "Product Warehouse", "/product-warehouse", "pi pi-home", 60),
         new(507, 5, "PRODUCT_BATCH", "Product Batch", "/product-batch", "pi pi-box", 70),
 
-        // Service
-        new(601, 6, "SERVICE_CALL", "Service Call", "/service-call", "pi pi-wrench", 10),
-        new(602, 6, "CALL_LOG", "Call Log", "/call-log", "pi pi-phone", 20),
-
         // Accounting
-        new(701, 7, "VOUCHER_ENTRY", "Voucher Entry", "/voucher-entry", "pi pi-wallet", 10),
-        new(705, 7, "EXPENSE", "Expense", "/expense", "pi pi-credit-card", 50),
-        new(702, 7, "CUST_CREDIT_NOTE", "Customer Credit/Debit Note", "/customer-credit-debit-note", "pi pi-file-edit", 20),
-        new(703, 7, "SUPP_CREDIT_NOTE", "Supplier Credit/Debit Note", "/supplier-credit-debit-note", "pi pi-truck", 30),
-        new(704, 7, "PAYMENT_REMINDER", "Payment Reminder", "/payment-reminder", "pi pi-bell", 40),
+        new(705, 7, "EXPENSE", "Expense", "/expense", "pi pi-credit-card", 10),
 
         // Users admin
         new(801, 8, "MGMT_USERS", "Users", "/users", "pi pi-user", 10),

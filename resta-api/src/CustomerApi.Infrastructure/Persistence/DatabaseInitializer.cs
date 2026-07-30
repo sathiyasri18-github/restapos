@@ -27,6 +27,42 @@ public static class DatabaseInitializer
 
         if (configuration.GetValue("Database:SeedOnStartup", true))
             await DatabaseSeeder.SeedAsync(context, logger, ct);
+
+        await EnsurePosSettingTaxModeColumnAsync(context, logger, ct);
+        await EnsureGeneralSettingBillColumnsAsync(context, logger, ct);
+    }
+
+    private static async Task EnsurePosSettingTaxModeColumnAsync(
+        ApplicationDbContext context,
+        ILogger logger,
+        CancellationToken ct)
+    {
+        const string sql = """
+            IF COL_LENGTH(N'dbo.PosSetting', N'TaxMode') IS NULL
+            BEGIN
+                ALTER TABLE [PosSetting] ADD [TaxMode] nvarchar(20) NOT NULL
+                    CONSTRAINT [DF_PosSetting_TaxMode] DEFAULT (N'Inclusive');
+            END
+            """;
+        await context.Database.ExecuteSqlRawAsync(sql, ct);
+        logger.LogInformation("Ensured PosSetting.TaxMode column exists (default Inclusive).");
+    }
+
+    private static async Task EnsureGeneralSettingBillColumnsAsync(
+        ApplicationDbContext context,
+        ILogger logger,
+        CancellationToken ct)
+    {
+        const string sql = """
+            IF COL_LENGTH(N'dbo.GeneralSetting', N'CompanyAddress') IS NULL
+                ALTER TABLE [GeneralSetting] ADD [CompanyAddress] nvarchar(500) NULL;
+            IF COL_LENGTH(N'dbo.GeneralSetting', N'CompanyPhone') IS NULL
+                ALTER TABLE [GeneralSetting] ADD [CompanyPhone] nvarchar(50) NULL;
+            IF COL_LENGTH(N'dbo.GeneralSetting', N'GstNumber') IS NULL
+                ALTER TABLE [GeneralSetting] ADD [GstNumber] nvarchar(50) NULL;
+            """;
+        await context.Database.ExecuteSqlRawAsync(sql, ct);
+        logger.LogInformation("Ensured GeneralSetting bill columns (CompanyAddress, CompanyPhone, GstNumber).");
     }
 
     private static async Task ApplyEfMigrationsAsync(

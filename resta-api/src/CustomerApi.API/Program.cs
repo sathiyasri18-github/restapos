@@ -55,6 +55,7 @@ using (var scope = app.Services.CreateScope())
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
     var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
     await DatabaseInitializer.InitializeAsync(db, configuration, logger);
+    await UserAccessBootstrap.EnsureAsync(scope.ServiceProvider);
 }
 
 app.UseCors("AllowAll");

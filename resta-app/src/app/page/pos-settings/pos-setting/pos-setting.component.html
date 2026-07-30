@@ -79,6 +79,20 @@
                 <p-checkbox [(ngModel)]="formData.keybordActive" [binary]="true" inputId="pos-keyboard" />
                 <label for="pos-keyboard">Touchscreen keyboard</label>
               </div>
+
+              <div class="form-field full-span">
+                <label>Default Tax Mode</label>
+                <div class="tax-mode-radios">
+                  @for (opt of taxModeOptions; track opt.value) {
+                    <label class="radio-option">
+                      <input type="radio" name="pos-tax-mode" [value]="opt.value"
+                        [(ngModel)]="formData.taxMode" />
+                      <span>{{ opt.label }}</span>
+                    </label>
+                  }
+                </div>
+                <p class="field-hint">Used as the default when opening POS. Inclusive GST means prices already include tax.</p>
+              </div>
             </div>
           </div>
 

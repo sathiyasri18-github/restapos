@@ -35,5 +35,8 @@ public class GeneralSettingConfiguration : IEntityTypeConfiguration<GeneralSetti
         builder.Property(x => x.ModifiedDate).HasAnnotation("Relational:DefaultConstraintName", "DF_GeneralSetting_ModifiedDate");
         builder.Property(x => x.CurrencyPosition).HasMaxLength(191);
         builder.Property(x => x.CurrencyPosition).IsRequired();
+        builder.Property(x => x.CompanyAddress).HasMaxLength(500).IsRequired(false);
+        builder.Property(x => x.CompanyPhone).HasMaxLength(50).IsRequired(false);
+        builder.Property(x => x.GstNumber).HasMaxLength(50).IsRequired(false);
     }
 }

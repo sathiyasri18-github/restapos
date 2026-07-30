@@ -1,14 +1,23 @@
 <p-toast position="top-right" />
 <p-confirmDialog />
 
-<div class="pos-root">
+<div class="pos-root" [class.mobile-view]="mobileView">
 
   <!-- LEFT: Cart panel -->
-  <div class="pos-left">
+  <div class="pos-left" [class.mobile-hidden]="mobileView && mobilePanel !== 'cart'">
     <div class="pos-left-header">
       <div class="pos-header-icons">
         <button type="button" class="icon-chip" pTooltip="Today"><i class="pi pi-calendar"></i></button>
         <button type="button" class="icon-chip" pTooltip="Currency"><i class="pi pi-dollar"></i></button>
+        <button
+          type="button"
+          class="icon-chip biller-chip"
+          pTooltip="Biller"
+          (click)="openBillerDialog()"
+        >
+          <i class="pi pi-id-card"></i>
+          <span class="biller-chip-label">{{ selectedBillerLabel }}</span>
+        </button>
       </div>
       <div class="customer-row">
         <p-select
@@ -117,9 +126,7 @@
         <span>Items <strong>{{ itemCount }}({{ totalUnits }})</strong></span>
         <button type="button" class="summary-edit" (click)="openEditField('tax')">
           Tax <i class="pi pi-pencil"></i> <strong>{{ formatMoney(totalTax) }}</strong>
-          @if (orderTaxPercent > 0) {
-            <span class="discount-meta">({{ orderTaxPercent }}%)</span>
-          }
+          <span class="discount-meta">({{ taxModeLabel }}@if (orderTaxPercent > 0) { · {{ orderTaxPercent }}% })</span>
         </button>
         <span>Total <strong>{{ formatMoney(subtotal) }}</strong></span>
         <button type="button" class="summary-edit" (click)="openEditField('shipping')">
@@ -134,12 +141,18 @@
   </div>
 
   <!-- RIGHT: Products panel -->
-  <div class="pos-right">
+  <div class="pos-right" [class.mobile-hidden]="mobileView && mobilePanel !== 'products'">
     <div class="pos-right-toolbar">
       <button type="button" class="tool-btn home" (click)="goHome()" pTooltip="Home"><i class="pi pi-home"></i></button>
       <div class="tool-group">
         <button type="button" class="tool-btn" pTooltip="Calculator" (click)="openCalculator()"><i class="pi pi-calculator"></i></button>
-        <button type="button" class="tool-btn" pTooltip="Mobile"><i class="pi pi-mobile"></i></button>
+        <button
+          type="button"
+          class="tool-btn"
+          [class.active]="mobileView"
+          pTooltip="Mobile view"
+          (click)="toggleMobileView()"
+        ><i class="pi pi-mobile"></i></button>
         <button type="button" class="tool-btn" pTooltip="Undo" (click)="cancelSale()"><i class="pi pi-undo"></i></button>
         <button type="button" class="tool-btn" (click)="togglePosFullscreen()" pTooltip="Fullscreen">
           <i class="pi" [ngClass]="isFullscreen ? 'pi-window-minimize' : 'pi-expand'"></i>
@@ -208,16 +221,34 @@
   </div>
 </div>
 
+@if (mobileView) {
+  <div class="mobile-panel-switch">
+    <button type="button" [class.active]="mobilePanel === 'cart'" (click)="showMobilePanel('cart')">
+      <i class="pi pi-shopping-cart"></i> Cart ({{ itemCount }})
+    </button>
+    <button type="button" [class.active]="mobilePanel === 'products'" (click)="showMobilePanel('products')">
+      <i class="pi pi-th-large"></i> Products
+    </button>
+    <button type="button" class="exit-mobile" (click)="toggleMobileView()" title="Exit mobile view">
+      <i class="pi pi-times"></i>
+    </button>
+  </div>
+}
+
 <!-- Footer payment bar -->
 <div class="pos-footer">
   <button type="button" class="pay card" [disabled]="isSubmitting" (click)="onPayment('card')">Card</button>
   <button type="button" class="pay cash" [disabled]="isSubmitting" (click)="onPayment('cash')">Cash</button>
   <button type="button" class="pay razorpay" [disabled]="isSubmitting" (click)="onPayment('razorpay')">Razorpay</button>
   <button type="button" class="pay credit" [disabled]="isSubmitting" (click)="onPayment('credit')">Credit Sale</button>
-  <button type="button" class="pay multiple" [disabled]="isSubmitting" (click)="onPayment('multiple')">Multiple Payment</button>
+  @if (showAdvancedPayments) {
+    <button type="button" class="pay multiple" [disabled]="isSubmitting" (click)="onPayment('multiple')">Multiple Payment</button>
+  }
   <button type="button" class="pay instalment" [disabled]="isSubmitting" (click)="openSearchSales()">Search Sales</button>
-  <button type="button" class="pay deposit" [disabled]="isSubmitting" (click)="onPayment('deposit')">Deposit</button>
-  <button type="button" class="pay points" [disabled]="isSubmitting" (click)="onPayment('points')">Points</button>
+  @if (showAdvancedPayments) {
+    <button type="button" class="pay deposit" [disabled]="isSubmitting" (click)="onPayment('deposit')">Deposit</button>
+    <button type="button" class="pay points" [disabled]="isSubmitting" (click)="onPayment('points')">Points</button>
+  }
   <button type="button" class="pay more" (click)="moreMenuVisible = !moreMenuVisible">More <i class="pi pi-chevron-down"></i></button>
   <button type="button" class="pay draft" (click)="saveDraft()">Draft</button>
   <button type="button" class="pay cancel" (click)="cancelSale()">Cancel</button>
@@ -237,6 +268,29 @@
   <ng-template pTemplate="footer">
     <button pButton label="Cancel" class="p-button-outlined" (click)="customerDialogVisible = false"></button>
     <button pButton label="Save" (click)="saveNewCustomer()"></button>
+  </ng-template>
+</p-dialog>
+
+<p-dialog header="Select Biller" [(visible)]="billerDialogVisible" [modal]="true" [style]="{ width: '420px' }">
+  <div class="dialog-field">
+    <label>Biller</label>
+    <p-select
+      [options]="billerOptions"
+      optionLabel="label"
+      optionValue="value"
+      [(ngModel)]="pendingBillerId"
+      placeholder="Choose biller"
+      [filter]="true"
+      appendTo="body"
+      styleClass="w-full"
+    />
+    @if (!billerOptions.length) {
+      <p class="hint">No active billers found. Add billers or set a default in POS Setting.</p>
+    }
+  </div>
+  <ng-template pTemplate="footer">
+    <button pButton label="Cancel" class="p-button-outlined" (click)="billerDialogVisible = false"></button>
+    <button pButton label="Apply" (click)="applyBillerSelection()" [disabled]="!pendingBillerId"></button>
   </ng-template>
 </p-dialog>
 
@@ -273,7 +327,22 @@
     </div>
   } @else if (editField === 'tax') {
     <div class="dialog-field">
-      <label>Percentage</label>
+      <label>Tax mode</label>
+      <div class="discount-mode-toggle tax-mode-toggle">
+        <button
+          type="button"
+          [class.active]="editTaxMode === 'Inclusive'"
+          (click)="editTaxMode = 'Inclusive'"
+        >Inclusive GST</button>
+        <button
+          type="button"
+          [class.active]="editTaxMode === 'Exclusive'"
+          (click)="editTaxMode = 'Exclusive'"
+        >Exclusive GST</button>
+      </div>
+    </div>
+    <div class="dialog-field">
+      <label>Order tax %</label>
       <p-inputNumber
         [(ngModel)]="editFieldValue"
         [min]="0"
@@ -283,7 +352,11 @@
         class="w-full"
       />
       @if (taxableSubtotal > 0 && editFieldValue > 0) {
-        <p class="hint">Tax amount: {{ formatMoney(previewEditTax()) }} on {{ formatMoney(taxableSubtotal) }}</p>
+        <p class="hint">
+          Tax amount: {{ formatMoney(previewEditTax()) }}
+          {{ editTaxMode === 'Inclusive' ? 'included in' : 'on' }}
+          {{ formatMoney(taxableSubtotal) }}
+        </p>
       }
     </div>
   } @else {

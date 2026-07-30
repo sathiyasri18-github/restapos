@@ -70,7 +70,7 @@ public static class MenuRouteSync
             SELECT r.[Id], m.[Id], 1, 1, 1, 1, GETDATE(), GETDATE()
             FROM [Role] r
             CROSS JOIN [Menu] m
-            WHERE LOWER(r.[Name]) = 'admin'
+            WHERE LOWER(r.[Name]) IN ('admin', 'superadmin')
               AND m.[IsActive] = 1
               AND NOT EXISTS (
                 SELECT 1 FROM [RoleMenu] rm WHERE rm.[RoleId] = r.[Id] AND rm.[MenuId] = m.[Id]
@@ -79,7 +79,7 @@ public static class MenuRouteSync
 
         var inserted = await context.Database.ExecuteSqlRawAsync(sql, ct);
         if (inserted > 0)
-            logger.LogInformation("Granted Admin role access to {Count} menu item(s).", inserted);
+            logger.LogInformation("Granted Admin/SuperAdmin role access to {Count} menu item(s).", inserted);
     }
 
     private static string Escape(string value) => value.Replace("'", "''");

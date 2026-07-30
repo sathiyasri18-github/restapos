@@ -37,6 +37,9 @@ public record AuthResponse(
     string ExpiresAt,
     AuthUserDto User);
 
+/// <summary>Returned by sign-up when the account awaits SuperAdmin approval (no JWT).</summary>
+public record SignUpResponse(string Message, bool PendingApproval);
+
 public record ForgotPasswordResponse(string Message, string? ResetToken = null);
 
 public record MessageResponse(string Message);
