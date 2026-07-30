@@ -10,45 +10,66 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$Root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
-Set-Location $Root
+$ScriptsDir = $PSScriptRoot
+$ComposeFile = Join-Path $ScriptsDir "docker-compose.yml"
+Set-Location $ScriptsDir
 
 function Ensure-Docker {
     if (-not (Get-Command docker -ErrorAction SilentlyContinue)) {
         throw "Docker is not installed. Run scripts\install-prerequisites.ps1 as Administrator."
     }
 
-    try {
-        docker info | Out-Null
-    }
-    catch {
+    & docker info 1>$null 2>$null
+    if ($LASTEXITCODE -ne 0) {
         throw "Docker daemon is not running. Start Docker Desktop and retry."
     }
 }
 
 function Ensure-EnvFile {
-    if (-not (Test-Path '.env')) {
-        Copy-Item '.env.example' '.env'
-        Write-Host "Created .env from .env.example — review passwords before production use."
+    $envFile = Join-Path $ScriptsDir '.env'
+    $example = Join-Path $ScriptsDir '.env.example'
+    if (-not (Test-Path $envFile)) {
+        if (-not (Test-Path $example)) {
+            throw "Missing scripts\.env.example"
+        }
+        Copy-Item $example $envFile
+        Write-Host "Created scripts\.env from .env.example — review passwords before production use."
+    }
+}
+
+function Remove-StaleContainers {
+    Write-Host "Stopping any existing Resta POS stack..." -ForegroundColor Cyan
+    docker compose -f $ComposeFile --project-directory $ScriptsDir down --remove-orphans 2>$null | Out-Null
+
+    $names = @('restapos-api', 'restapos-web', 'restapos-sqlserver')
+    foreach ($name in $names) {
+        & docker inspect $name 1>$null 2>$null
+        if ($LASTEXITCODE -ne 0) { continue }
+        Write-Host "  Removing leftover container: $name" -ForegroundColor Yellow
+        docker rm -f $name 1>$null 2>$null
     }
 }
 
 Ensure-Docker
 
+if (-not (Test-Path $ComposeFile)) {
+    throw "Missing docker-compose.yml in $ScriptsDir"
+}
+
 if ($Down) {
-    Write-Host "Stopping Resta POS containers..."
-    docker compose down
+    Remove-StaleContainers
     exit 0
 }
 
 if ($Logs) {
-    docker compose logs -f
+    docker compose -f $ComposeFile --project-directory $ScriptsDir logs -f
     exit 0
 }
 
 Ensure-EnvFile
+Remove-StaleContainers
 
-$composeArgs = @('compose', 'up', '-d')
+$composeArgs = @('compose', '-f', $ComposeFile, '--project-directory', $ScriptsDir, 'up', '-d')
 if ($Build) { $composeArgs += '--build' }
 
 Write-Host "Starting Resta POS stack..."

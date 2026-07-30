@@ -1,3 +1,8 @@
+# Client deployment — pre-built images only (no source code required).
+# From repo: docker compose -f scripts/docker-compose.client.yml --project-directory scripts up -d
+# Or from scripts/: docker compose -f docker-compose.client.yml up -d
+# Load images first: .\scripts\import-docker-images.ps1
+
 services:
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
@@ -24,9 +29,6 @@ services:
 
   resta-api:
     image: restapos/api:${RESTAPOS_VERSION:-latest}
-    build:
-      context: ./resta-api
-      dockerfile: Dockerfile
     container_name: restapos-api
     environment:
       ASPNETCORE_ENVIRONMENT: Docker
@@ -42,9 +44,6 @@ services:
 
   resta-app:
     image: restapos/web:${RESTAPOS_VERSION:-latest}
-    build:
-      context: ./resta-app
-      dockerfile: Dockerfile
     container_name: restapos-web
     ports:
       - "${WEB_PORT:-8080}:80"

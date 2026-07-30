@@ -1,8 +1,8 @@
-# Shared helpers for docker compose environment files.
-# Compose reads ".env" by default only; use these to fall back to ".env.example".
+# Shared helpers for docker compose environment files under scripts/.
+# Compose reads ".env" from --project-directory (scripts/).
 
 function Get-ComposeEnvFile {
-    param([string]$Root = (Get-Location).Path)
+    param([string]$Root = $PSScriptRoot)
 
     $envPath = Join-Path $Root '.env'
     $examplePath = Join-Path $Root '.env.example'
@@ -13,7 +13,7 @@ function Get-ComposeEnvFile {
 }
 
 function Get-ComposeEnvArgs {
-    param([string]$Root = (Get-Location).Path)
+    param([string]$Root = $PSScriptRoot)
 
     $file = Get-ComposeEnvFile -Root $Root
     if ($file) { return @('--env-file', $file) }
@@ -24,7 +24,7 @@ function Read-ComposeEnvValue {
     param(
         [Parameter(Mandatory = $true)][string]$Name,
         [string]$Default = '',
-        [string]$Root = (Get-Location).Path
+        [string]$Root = $PSScriptRoot
     )
 
     $file = Get-ComposeEnvFile -Root $Root
@@ -39,7 +39,7 @@ function Read-ComposeEnvValue {
 }
 
 function Ensure-ComposeEnvFile {
-    param([string]$Root = (Get-Location).Path)
+    param([string]$Root = $PSScriptRoot)
 
     $envPath = Join-Path $Root '.env'
     $examplePath = Join-Path $Root '.env.example'
@@ -48,9 +48,9 @@ function Ensure-ComposeEnvFile {
 
     if (Test-Path $examplePath) {
         Copy-Item $examplePath $envPath
-        Write-Host 'Created .env from .env.example - review passwords before production use.'
+        Write-Host 'Created scripts\.env from .env.example - review passwords before production use.'
         return $envPath
     }
 
-    throw '.env not found. Copy .env.example to .env and set RESTAPOS_MSSQL_SA_PASSWORD, JWT_KEY, etc.'
+    throw '.env not found. Copy scripts\.env.example to scripts\.env and set RESTAPOS_MSSQL_SA_PASSWORD, JWT_KEY, etc.'
 }

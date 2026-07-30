@@ -130,9 +130,10 @@ Write-Host @"
 
 Next steps (Docker deployment — recommended):
   1. Ensure Docker Desktop is running
-  2. cd to repo root
+  2. cd scripts
   3. copy .env.example .env   (edit passwords if needed)
-  4. .\scripts\deploy-docker.ps1
+  4. .\deploy-docker.ps1
+     (or from repo root: .\scripts\deploy-docker.ps1)
 
 URLs after deploy:
   Web app : http://localhost:8080

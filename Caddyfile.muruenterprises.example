@@ -6,7 +6,7 @@
 #   www.muruenterprises.info
 #   api.muruenterprises.info
 #
-# Matches docker-compose.client.yml defaults:
+# Matches scripts/docker-compose.client.yml defaults:
 #   WEB_PORT=8080  â†’ resta-app
 #   API_PORT=8081  â†’ resta-api
 #
