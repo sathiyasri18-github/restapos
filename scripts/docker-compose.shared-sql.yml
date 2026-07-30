@@ -1,0 +1,42 @@
+# Shared SQL Server for ALL applications on this host (restapos, tncoa, etc.).
+# Start once — do not include this in per-app stacks.
+#
+#   docker compose -f scripts/docker-compose.shared-sql.yml -p shared-sql up -d
+#
+# Apps connect via published port (host.docker.internal,1433 or localhost,1433)
+# or by joining the external network "shared-sql-net" and using host "shared-sqlserver".
+
+name: shared-sql
+
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: shared-sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: ${SHARED_MSSQL_SA_PASSWORD:-Sql@123456!}
+      MSSQL_PID: Express
+    ports:
+      - "${SHARED_SQL_PORT:-1433}:1433"
+    volumes:
+      - shared_sqldata:/var/opt/mssql
+    networks:
+      - shared-sql-net
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q \"SELECT 1\" || exit 1",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
+    restart: unless-stopped
+
+volumes:
+  shared_sqldata:
+
+networks:
+  shared-sql-net:
+    name: shared-sql-net

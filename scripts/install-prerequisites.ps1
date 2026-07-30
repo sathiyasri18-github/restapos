@@ -60,11 +60,19 @@ if (-not $SkipDocker) {
     }
 
     if (Test-Command docker) {
+        $prev = $ErrorActionPreference
+        $ErrorActionPreference = 'Continue'
         try {
-            docker info | Out-Null
+            $null = & docker info 2>&1
+            $dockerOk = ($LASTEXITCODE -eq 0)
+        }
+        finally {
+            $ErrorActionPreference = $prev
+        }
+        if ($dockerOk) {
             Write-Host "Docker daemon is running."
         }
-        catch {
+        else {
             Write-Warning "Docker is installed but not running. Start Docker Desktop before deploying."
         }
     }
@@ -114,7 +122,7 @@ if (-not $SkipDotNet) {
 # ── SQL Server 2022 Express (native) ──────────────────────────────────────────
 if (-not $SkipSqlExpress) {
     Write-Step "Installing SQL Server 2022 Express (native host install)..."
-    Write-Host "Note: Docker deployment uses SQL Server inside a container — native Express is optional."
+    Write-Host "Note: Apps share one SQL container (shared-sqlserver). Native Express is optional."
 
     $sqlInstalled = Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Microsoft SQL Server\Instance Names\SQL' -ErrorAction SilentlyContinue
     if ($sqlInstalled) {

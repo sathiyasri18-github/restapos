@@ -1,6 +1,20 @@
 # Shared helpers for docker compose environment files under scripts/.
 # Compose reads ".env" from --project-directory (scripts/).
 
+function Test-DockerDaemon {
+    # Cross-platform: works on Windows and Linux PowerShell.
+    # Docker may write warnings to stderr; with $ErrorActionPreference=Stop those become terminating errors.
+    $prev = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        $null = & docker info 2>&1
+        return ($LASTEXITCODE -eq 0)
+    }
+    finally {
+        $ErrorActionPreference = $prev
+    }
+}
+
 function Get-ComposeEnvFile {
     param([string]$Root = $PSScriptRoot)
 

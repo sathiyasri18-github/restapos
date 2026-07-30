@@ -2,6 +2,7 @@
 <#
 .SYNOPSIS
   Builds Resta POS Docker images and exports them to scripts/restapos-images.tar.
+  Image/container names are prefixed with restapos so they do not collide with other apps.
 
 .EXAMPLE
   .\scripts\export-docker-images.ps1
@@ -17,6 +18,7 @@ $ErrorActionPreference = 'Stop'
 $ScriptsDir = $PSScriptRoot
 $Root = Split-Path -Parent $ScriptsDir
 $ComposeFile = Join-Path $ScriptsDir "docker-compose.yml"
+$ProjectName = 'restapos'
 
 if (-not $OutputDir) {
     $OutputDir = $ScriptsDir
@@ -26,9 +28,17 @@ $imagesTar = Join-Path $OutputDir "restapos-images.tar"
 $packageDir = $OutputDir
 
 function Test-DockerDaemon {
-    # Native docker.exe does not throw into try/catch on WinPS 5.1; check exit code.
-    & docker info 1>$null 2>$null
-    return ($LASTEXITCODE -eq 0)
+    # Cross-platform: works on Windows and Linux PowerShell.
+    # Docker may write warnings to stderr; with $ErrorActionPreference=Stop those become terminating errors.
+    $prev = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        $null = & docker info 2>&1
+        return ($LASTEXITCODE -eq 0)
+    }
+    finally {
+        $ErrorActionPreference = $prev
+    }
 }
 
 function Start-DockerDesktopIfNeeded {
@@ -73,6 +83,23 @@ function Ensure-Docker {
     Start-DockerDesktopIfNeeded
 }
 
+# Run docker without treating stderr warnings as terminating errors (PS 5.1 + Stop).
+function Invoke-Docker {
+    param(
+        [Parameter(Mandatory = $true)][string[]]$DockerArgs,
+        [string]$FailMessage = 'docker command failed.'
+    )
+    $prev = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    try {
+        & docker @DockerArgs
+        if ($LASTEXITCODE -ne 0) { throw "$FailMessage (exit $LASTEXITCODE)" }
+    }
+    finally {
+        $ErrorActionPreference = $prev
+    }
+}
+
 if (-not (Test-Path $ComposeFile)) {
     throw "Missing docker-compose.yml in $ScriptsDir"
 }
@@ -81,8 +108,10 @@ Ensure-Docker
 
 Write-Host "Building Resta POS images (version: $Version)..." -ForegroundColor Cyan
 $env:RESTAPOS_VERSION = $Version
-docker compose -f $ComposeFile --project-directory $ScriptsDir build resta-api resta-app
-if ($LASTEXITCODE -ne 0) { throw "docker compose build failed." }
+Invoke-Docker -FailMessage 'docker compose build failed.' -DockerArgs @(
+    'compose', '-f', $ComposeFile, '-p', $ProjectName, '--project-directory', $ScriptsDir,
+    'build', 'resta-api', 'resta-app'
+)
 
 $images = @(
     "restapos/api:$Version",
@@ -90,22 +119,24 @@ $images = @(
 )
 
 if ($IncludeSqlServer) {
-    Write-Host "Pulling SQL Server 2022 image (large download)..." -ForegroundColor Cyan
-    docker pull mcr.microsoft.com/mssql/server:2022-latest
-    if ($LASTEXITCODE -ne 0) { throw "docker pull sqlserver failed." }
+    Write-Host "Pulling SQL Server 2022 image for shared-sqlserver (optional offline package)..." -ForegroundColor Cyan
+    Invoke-Docker -FailMessage 'docker pull sqlserver failed.' -DockerArgs @(
+        'pull', 'mcr.microsoft.com/mssql/server:2022-latest'
+    )
     $images += "mcr.microsoft.com/mssql/server:2022-latest"
 }
 
 New-Item -ItemType Directory -Force -Path $packageDir | Out-Null
 
 Write-Host "Saving images to $imagesTar ..." -ForegroundColor Cyan
-docker save -o $imagesTar @images
-if ($LASTEXITCODE -ne 0) { throw "docker save failed." }
+Invoke-Docker -FailMessage 'docker save failed.' -DockerArgs (@('save', '-o', $imagesTar) + $images)
 
 # When exporting to a custom OutputDir, copy client deploy files alongside the tar.
 if ($packageDir -ne $ScriptsDir) {
     $clientFiles = @(
         "docker-compose.client.yml",
+        "docker-compose.shared-sql.yml",
+        "compose-env.ps1",
         ".env.example",
         "import-docker-images.ps1"
     )
@@ -123,10 +154,18 @@ Version:   $Version
 Images:    $($images -join ', ')
 Archive:   restapos-images.tar
 
+Containers (unique to this app — safe alongside other apps):
+  restapos-api
+  restapos-web
+
+Shared SQL (one per host for all apps):
+  shared-sqlserver  →  docker-compose.shared-sql.yml
+
 Client install (from the scripts folder or package copy):
   1. Copy scripts\ (or this package folder) to the customer machine
-  2. copy .env.example .env   (edit passwords)
-  3. .\import-docker-images.ps1
+  2. copy .env.example .env   (edit ConnectionStrings__DefaultConnection)
+  3. .\import-docker-images.ps1 -EnsureSharedSql
+     (or point ConnectionStrings at an existing SQL host / tncoa-sqlserver / shared-sqlserver)
 "@
 $manifest | Set-Content (Join-Path $packageDir "README-CLIENT.txt") -Encoding UTF8
 
@@ -140,6 +179,6 @@ Export complete.
   Version        : $Version
 
 On the client machine, from this folder run:
-  .\import-docker-images.ps1
+  .\import-docker-images.ps1 -EnsureSharedSql
 
 "@ -ForegroundColor Green

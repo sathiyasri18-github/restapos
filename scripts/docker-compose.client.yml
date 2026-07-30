@@ -1,32 +1,13 @@
 # Client deployment — pre-built images only (no source code required).
-# From repo: docker compose -f scripts/docker-compose.client.yml --project-directory scripts up -d
-# Or from scripts/: docker compose -f docker-compose.client.yml up -d
+# Project name "restapos" keeps containers unique across apps on the same Docker host.
+# SQL is NOT included — use shared-sqlserver (docker-compose.shared-sql.yml) once per host.
+#
+# From repo: docker compose -f scripts/docker-compose.client.yml -p restapos --project-directory scripts up -d
 # Load images first: .\scripts\import-docker-images.ps1
 
-services:
-  sqlserver:
-    image: mcr.microsoft.com/mssql/server:2022-latest
-    container_name: restapos-sqlserver
-    environment:
-      ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: ${RESTAPOS_MSSQL_SA_PASSWORD:-RestaPos@2024!}
-      MSSQL_PID: Express
-    ports:
-      - "${SQL_PORT:-1433}:1433"
-    volumes:
-      - sqldata:/var/opt/mssql
-    healthcheck:
-      test:
-        [
-          "CMD-SHELL",
-          "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q \"SELECT 1\" || exit 1",
-        ]
-      interval: 10s
-      timeout: 5s
-      retries: 12
-      start_period: 40s
-    restart: unless-stopped
+name: restapos
 
+services:
   resta-api:
     image: restapos/api:${RESTAPOS_VERSION:-latest}
     container_name: restapos-api
@@ -39,7 +20,7 @@ services:
       Jwt__Audience: ${JWT_AUDIENCE:-SystemService}
     ports:
       - "${API_PORT:-8081}:8080"
-    # External SQL via ConnectionStrings__DefaultConnection — do not wait on local sqlserver.
+    # Connects to shared SQL via ConnectionStrings__DefaultConnection (not a local sqlserver service).
     restart: unless-stopped
 
   resta-app:
@@ -50,6 +31,3 @@ services:
     depends_on:
       - resta-api
     restart: unless-stopped
-
-volumes:
-  sqldata:
