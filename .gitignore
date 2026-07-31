@@ -1,5 +1,4 @@
 .env
-dist/
 /resta-api/src/CustomerApi.API/bin
 /resta-api/src/CustomerApi.API/obj
 /resta-api/src/CustomerApi.Application/obj
