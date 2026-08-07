@@ -283,6 +283,72 @@ export const routes: Routes = [
         path: 'settings/security',
         loadComponent: () =>
           import('./page/settings/change-password/change-password.component').then(m => m.ChangePasswordComponent)
+      },
+      // CMS (restaurant website)
+      {
+        path: 'cms/banners',
+        loadComponent: () =>
+          import('./page/cms/banners/banners.component').then(m => m.CmsBannersComponent)
+      },
+      {
+        path: 'cms/gallery',
+        loadComponent: () =>
+          import('./page/cms/gallery/gallery.component').then(m => m.CmsGalleryComponent)
+      },
+      {
+        path: 'cms/news',
+        loadComponent: () =>
+          import('./page/cms/news/news.component').then(m => m.CmsNewsComponent)
+      },
+      {
+        path: 'cms/videos',
+        loadComponent: () =>
+          import('./page/cms/videos/videos.component').then(m => m.CmsVideosComponent)
+      },
+      {
+        path: 'cms/menu',
+        loadComponent: () =>
+          import('./page/cms/specialties/specialties.component').then(m => m.CmsSpecialtiesComponent)
+      },
+      {
+        path: 'cms/specialties',
+        redirectTo: 'cms/menu',
+        pathMatch: 'full'
+      },
+      {
+        path: 'cms/promotions',
+        loadComponent: () =>
+          import('./page/cms/promotions/promotions.component').then(m => m.CmsPromotionsComponent)
+      },
+      {
+        path: 'cms/events',
+        loadComponent: () =>
+          import('./page/cms/events/events.component').then(m => m.CmsEventsComponent)
+      },
+      {
+        path: 'cms/contact',
+        loadComponent: () =>
+          import('./page/cms/contact/contact.component').then(m => m.CmsContactComponent)
+      },
+      {
+        path: 'cms/careers',
+        loadComponent: () =>
+          import('./page/cms/careers/careers.component').then(m => m.CmsCareersComponent)
+      },
+      {
+        path: 'cms/site-menu',
+        loadComponent: () =>
+          import('./page/cms/site-menu/site-menu.component').then(m => m.CmsSiteMenuComponent)
+      },
+      {
+        path: 'cms/pages',
+        loadComponent: () =>
+          import('./page/cms/pages/pages.component').then(m => m.CmsPagesComponent)
+      },
+      {
+        path: 'cms/settings',
+        loadComponent: () =>
+          import('./page/cms/settings/settings.component').then(m => m.CmsSettingsComponent)
       }
     ]
   },

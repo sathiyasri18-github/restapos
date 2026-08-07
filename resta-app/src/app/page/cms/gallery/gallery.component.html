@@ -1,0 +1,184 @@
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<div class="cms-wrapper">
+  <div class="cms-toolbar">
+    <div class="toolbar-left">
+      <i class="pi pi-images toolbar-icon"></i>
+      <span class="toolbar-title">Gallery</span>
+      <span class="record-badge">{{ filtered.length }}</span>
+    </div>
+    <div class="toolbar-actions">
+      <button pButton type="button" icon="pi pi-plus" label="Add" class="toolbar-btn btn-add" (click)="openAdd()"></button>
+      <button pButton type="button" icon="pi pi-images" label="Images" class="toolbar-btn btn-edit" [disabled]="!selected" (click)="manageImages(selected!)"></button>
+      <button pButton type="button" icon="pi pi-pencil" label="Edit" class="toolbar-btn btn-edit" [disabled]="!selected" (click)="onEditSelected()"></button>
+      <button pButton type="button" icon="pi pi-trash" label="Delete" class="toolbar-btn btn-delete" [disabled]="!selected" (click)="onDeleteSelected($event)"></button>
+    </div>
+  </div>
+
+  <div class="search-bar">
+    <div class="search-fields">
+      <div class="search-field">
+        <label>Search</label>
+        <input pInputText [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange()" placeholder="Search albums…" />
+      </div>
+    </div>
+  </div>
+
+  <div class="table-container">
+    <p-table [value]="filtered" selectionMode="single" [(selection)]="selected" dataKey="id"
+      [scrollable]="true" scrollHeight="flex" [loading]="isLoading" [paginator]="true" [rows]="20" styleClass="cms-table">
+      <ng-template pTemplate="header">
+        <tr>
+          <th class="col-index">#</th>
+          <th pSortableColumn="title">Title <p-sortIcon field="title" /></th>
+          <th>Category</th>
+          <th>Event Date</th>
+          <th>Images</th>
+          <th class="col-actions">Actions</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-item let-rowIndex="rowIndex">
+        <tr [pSelectableRow]="item" [class.row-selected]="selected?.id === item.id" (dblclick)="manageImages(item)">
+          <td class="col-index">{{ rowIndex + 1 }}</td>
+          <td><span class="name-cell">{{ item.title }}</span></td>
+          <td class="muted-cell">{{ item.category || '—' }}</td>
+          <td class="muted-cell">{{ (item.eventDate || '').substring(0, 10) || '—' }}</td>
+          <td>{{ item.imageCount ?? 0 }}</td>
+          <td class="col-actions">
+            <div class="action-btns">
+              <button class="icon-btn edit-icon" pTooltip="Manage images" (click)="manageImages(item, $event)"><i class="pi pi-images"></i></button>
+              <button class="icon-btn edit-icon" pTooltip="Edit album" (click)="openEdit(item); $event.stopPropagation()"><i class="pi pi-pencil"></i></button>
+              <button class="icon-btn delete-icon" pTooltip="Delete album" (click)="confirmDelete(item, $event)"><i class="pi pi-trash"></i></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6">
+            <div class="empty-state">
+              <i class="pi pi-images empty-icon"></i>
+              <p class="empty-title">No albums yet</p>
+              <p class="empty-sub">Create an album, then add multiple gallery images.</p>
+              <button pButton type="button" icon="pi pi-plus" label="Add Album" class="p-button-sm" (click)="openAdd()"></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+  <div class="status-bar">
+    <span>Showing <strong>{{ filtered.length }}</strong> albums</span>
+    <span class="hint-text" style="margin-left:auto;opacity:.55;font-style:italic">Double-click a row to manage images</span>
+  </div>
+</div>
+
+<p-dialog [header]="dialogTitle" [(visible)]="dialogVisible" [modal]="true" [style]="{ width: '560px' }" styleClass="cms-dialog">
+  <div class="dialog-form">
+    <div class="form-section">
+      <div class="section-title"><i class="pi pi-folder"></i> Album</div>
+      <div class="form-grid-2">
+        <div class="form-field full-span">
+          <label>Title <span class="required">*</span></label>
+          <input pInputText [(ngModel)]="form.title" />
+          @if (formErrors.title) { <span class="field-error">{{ formErrors.title }}</span> }
+        </div>
+        <div class="form-field">
+          <label>Category</label>
+          <input pInputText [(ngModel)]="form.category" placeholder="e.g. Slideshow, Events" />
+        </div>
+        <div class="form-field">
+          <label>Event Date</label>
+          <input pInputText type="date" [(ngModel)]="form.eventDate" />
+        </div>
+        <div class="form-field full-span">
+          <label>Description</label>
+          <textarea pTextarea [(ngModel)]="form.description" rows="3"></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button pButton type="button" icon="pi pi-times" label="Cancel" class="p-button-outlined btn-cancel" (click)="dialogVisible = false"></button>
+      <button pButton type="button" icon="pi pi-check" label="Save" class="btn-ok" [loading]="isSaving" (click)="onSave()"></button>
+    </div>
+  </ng-template>
+</p-dialog>
+
+<p-dialog
+  [(visible)]="imagesDialogVisible"
+  [header]="'Images: ' + (selectedAlbum?.title || '')"
+  [modal]="true"
+  [style]="{ width: '820px' }"
+  [maximizable]="true"
+  styleClass="cms-dialog">
+  <div class="dialog-form images-dialog">
+    <div class="form-section">
+      <div class="section-title"><i class="pi pi-plus"></i> Add Image</div>
+      <div class="form-grid-2">
+        <div class="form-field">
+          <label>Title</label>
+          <input pInputText [(ngModel)]="imageForm.title" placeholder="Optional title" />
+        </div>
+        <div class="form-field">
+          <label>Sort Order</label>
+          <p-inputNumber [(ngModel)]="imageForm.sortOrder" [showButtons]="true" styleClass="w-full" />
+        </div>
+        <div class="form-field full-span" [class.has-error]="imageErrors.imageUrl">
+          <app-cms-file-upload
+            folder="gallery"
+            label="Image"
+            [required]="true"
+            [(url)]="imageForm.imageUrl" />
+          @if (imageErrors.imageUrl) { <span class="field-error">{{ imageErrors.imageUrl }}</span> }
+        </div>
+        <div class="form-field full-span">
+          <label>Caption</label>
+          <input pInputText [(ngModel)]="imageForm.caption" placeholder="Optional caption" />
+        </div>
+      </div>
+      <div class="image-actions">
+        <button pButton type="button" icon="pi pi-plus" label="Add Image" class="btn-ok" [loading]="isAddingImage" (click)="addImage()"></button>
+        <button pButton type="button" icon="pi pi-upload" label="Upload Multiple" class="p-button-outlined" [loading]="isUploadingMany" [disabled]="isUploadingMany" (click)="triggerMultiUpload()"></button>
+        <input #multiFileInput type="file" accept="image/*" multiple hidden (change)="onMultiFilesSelected($event)" />
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="section-title"><i class="pi pi-images"></i> Album Images ({{ images.length }})</div>
+      @if (isLoadingImages) {
+        <p-skeleton height="120px" />
+      } @else if (images.length === 0) {
+        <div class="empty-state compact">
+          <p class="empty-title">No images in this album</p>
+          <p class="empty-sub">Upload one image, or use Upload Multiple.</p>
+        </div>
+      } @else {
+        <div class="image-grid">
+          @for (img of images; track img.id) {
+            <div class="image-card">
+              @if (imagePreview(img.imageUrl); as preview) {
+                <img [src]="preview" [alt]="img.title" />
+              }
+              <div class="image-meta">
+                <strong>{{ img.title }}</strong>
+                <small>Order {{ img.sortOrder }}</small>
+                @if (img.caption) { <small>{{ img.caption }}</small> }
+              </div>
+              <button class="icon-btn delete-icon" pTooltip="Delete image" (click)="deleteImage(img, $event)">
+                <i class="pi pi-trash"></i>
+              </button>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button pButton type="button" icon="pi pi-times" label="Close" class="p-button-outlined btn-cancel" (click)="imagesDialogVisible = false"></button>
+    </div>
+  </ng-template>
+</p-dialog>

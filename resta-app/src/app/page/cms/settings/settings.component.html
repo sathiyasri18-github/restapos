@@ -1,0 +1,75 @@
+<p-toast position="top-right" />
+
+<div class="cms-wrapper">
+  <div class="cms-toolbar">
+    <div class="toolbar-left">
+      <i class="pi pi-cog toolbar-icon"></i>
+      <span class="toolbar-title">About / Site Settings</span>
+    </div>
+    <div class="toolbar-actions">
+      <button pButton type="button" icon="pi pi-refresh" label="Reload" class="toolbar-btn btn-edit" [disabled]="isLoading" (click)="load()"></button>
+      <button pButton type="button" icon="pi pi-check" label="Save" class="toolbar-btn btn-add" [loading]="isSaving" [disabled]="isLoading" (click)="onSave()"></button>
+    </div>
+  </div>
+
+  @if (isLoading) {
+    <div class="settings-form">
+      <p-skeleton height="120px" styleClass="mb-3" />
+      <p-skeleton height="200px" />
+    </div>
+  } @else {
+    <div class="settings-form">
+      <div class="settings-card">
+        <div class="section-title"><i class="pi pi-building"></i> Restaurant Identity</div>
+        <div class="form-grid-2">
+          <div class="form-field">
+            <label>Name</label>
+            <input pInputText [(ngModel)]="form.associationName" placeholder="Restaurant / brand name" />
+          </div>
+          <div class="form-field">
+            <label>Tagline</label>
+            <input pInputText [(ngModel)]="form.tagline" />
+          </div>
+          <div class="form-field">
+            <label>Phone</label>
+            <input pInputText [(ngModel)]="form.phone" />
+          </div>
+          <div class="form-field">
+            <label>Email</label>
+            <input pInputText [(ngModel)]="form.email" />
+          </div>
+          <div class="form-field full-span">
+            <label>Address</label>
+            <input pInputText [(ngModel)]="form.address" />
+          </div>
+          <div class="form-field full-span">
+            <label>Map Embed URL</label>
+            <input pInputText [(ngModel)]="form.mapEmbedUrl" />
+          </div>
+        </div>
+      </div>
+
+      <div class="settings-card">
+        <div class="section-title"><i class="pi pi-info-circle"></i> About</div>
+        <div class="form-grid-2">
+          <div class="form-field full-span">
+            <label>Our Story (About Content)</label>
+            <textarea pTextarea [(ngModel)]="form.aboutContent" rows="4"></textarea>
+          </div>
+          <div class="form-field">
+            <label>Vision</label>
+            <textarea pTextarea [(ngModel)]="form.vision" rows="3"></textarea>
+          </div>
+          <div class="form-field">
+            <label>Mission</label>
+            <textarea pTextarea [(ngModel)]="form.mission" rows="3"></textarea>
+          </div>
+          <div class="form-field full-span">
+            <label>Objectives</label>
+            <textarea pTextarea [(ngModel)]="form.objectives" rows="3"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+</div>

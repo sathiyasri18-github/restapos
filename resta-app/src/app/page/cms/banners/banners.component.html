@@ -1,0 +1,149 @@
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<div class="cms-wrapper">
+  <div class="cms-toolbar">
+    <div class="toolbar-left">
+      <i class="pi pi-image toolbar-icon"></i>
+      <span class="toolbar-title">Banners</span>
+      <span class="record-badge">{{ filtered.length }}</span>
+    </div>
+    <div class="toolbar-actions">
+      <button pButton type="button" icon="pi pi-plus" label="Add" class="toolbar-btn btn-add" (click)="openAdd()"></button>
+      <button pButton type="button" icon="pi pi-pencil" label="Edit" class="toolbar-btn btn-edit" [disabled]="!selected" (click)="onEditSelected()"></button>
+      <button pButton type="button" icon="pi pi-trash" label="Delete" class="toolbar-btn btn-delete" [disabled]="!selected" (click)="onDeleteSelected($event)"></button>
+    </div>
+  </div>
+
+  <div class="search-bar">
+    <div class="search-fields">
+      <div class="search-field">
+        <label for="banner-search">Search</label>
+        <input id="banner-search" pInputText type="text" [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange()" placeholder="Search banners…" />
+      </div>
+    </div>
+  </div>
+
+  <div class="table-container">
+    <p-table
+      [value]="filtered"
+      selectionMode="single"
+      [(selection)]="selected"
+      dataKey="id"
+      [scrollable]="true"
+      scrollHeight="flex"
+      [loading]="isLoading"
+      [paginator]="true"
+      [rows]="20"
+      [rowsPerPageOptions]="[10, 20, 50]"
+      styleClass="cms-table"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th class="col-index">#</th>
+          <th pSortableColumn="title">Title <p-sortIcon field="title" /></th>
+          <th>Subtitle</th>
+          <th pSortableColumn="sortOrder">Order <p-sortIcon field="sortOrder" /></th>
+          <th>Image</th>
+          <th class="col-actions">Actions</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-item let-rowIndex="rowIndex">
+        <tr [pSelectableRow]="item" [class.row-selected]="selected?.id === item.id" (dblclick)="openEdit(item)">
+          <td class="col-index">{{ rowIndex + 1 }}</td>
+          <td><span class="name-cell">{{ item.title }}</span></td>
+          <td class="muted-cell">{{ item.subtitle || '—' }}</td>
+          <td>{{ item.sortOrder }}</td>
+          <td>
+            @if (imagePreview(item.imageUrl); as preview) {
+              <img [src]="preview" alt="{{ item.title }}" class="banner-thumb" />
+            } @else {
+              <span class="muted-cell">—</span>
+            }
+          </td>
+          <td class="col-actions">
+            <div class="action-btns">
+              <button class="icon-btn edit-icon" (click)="openEdit(item); $event.stopPropagation()" pTooltip="Edit"><i class="pi pi-pencil"></i></button>
+              <button class="icon-btn delete-icon" (click)="confirmDelete(item, $event)" pTooltip="Delete"><i class="pi pi-trash"></i></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6">
+            <div class="empty-state">
+              <i class="pi pi-image empty-icon"></i>
+              <p class="empty-title">No banners yet</p>
+              <p class="empty-sub">Each banner needs a title, subtitle, and image.</p>
+              <button pButton type="button" icon="pi pi-plus" label="Add Banner" class="p-button-sm btn-add" (click)="openAdd()"></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <div class="status-bar">
+    <span>Showing <strong>{{ filtered.length }}</strong> of <strong>{{ items.length }}</strong> banners</span>
+    <span class="hint-text" style="margin-left:auto;opacity:.55;font-style:italic">Double-click a row to edit</span>
+  </div>
+</div>
+
+<p-dialog [header]="dialogTitle" [(visible)]="dialogVisible" [modal]="true" [style]="{ width: '580px' }" [draggable]="true" styleClass="cms-dialog">
+  <div class="dialog-form">
+    <div class="form-section">
+      <div class="section-title"><i class="pi pi-image"></i> Banner Information</div>
+      <div class="form-grid-2">
+        <div class="form-field full-span" [class.has-error]="formErrors.title">
+          <label>Title <span class="required">*</span></label>
+          <input pInputText [(ngModel)]="form.title" placeholder="Shown as the main slider headline" />
+          @if (formErrors.title) { <span class="field-error"><i class="pi pi-exclamation-circle"></i> {{ formErrors.title }}</span> }
+        </div>
+        <div class="form-field full-span" [class.has-error]="formErrors.subtitle">
+          <label>Subtitle <span class="required">*</span></label>
+          <input pInputText [(ngModel)]="form.subtitle" placeholder="Shown under the title on the slider" />
+          @if (formErrors.subtitle) { <span class="field-error"><i class="pi pi-exclamation-circle"></i> {{ formErrors.subtitle }}</span> }
+        </div>
+        <div class="form-field">
+          <label>Sort Order</label>
+          <p-inputNumber [(ngModel)]="form.sortOrder" [showButtons]="true" styleClass="w-full" />
+        </div>
+        <div class="form-field">
+          <label>Link URL</label>
+          <input pInputText [(ngModel)]="form.linkUrl" placeholder="Optional CTA link" />
+        </div>
+        <div class="form-field full-span" [class.has-error]="formErrors.imageUrl">
+          <label>Banner Image <span class="required">*</span></label>
+          <div class="cms-file-upload-row">
+            <input
+              pInputText
+              class="flex-1"
+              [(ngModel)]="form.imageUrl"
+              placeholder="Upload an image or paste a URL" />
+            <input #bannerFileInput type="file" accept="image/*" hidden (change)="onBannerFileSelected($event)" />
+            <button
+              pButton
+              type="button"
+              [label]="isUploading ? 'Uploading…' : 'Upload'"
+              icon="pi pi-upload"
+              class="p-button-sm"
+              [loading]="isUploading"
+              [disabled]="isUploading"
+              (click)="triggerBannerUpload()"></button>
+          </div>
+          @if (imagePreview(form.imageUrl); as preview) {
+            <img [src]="preview" alt="Banner preview" class="banner-preview" />
+          }
+          @if (formErrors.imageUrl) { <span class="field-error"><i class="pi pi-exclamation-circle"></i> {{ formErrors.imageUrl }}</span> }
+        </div>
+      </div>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button pButton type="button" icon="pi pi-times" label="Cancel" class="p-button-outlined btn-cancel" (click)="dialogVisible = false"></button>
+      <button pButton type="button" icon="pi pi-check" label="Save" class="btn-ok" [loading]="isSaving" [disabled]="isUploading" (click)="onSave()"></button>
+    </div>
+  </ng-template>
+</p-dialog>

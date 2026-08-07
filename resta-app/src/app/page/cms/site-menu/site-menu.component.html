@@ -1,0 +1,99 @@
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<div class="cms-wrapper">
+  <div class="cms-toolbar">
+    <div class="toolbar-left">
+      <i class="pi pi-bars toolbar-icon"></i>
+      <span class="toolbar-title">Site Menu</span>
+      <span class="record-badge">{{ filtered.length }}</span>
+    </div>
+    <div class="toolbar-actions">
+      <button pButton type="button" icon="pi pi-plus" label="Add" class="toolbar-btn btn-add" (click)="openAdd()"></button>
+      <button pButton type="button" icon="pi pi-pencil" label="Edit" class="toolbar-btn btn-edit" [disabled]="!selected" (click)="onEditSelected()"></button>
+      <button pButton type="button" icon="pi pi-trash" label="Delete" class="toolbar-btn btn-delete" [disabled]="!selected" (click)="onDeleteSelected($event)"></button>
+    </div>
+  </div>
+
+  <div class="search-bar">
+    <div class="search-fields">
+      <div class="search-field">
+        <label>Search</label>
+        <input pInputText [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange()" placeholder="Search menu…" />
+      </div>
+    </div>
+  </div>
+
+  <div class="table-container">
+    <p-table [value]="filtered" selectionMode="single" [(selection)]="selected" dataKey="id"
+      [scrollable]="true" scrollHeight="flex" [loading]="isLoading" [paginator]="true" [rows]="20" styleClass="cms-table">
+      <ng-template pTemplate="header">
+        <tr>
+          <th class="col-index">#</th>
+          <th pSortableColumn="title">Title <p-sortIcon field="title" /></th>
+          <th>URL</th>
+          <th>Parent</th>
+          <th>Order</th>
+          <th class="col-actions">Actions</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-item let-rowIndex="rowIndex">
+        <tr [pSelectableRow]="item" [class.row-selected]="selected?.id === item.id" (dblclick)="openEdit(item)">
+          <td class="col-index">{{ rowIndex + 1 }}</td>
+          <td><span class="name-cell">{{ item.title }}</span></td>
+          <td class="muted-cell">{{ item.url || '—' }}</td>
+          <td class="muted-cell">{{ parentLabel(item.parentId) }}</td>
+          <td>{{ item.sortOrder }}</td>
+          <td class="col-actions">
+            <div class="action-btns">
+              <button class="icon-btn edit-icon" (click)="openEdit(item); $event.stopPropagation()"><i class="pi pi-pencil"></i></button>
+              <button class="icon-btn delete-icon" (click)="confirmDelete(item, $event)"><i class="pi pi-trash"></i></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr><td colspan="6"><div class="empty-state"><i class="pi pi-bars empty-icon"></i><p class="empty-title">No menu items yet</p>
+          <button pButton type="button" icon="pi pi-plus" label="Add Item" class="p-button-sm" (click)="openAdd()"></button></div></td></tr>
+      </ng-template>
+    </p-table>
+  </div>
+  <div class="status-bar"><span>Showing <strong>{{ filtered.length }}</strong> menu items</span></div>
+</div>
+
+<p-dialog [header]="dialogTitle" [(visible)]="dialogVisible" [modal]="true" [style]="{ width: '520px' }" styleClass="cms-dialog">
+  <div class="dialog-form">
+    <div class="form-section">
+      <div class="section-title"><i class="pi pi-bars"></i> Menu Item</div>
+      <div class="form-grid-2">
+        <div class="form-field full-span">
+          <label>Title <span class="required">*</span></label>
+          <input pInputText [(ngModel)]="form.title" />
+          @if (formErrors.title) { <span class="field-error">{{ formErrors.title }}</span> }
+        </div>
+        <div class="form-field full-span">
+          <label>URL</label>
+          <input pInputText [(ngModel)]="form.url" placeholder="/about" />
+        </div>
+        <div class="form-field">
+          <label>Parent</label>
+          <p-select [options]="parentOptions" optionLabel="label" optionValue="value" [(ngModel)]="form.parentId" appendTo="body" styleClass="w-full" />
+        </div>
+        <div class="form-field">
+          <label>Sort Order</label>
+          <p-inputNumber [(ngModel)]="form.sortOrder" [showButtons]="true" styleClass="w-full" />
+        </div>
+        <div class="form-field full-span checkbox-field">
+          <p-checkbox [(ngModel)]="form.openInNewTab" [binary]="true" inputId="menu-newtab" />
+          <label for="menu-newtab">Open in new tab</label>
+        </div>
+      </div>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button pButton type="button" icon="pi pi-times" label="Cancel" class="p-button-outlined btn-cancel" (click)="dialogVisible = false"></button>
+      <button pButton type="button" icon="pi pi-check" label="Save" class="btn-ok" [loading]="isSaving" (click)="onSave()"></button>
+    </div>
+  </ng-template>
+</p-dialog>

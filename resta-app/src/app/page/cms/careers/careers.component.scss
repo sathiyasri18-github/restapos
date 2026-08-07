@@ -1,0 +1,17 @@
+@use '../cms-shared.scss';
+
+.hint {
+  margin: 0 0 1rem;
+  color: var(--text-muted, #64748b);
+  font-size: 0.9rem;
+}
+
+.hint code {
+  font-size: 0.85rem;
+}
+
+.checkbox-field {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}

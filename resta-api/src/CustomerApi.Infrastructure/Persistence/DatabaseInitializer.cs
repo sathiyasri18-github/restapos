@@ -73,11 +73,51 @@ public static class DatabaseInitializer
         var applied = (await context.Database.GetAppliedMigrationsAsync(ct)).ToList();
         if (applied.Count == 0 && await LegacySchemaExistsAsync(context, ct))
         {
-            await BaselineEfMigrationsAsync(context, logger, ct);
-            return;
+            // Baseline only migrations that already match the legacy POS schema.
+            // Leave AddCmsTables pending so MigrateAsync can create CMS tables.
+            await BaselineEfMigrationsAsync(context, logger, excludeMigrationContains: "AddCmsTables", ct);
+        }
+
+        // If a previous bad baseline marked AddCmsTables applied without creating tables,
+        // un-mark it so MigrateAsync can run the fixed CMS-only migration.
+        if (applied.Any(m => m.Contains("AddCmsTables", StringComparison.OrdinalIgnoreCase))
+            && !await CmsSchemaExistsAsync(context, ct))
+        {
+            await context.Database.ExecuteSqlRawAsync(
+                """
+                DELETE FROM [__EFMigrationsHistory]
+                WHERE [MigrationId] LIKE N'%AddCmsTables%';
+                """,
+                ct);
+            logger.LogWarning(
+                "Removed AddCmsTables from EF history because CMS tables are missing; will re-apply.");
         }
 
         await context.Database.MigrateAsync(ct);
+    }
+
+    private static async Task<bool> CmsSchemaExistsAsync(
+        ApplicationDbContext context,
+        CancellationToken ct)
+    {
+        var connection = context.Database.GetDbConnection();
+        var shouldClose = connection.State != ConnectionState.Open;
+        if (shouldClose)
+            await connection.OpenAsync(ct);
+
+        try
+        {
+            await using var command = connection.CreateCommand();
+            command.CommandText =
+                "SELECT CASE WHEN OBJECT_ID(N'dbo.[CmsBannerSlides]', N'U') IS NOT NULL THEN 1 ELSE 0 END";
+            var result = await command.ExecuteScalarAsync(ct);
+            return Convert.ToInt32(result) == 1;
+        }
+        finally
+        {
+            if (shouldClose && connection.State == ConnectionState.Open)
+                await connection.CloseAsync();
+        }
     }
 
     private static async Task<bool> LegacySchemaExistsAsync(
@@ -107,6 +147,7 @@ public static class DatabaseInitializer
     private static async Task BaselineEfMigrationsAsync(
         ApplicationDbContext context,
         ILogger logger,
+        string? excludeMigrationContains,
         CancellationToken ct)
     {
         await context.Database.ExecuteSqlRawAsync(
@@ -120,7 +161,11 @@ public static class DatabaseInitializer
             """,
             ct);
 
-        var migrations = context.Database.GetMigrations();
+        var migrations = context.Database.GetMigrations()
+            .Where(m => excludeMigrationContains is null
+                        || !m.Contains(excludeMigrationContains, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
         foreach (var migration in migrations)
         {
             await context.Database.ExecuteSqlRawAsync(
@@ -134,7 +179,7 @@ public static class DatabaseInitializer
 
         logger.LogWarning(
             "Existing database schema detected without EF migration history. Baselined {Count} migration(s).",
-            migrations.Count());
+            migrations.Count);
     }
 
     private static async Task EnsureDatabaseExistsAsync(

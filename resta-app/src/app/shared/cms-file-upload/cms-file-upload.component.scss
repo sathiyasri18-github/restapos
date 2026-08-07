@@ -1,0 +1,35 @@
+.cms-file-upload {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  width: 100%;
+}
+
+.cms-file-upload label {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.cms-file-upload .required {
+  color: #dc2626;
+}
+
+.cms-file-upload-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.cms-file-upload-row .flex-1 {
+  flex: 1;
+  min-width: 0;
+}
+
+.cms-file-preview {
+  max-width: 220px;
+  max-height: 130px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  margin-top: 0.35rem;
+}

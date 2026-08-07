@@ -1,0 +1,94 @@
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<div class="cms-wrapper">
+  <div class="cms-toolbar">
+    <div class="toolbar-left">
+      <i class="pi pi-envelope toolbar-icon"></i>
+      <span class="toolbar-title">Contact Inquiries</span>
+      <span class="record-badge">{{ filtered.length }}</span>
+    </div>
+    <div class="toolbar-actions">
+      <button pButton type="button" icon="pi pi-trash" label="Delete" class="toolbar-btn btn-delete" [disabled]="!selected" (click)="onDeleteSelected($event)"></button>
+    </div>
+  </div>
+
+  <div class="search-bar">
+    <div class="search-fields">
+      <div class="search-field">
+        <label>Search</label>
+        <input pInputText [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange()" placeholder="Name, email, subject…" />
+      </div>
+      <div class="form-field checkbox-field" style="flex-direction:row;align-items:center;gap:8px">
+        <p-checkbox [(ngModel)]="unreadOnly" [binary]="true" inputId="unread-only" (ngModelChange)="onFilterChange()" />
+        <label for="unread-only">Unread only</label>
+      </div>
+    </div>
+  </div>
+
+  <div class="table-container">
+    <p-table [value]="filtered" selectionMode="single" [(selection)]="selected" dataKey="id"
+      [scrollable]="true" scrollHeight="flex" [loading]="isLoading" [paginator]="true" [rows]="20" styleClass="cms-table">
+      <ng-template pTemplate="header">
+        <tr>
+          <th class="col-index">#</th>
+          <th pSortableColumn="name">Name <p-sortIcon field="name" /></th>
+          <th>Email</th>
+          <th>Subject</th>
+          <th>Date</th>
+          <th>Status</th>
+          <th class="col-actions">Actions</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-item let-rowIndex="rowIndex">
+        <tr [pSelectableRow]="item" [class.row-selected]="selected?.id === item.id" (dblclick)="openDetail(item)">
+          <td class="col-index">{{ rowIndex + 1 }}</td>
+          <td><span class="name-cell">{{ item.name }}</span></td>
+          <td class="muted-cell">{{ item.email }}</td>
+          <td>{{ item.subject }}</td>
+          <td class="muted-cell">{{ formatDate(item.createdAt) }}</td>
+          <td>
+            <span class="status-badge" [class.read]="item.isRead" [class.unread]="!item.isRead">
+              {{ item.isRead ? 'Read' : 'Unread' }}
+            </span>
+          </td>
+          <td class="col-actions">
+            <div class="action-btns">
+              <button class="icon-btn view-icon" (click)="openDetail(item); $event.stopPropagation()" pTooltip="View"><i class="pi pi-eye"></i></button>
+              @if (!item.isRead) {
+                <button class="icon-btn edit-icon" (click)="markRead(item, $event)" pTooltip="Mark read"><i class="pi pi-check"></i></button>
+              }
+              <button class="icon-btn delete-icon" (click)="confirmDelete(item, $event)" pTooltip="Delete"><i class="pi pi-trash"></i></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr><td colspan="7"><div class="empty-state"><i class="pi pi-envelope empty-icon"></i><p class="empty-title">No inquiries</p></div></td></tr>
+      </ng-template>
+    </p-table>
+  </div>
+  <div class="status-bar"><span>Showing <strong>{{ filtered.length }}</strong> of <strong>{{ items.length }}</strong> inquiries</span></div>
+</div>
+
+<p-dialog header="Inquiry Detail" [(visible)]="detailVisible" [modal]="true" [style]="{ width: '560px' }" styleClass="cms-dialog">
+  @if (detailItem) {
+    <div class="dialog-form">
+      <div class="form-section">
+        <div class="form-grid-2">
+          <div class="form-field"><label>Name</label><div class="name-cell">{{ detailItem.name }}</div></div>
+          <div class="form-field"><label>Email</label><div>{{ detailItem.email }}</div></div>
+          <div class="form-field"><label>Phone</label><div>{{ detailItem.phone || '—' }}</div></div>
+          <div class="form-field"><label>Date</label><div>{{ formatDate(detailItem.createdAt) }}</div></div>
+          <div class="form-field full-span"><label>Subject</label><div>{{ detailItem.subject }}</div></div>
+          <div class="form-field full-span"><label>Message</label><div class="message-preview">{{ detailItem.message }}</div></div>
+        </div>
+      </div>
+    </div>
+  }
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button pButton type="button" icon="pi pi-times" label="Close" class="p-button-outlined btn-cancel" (click)="detailVisible = false"></button>
+    </div>
+  </ng-template>
+</p-dialog>

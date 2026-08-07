@@ -1,0 +1,102 @@
+<p-toast position="top-right" />
+<p-confirmDialog />
+
+<div class="cms-wrapper">
+  <div class="cms-toolbar">
+    <div class="toolbar-left">
+      <i class="pi pi-file-edit toolbar-icon"></i>
+      <span class="toolbar-title">Pages</span>
+      <span class="record-badge">{{ filtered.length }}</span>
+    </div>
+    <div class="toolbar-actions">
+      <button pButton type="button" icon="pi pi-plus" label="Add" class="toolbar-btn btn-add" (click)="openAdd()"></button>
+      <button pButton type="button" icon="pi pi-pencil" label="Edit" class="toolbar-btn btn-edit" [disabled]="!selected" (click)="onEditSelected()"></button>
+      <button pButton type="button" icon="pi pi-trash" label="Delete" class="toolbar-btn btn-delete" [disabled]="!selected" (click)="onDeleteSelected($event)"></button>
+    </div>
+  </div>
+
+  <div class="search-bar">
+    <div class="search-fields">
+      <div class="search-field">
+        <label>Search</label>
+        <input pInputText [(ngModel)]="searchTerm" (ngModelChange)="onSearchChange()" placeholder="Search pages…" />
+      </div>
+    </div>
+  </div>
+
+  <div class="table-container">
+    <p-table [value]="filtered" selectionMode="single" [(selection)]="selected" dataKey="id"
+      [scrollable]="true" scrollHeight="flex" [loading]="isLoading" [paginator]="true" [rows]="20" styleClass="cms-table">
+      <ng-template pTemplate="header">
+        <tr>
+          <th class="col-index">#</th>
+          <th pSortableColumn="title">Title <p-sortIcon field="title" /></th>
+          <th>Slug</th>
+          <th>Status</th>
+          <th class="col-actions">Actions</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-item let-rowIndex="rowIndex">
+        <tr [pSelectableRow]="item" [class.row-selected]="selected?.id === item.id" (dblclick)="openEdit(item)">
+          <td class="col-index">{{ rowIndex + 1 }}</td>
+          <td><span class="name-cell">{{ item.title }}</span></td>
+          <td class="muted-cell">{{ item.slug }}</td>
+          <td>
+            <span class="status-badge" [class.published]="item.isPublished" [class.draft]="!item.isPublished">
+              {{ item.isPublished ? 'Published' : 'Draft' }}
+            </span>
+          </td>
+          <td class="col-actions">
+            <div class="action-btns">
+              <button class="icon-btn edit-icon" (click)="openEdit(item); $event.stopPropagation()"><i class="pi pi-pencil"></i></button>
+              <button class="icon-btn delete-icon" (click)="confirmDelete(item, $event)"><i class="pi pi-trash"></i></button>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr><td colspan="5"><div class="empty-state"><i class="pi pi-file-edit empty-icon"></i><p class="empty-title">No pages yet</p>
+          <button pButton type="button" icon="pi pi-plus" label="Add Page" class="p-button-sm" (click)="openAdd()"></button></div></td></tr>
+      </ng-template>
+    </p-table>
+  </div>
+  <div class="status-bar"><span>Showing <strong>{{ filtered.length }}</strong> pages</span></div>
+</div>
+
+<p-dialog [header]="dialogTitle" [(visible)]="dialogVisible" [modal]="true" [style]="{ width: '680px' }" styleClass="cms-dialog">
+  <div class="dialog-form">
+    <div class="form-section">
+      <div class="section-title"><i class="pi pi-file-edit"></i> Page Content</div>
+      <div class="form-grid-2">
+        <div class="form-field">
+          <label>Title <span class="required">*</span></label>
+          <input pInputText [(ngModel)]="form.title" (ngModelChange)="onTitleChange()" />
+          @if (formErrors.title) { <span class="field-error">{{ formErrors.title }}</span> }
+        </div>
+        <div class="form-field">
+          <label>Slug <span class="required">*</span></label>
+          <input pInputText [(ngModel)]="form.slug" />
+          @if (formErrors.slug) { <span class="field-error">{{ formErrors.slug }}</span> }
+        </div>
+        <div class="form-field full-span">
+          <label>Meta Description</label>
+          <input pInputText [(ngModel)]="form.metaDescription" />
+        </div>
+        <div class="form-field full-span">
+          <label>Content</label>
+          <textarea pTextarea [(ngModel)]="form.content" rows="8"></textarea>
+        </div>
+        <div class="form-field full-span checkbox-field">
+          <p-checkbox [(ngModel)]="form.isPublished" [binary]="true" inputId="page-pub" />
+          <label for="page-pub">Published</label>
+        </div>
+      </div>
+    </div>
+  </div>
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button pButton type="button" icon="pi pi-times" label="Cancel" class="p-button-outlined btn-cancel" (click)="dialogVisible = false"></button>
+      <button pButton type="button" icon="pi pi-check" label="Save" class="btn-ok" [loading]="isSaving" (click)="onSave()"></button>
+    </div>
+  </ng-template>
+</p-dialog>

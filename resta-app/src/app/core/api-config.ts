@@ -13,6 +13,12 @@ export function apiUrl(controller: string): string {
   return `${base}/api/${environment.apiVersion}/${path}`;
 }
 
+/** Build an unversioned CMS admin API URL, e.g. cmsApiUrl('banners') → …/api/admin/banners */
+export function cmsApiUrl(path: string): string {
+  const base = environment.apiBaseUrl.replace(/\/$/, '');
+  return `${base}/api/admin/${path.replace(/^\//, '')}`;
+}
+
 /** Resolve a relative upload path (e.g. uploads/products/...) to a full URL. */
 export function apiAssetUrl(path: string | null | undefined): string | null {
   if (!path?.trim()) return null;

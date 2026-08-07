@@ -1,0 +1,29 @@
+<div class="cms-file-upload">
+  <label>
+    {{ label }}
+    @if (required) {
+      <span class="required">*</span>
+    }
+  </label>
+  <div class="cms-file-upload-row">
+    <input
+      pInputText
+      class="flex-1"
+      [ngModel]="url"
+      (ngModelChange)="onUrlInput($event)"
+      placeholder="Upload an image or paste a URL" />
+    <input #fileInput type="file" [accept]="accept" (change)="onFileSelected($event)" hidden />
+    <button
+      pButton
+      type="button"
+      [label]="uploading ? 'Uploading…' : 'Upload'"
+      icon="pi pi-upload"
+      class="p-button-sm"
+      [loading]="uploading"
+      [disabled]="uploading"
+      (click)="triggerFilePicker()"></button>
+  </div>
+  @if (previewUrl && accept.includes('image')) {
+    <img [src]="previewUrl" alt="Preview" class="cms-file-preview" />
+  }
+</div>

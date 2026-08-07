@@ -1,4 +1,5 @@
 using CustomerApi.Domain.Entities;
+using CustomerApi.Domain.Entities.Cms;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -8,6 +9,20 @@ namespace CustomerApi.Infrastructure.Persistence;
 public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
     : IdentityDbContext<User, Role, int>(options)
 {
+    public DbSet<NewsArticle> NewsArticles => Set<NewsArticle>();
+    public DbSet<GalleryAlbum> GalleryAlbums => Set<GalleryAlbum>();
+    public DbSet<GalleryImage> GalleryImages => Set<GalleryImage>();
+    public DbSet<VideoItem> Videos => Set<VideoItem>();
+    public DbSet<Advertisement> Advertisements => Set<Advertisement>();
+    public DbSet<BannerSlide> BannerSlides => Set<BannerSlide>();
+    public DbSet<SiteMenuItem> SiteMenuItems => Set<SiteMenuItem>();
+    public DbSet<DynamicPage> DynamicPages => Set<DynamicPage>();
+    public DbSet<ContactInquiry> ContactInquiries => Set<ContactInquiry>();
+    public DbSet<SiteSetting> SiteSettings => Set<SiteSetting>();
+    public DbSet<VisitorStat> VisitorStats => Set<VisitorStat>();
+    public DbSet<EventItem> Events => Set<EventItem>();
+    public DbSet<ServiceOffering> ServiceOfferings => Set<ServiceOffering>();
+    public DbSet<ServiceImage> ServiceImages => Set<ServiceImage>();
     public DbSet<Account> Accounts => Set<Account>();
     public DbSet<Adjustment> Adjustments => Set<Adjustment>();
     public DbSet<Attendance> Attendances => Set<Attendance>();
@@ -80,7 +95,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         base.OnModelCreating(modelBuilder);
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
 
-        // Single RoleId FK model — skip Identity join/claim tables.
+        // Single RoleId FK model ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â skip Identity join/claim tables.
         modelBuilder.Ignore<IdentityUserRole<int>>();
         modelBuilder.Ignore<IdentityUserClaim<int>>();
         modelBuilder.Ignore<IdentityUserLogin<int>>();
@@ -88,3 +103,7 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         modelBuilder.Ignore<IdentityRoleClaim<int>>();
     }
 }
+
+
+
+

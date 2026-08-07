@@ -41,8 +41,13 @@ builder.Services.AddCors(o => o.AddPolicy("AllowAll", p =>
                 or "https://www.muruenterprises.info"
                 or "http://localhost:8080"
                 or "http://localhost:4200"
+                or "http://localhost:5014"
+                or "https://localhost:7048"
+                or "http://localhost:20156"
+                or "https://localhost:44397"
                 or "http://127.0.0.1:8080"
-                or "http://127.0.0.1:4200")
+                or "http://127.0.0.1:4200"
+                or "http://127.0.0.1:5014")
         .AllowAnyMethod()
         .AllowAnyHeader()
         .AllowCredentials()));
@@ -69,6 +74,7 @@ if (app.Environment.IsDevelopment() || app.Environment.EnvironmentName == "Docke
 
 var webRoot = app.Environment.WebRootPath ?? Path.Combine(app.Environment.ContentRootPath, "wwwroot");
 Directory.CreateDirectory(Path.Combine(webRoot, "uploads", "products"));
+Directory.CreateDirectory(Path.Combine(webRoot, "uploads", "cms"));
 app.UseStaticFiles();
 
 app.UseAuthentication();

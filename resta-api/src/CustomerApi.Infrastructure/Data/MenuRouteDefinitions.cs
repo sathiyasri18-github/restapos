@@ -22,6 +22,7 @@ public static class MenuRouteDefinitions
         new(3, null, "PURCHASE", "Purchase", null, "pi pi-shopping-cart", 20),
         new(4, null, "SALES", "Sales", null, "pi pi-chart-bar", 30),
         new(5, null, "INVENTORY", "Inventory", null, "pi pi-box", 40),
+        new(6, null, "CMS", "CMS", null, "pi pi-file-edit", 50),
         new(7, null, "ACCOUNTING", "Accounting", null, "pi pi-wallet", 60),
         new(8, null, "USERS", "Users", null, "pi pi-users", 70),
         new(9, null, "SETTINGS", "Settings", null, "pi pi-cog", 80),
@@ -58,6 +59,20 @@ public static class MenuRouteDefinitions
         new(505, 5, "PRODUCT_TRANSFER", "Product Transfer", "/product-transfer", "pi pi-arrow-right-arrow-left", 50),
         new(506, 5, "PRODUCT_WAREHOUSE", "Product Warehouse", "/product-warehouse", "pi pi-home", 60),
         new(507, 5, "PRODUCT_BATCH", "Product Batch", "/product-batch", "pi pi-box", 70),
+
+        // CMS (restaurant website)
+        new(601, 6, "CMS_BANNERS", "Banners", "/cms/banners", "pi pi-image", 10),
+        new(602, 6, "CMS_GALLERY", "Gallery", "/cms/gallery", "pi pi-images", 20),
+        new(603, 6, "CMS_NEWS", "News", "/cms/news", "pi pi-file", 30),
+        new(604, 6, "CMS_VIDEOS", "Video Gallery", "/cms/videos", "pi pi-video", 40),
+        new(605, 6, "CMS_MENU", "Menu", "/cms/menu", "pi pi-book", 50),
+        new(606, 6, "CMS_PROMOTIONS", "Promotions", "/cms/promotions", "pi pi-megaphone", 60),
+        new(607, 6, "CMS_EVENTS", "Events / Private Dining", "/cms/events", "pi pi-calendar", 70),
+        new(608, 6, "CMS_CONTACT", "Contact Inquiries", "/cms/contact", "pi pi-envelope", 80),
+        new(612, 6, "CMS_CAREERS", "Careers", "/cms/careers", "pi pi-briefcase", 85),
+        new(609, 6, "CMS_SITE_MENU", "Site Menu", "/cms/site-menu", "pi pi-bars", 90),
+        new(610, 6, "CMS_PAGES", "Pages", "/cms/pages", "pi pi-file-edit", 100),
+        new(611, 6, "CMS_SETTINGS", "About / Site Settings", "/cms/settings", "pi pi-cog", 110),
 
         // Accounting
         new(705, 7, "EXPENSE", "Expense", "/expense", "pi pi-credit-card", 10),

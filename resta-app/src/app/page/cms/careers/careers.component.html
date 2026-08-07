@@ -1,0 +1,50 @@
+<p-toast position="top-right" />
+
+<div class="cms-wrapper">
+  <div class="cms-toolbar">
+    <div class="toolbar-left">
+      <i class="pi pi-briefcase toolbar-icon"></i>
+      <span class="toolbar-title">Careers</span>
+    </div>
+    <div class="toolbar-actions">
+      <button pButton type="button" icon="pi pi-refresh" label="Reload" class="toolbar-btn btn-edit" [disabled]="isLoading" (click)="load()"></button>
+      <button pButton type="button" icon="pi pi-check" label="Save" class="toolbar-btn btn-add" [loading]="isSaving" [disabled]="isLoading" (click)="onSave()"></button>
+    </div>
+  </div>
+
+  @if (isLoading) {
+    <div class="settings-form">
+      <p-skeleton height="120px" styleClass="mb-3" />
+      <p-skeleton height="240px" />
+    </div>
+  } @else {
+    <div class="settings-form">
+      <div class="settings-card">
+        <div class="section-title"><i class="pi pi-file-edit"></i> Public Careers Page</div>
+        <p class="hint">This content is shown on the restaurant site at <code>/careers</code>.</p>
+        <div class="form-grid-2">
+          <div class="form-field">
+            <label>Title</label>
+            <input pInputText [(ngModel)]="form.title" />
+          </div>
+          <div class="form-field">
+            <label>Slug</label>
+            <input pInputText [ngModel]="form.slug" disabled />
+          </div>
+        </div>
+        <div class="form-field">
+          <label>Meta Description</label>
+          <input pInputText [(ngModel)]="form.metaDescription" />
+        </div>
+        <div class="form-field">
+          <label>Content (HTML allowed)</label>
+          <textarea pTextarea [(ngModel)]="form.content" rows="14"></textarea>
+        </div>
+        <div class="form-field checkbox-field">
+          <p-checkbox [(ngModel)]="form.isPublished" [binary]="true" inputId="careersPublished"></p-checkbox>
+          <label for="careersPublished">Published</label>
+        </div>
+      </div>
+    </div>
+  }
+</div>

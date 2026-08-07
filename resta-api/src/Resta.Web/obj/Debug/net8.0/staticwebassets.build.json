@@ -1,0 +1,846 @@
+{
+  "Version": 1,
+  "Hash": "K4Y0RJXGTsjcsHewXdfyHkMmYl7ob5Iew4R4x+5FNdE=",
+  "Source": "Resta.Web",
+  "BasePath": "_content/Resta.Web",
+  "Mode": "Default",
+  "ManifestType": "Build",
+  "ReferencedProjectsConfiguration": [],
+  "DiscoveryPatterns": [
+    {
+      "Name": "Resta.Web\\wwwroot",
+      "Source": "Resta.Web",
+      "ContentRoot": "C:\\Development\\working folder\\restapos\\resta-api\\src\\Resta.Web\\wwwroot\\",
+      "BasePath": "_content/Resta.Web",
+      "Pattern": "**"
+    }
+  ],
+  "Assets": [
+    {
+      "Identity": "C:\\Development\\working folder\\restapos\\resta-api\\src\\Resta.Web\\obj\\Debug\\net8.0\\scopedcss\\bundle\\Resta.Web.styles.css",
+      "SourceId": "Resta.Web",
+      "SourceType": "Computed",
+      "ContentRoot": "C:\\Development\\working folder\\restapos\\resta-api\\src\\Resta.Web\\obj\\Debug\\net8.0\\scopedcss\\bundle\\",
+      "BasePath": "_content/Resta.Web",
+      "RelativePath": "Resta.Web#[.{fingerprint}]?.styles.css",
+      "AssetKind": "All",
+      "AssetMode": "CurrentProject",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "ScopedCss",
+      "AssetTraitValue": "ApplicationBundle",
+      "Fingerprint": "j4oqscn1zu",
+      "Integrity": "o/ijTAucqrtLjJnwBPzQnAe8O5+2j44L25kjc+SAxuk=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "C:\\Development\\working folder\\restapos\\resta-api\\src\\Resta.Web\\obj\\Debug\\net8.0\\scopedcss\\bundle\\Resta.Web.styles.css"
+    },
+    {
+      "Identity": "C:\\Development\\working folder\\restapos\\resta-api\\src\\Resta.Web\\obj\\Debug\\net8.0\\scopedcss\\projectbundle\\Resta.Web.bundle.scp.css",
+      "SourceId": "Resta.Web",
+      "SourceType": "Computed",
+      "ContentRoot": "C:\\Development\\working folder\\restapos\\resta-api\\src\\Resta.Web\\obj\\Debug\\net8.0\\scopedcss\\projectbundle\\",
+      "BasePath": "_content/Resta.Web",
+      "RelativePath": "Resta.Web#[.{fingerprint}]!.bundle.scp.css",
+      "AssetKind": "All",
+      "AssetMode": "Reference",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "ScopedCss",
+      "AssetTraitValue": "ProjectBundle",
+      "Fingerprint": "j4oqscn1zu",
+      "Integrity": "o/ijTAucqrtLjJnwBPzQnAe8O5+2j44L25kjc+SAxuk=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "C:\\Development\\working folder\\restapos\\resta-api\\src\\Resta.Web\\obj\\Debug\\net8.0\\scopedcss\\projectbundle\\Resta.Web.bundle.scp.css"
+    },
+    {
+      "Identity": "C:\\Development\\working folder\\restapos\\resta-api\\src\\Resta.Web\\wwwroot\\app.css",
+      "SourceId": "Resta.Web",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Development\\working folder\\restapos\\resta-api\\src\\Resta.Web\\wwwroot\\",
+      "BasePath": "_content/Resta.Web",
+      "RelativePath": "app#[.{fingerprint}]?.css",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "kmqqut6j2j",
+      "Integrity": "TJtPDoe1xBtvFPfYo+tpuLtT+7HIfbDULqrH4bdXcH8=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\app.css"
+    },
+    {
+      "Identity": "C:\\Development\\working folder\\restapos\\resta-api\\src\\Resta.Web\\wwwroot\\css\\cookieConsent.css",
+      "SourceId": "Resta.Web",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Development\\working folder\\restapos\\resta-api\\src\\Resta.Web\\wwwroot\\",
+      "BasePath": "_content/Resta.Web",
+      "RelativePath": "css/cookieConsent#[.{fingerprint}]?.css",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "kq28bd3g76",
+      "Integrity": "3C4a/Dwlngt0qH3MvaU2f67iOeD5EZMhsG7/LwZy3gQ=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\css\\cookieConsent.css"
+    },
+    {
+      "Identity": "C:\\Development\\working folder\\restapos\\resta-api\\src\\Resta.Web\\wwwroot\\images\\.gitkeep",
+      "SourceId": "Resta.Web",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Development\\working folder\\restapos\\resta-api\\src\\Resta.Web\\wwwroot\\",
+      "BasePath": "_content/Resta.Web",
+      "RelativePath": "images/#[.{fingerprint}]?.gitkeep",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "5ipweew5fc",
+      "Integrity": "47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\images\\.gitkeep"
+    },
+    {
+      "Identity": "C:\\Development\\working folder\\restapos\\resta-api\\src\\Resta.Web\\wwwroot\\js\\cookieConsent.js",
+      "SourceId": "Resta.Web",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Development\\working folder\\restapos\\resta-api\\src\\Resta.Web\\wwwroot\\",
+      "BasePath": "_content/Resta.Web",
+      "RelativePath": "js/cookieConsent#[.{fingerprint}]?.js",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "dibqrq9f8r",
+      "Integrity": "xa/cMLL6de9BN22mrreRvF5Mc6IZzsbZy0g7PJCPo5Y=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\js\\cookieConsent.js"
+    },
+    {
+      "Identity": "C:\\Development\\working folder\\restapos\\resta-api\\src\\Resta.Web\\wwwroot\\js\\siteNav.js",
+      "SourceId": "Resta.Web",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Development\\working folder\\restapos\\resta-api\\src\\Resta.Web\\wwwroot\\",
+      "BasePath": "_content/Resta.Web",
+      "RelativePath": "js/siteNav#[.{fingerprint}]?.js",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "zavrw1ytrs",
+      "Integrity": "xQRlQuXPKp369445roYVK59RPxdeRsnPay2Z8PgbV4s=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\js\\siteNav.js"
+    },
+    {
+      "Identity": "C:\\Development\\working folder\\restapos\\resta-api\\src\\Resta.Web\\wwwroot\\robots.txt",
+      "SourceId": "Resta.Web",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Development\\working folder\\restapos\\resta-api\\src\\Resta.Web\\wwwroot\\",
+      "BasePath": "_content/Resta.Web",
+      "RelativePath": "robots#[.{fingerprint}]?.txt",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "Fingerprint": "5ccjyjdn01",
+      "Integrity": "NeNemCWkwS5oY7MbGM9HoAjQaXaPu0bHqaJDc0AXB54=",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\robots.txt"
+    }
+  ],
+  "Endpoints": [
+    {
+      "Route": "app.css",
+      "AssetFile": "C:\\Development\\working folder\\restapos\\resta-api\\src\\Resta.Web\\wwwroot\\app.css",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "21698"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"TJtPDoe1xBtvFPfYo+tpuLtT+7HIfbDULqrH4bdXcH8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 31 Jul 2026 12:09:37 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-TJtPDoe1xBtvFPfYo+tpuLtT+7HIfbDULqrH4bdXcH8="
+        }
+      ]
+    },
+    {
+      "Route": "app.kmqqut6j2j.css",
+      "AssetFile": "C:\\Development\\working folder\\restapos\\resta-api\\src\\Resta.Web\\wwwroot\\app.css",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "21698"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"TJtPDoe1xBtvFPfYo+tpuLtT+7HIfbDULqrH4bdXcH8=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 31 Jul 2026 12:09:37 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "kmqqut6j2j"
+        },
+        {
+          "Name": "label",
+          "Value": "app.css"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-TJtPDoe1xBtvFPfYo+tpuLtT+7HIfbDULqrH4bdXcH8="
+        }
+      ]
+    },
+    {
+      "Route": "css/cookieConsent.css",
+      "AssetFile": "C:\\Development\\working folder\\restapos\\resta-api\\src\\Resta.Web\\wwwroot\\css\\cookieConsent.css",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "6245"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"3C4a/Dwlngt0qH3MvaU2f67iOeD5EZMhsG7/LwZy3gQ=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 31 Jul 2026 12:11:25 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-3C4a/Dwlngt0qH3MvaU2f67iOeD5EZMhsG7/LwZy3gQ="
+        }
+      ]
+    },
+    {
+      "Route": "css/cookieConsent.kq28bd3g76.css",
+      "AssetFile": "C:\\Development\\working folder\\restapos\\resta-api\\src\\Resta.Web\\wwwroot\\css\\cookieConsent.css",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "6245"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"3C4a/Dwlngt0qH3MvaU2f67iOeD5EZMhsG7/LwZy3gQ=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 31 Jul 2026 12:11:25 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "kq28bd3g76"
+        },
+        {
+          "Name": "label",
+          "Value": "css/cookieConsent.css"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-3C4a/Dwlngt0qH3MvaU2f67iOeD5EZMhsG7/LwZy3gQ="
+        }
+      ]
+    },
+    {
+      "Route": "images/.5ipweew5fc.gitkeep",
+      "AssetFile": "C:\\Development\\working folder\\restapos\\resta-api\\src\\Resta.Web\\wwwroot\\images\\.gitkeep",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "0"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/octet-stream"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 12 Jun 2026 20:39:22 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "5ipweew5fc"
+        },
+        {
+          "Name": "label",
+          "Value": "images/.gitkeep"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU="
+        }
+      ]
+    },
+    {
+      "Route": "images/.gitkeep",
+      "AssetFile": "C:\\Development\\working folder\\restapos\\resta-api\\src\\Resta.Web\\wwwroot\\images\\.gitkeep",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "0"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "application/octet-stream"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 12 Jun 2026 20:39:22 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-47DEQpj8HBSa+/TImW+5JCeuQeRkm5NMpJWZG3hSuFU="
+        }
+      ]
+    },
+    {
+      "Route": "js/cookieConsent.dibqrq9f8r.js",
+      "AssetFile": "C:\\Development\\working folder\\restapos\\resta-api\\src\\Resta.Web\\wwwroot\\js\\cookieConsent.js",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "12058"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/javascript"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"xa/cMLL6de9BN22mrreRvF5Mc6IZzsbZy0g7PJCPo5Y=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 31 Jul 2026 12:11:25 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "dibqrq9f8r"
+        },
+        {
+          "Name": "label",
+          "Value": "js/cookieConsent.js"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-xa/cMLL6de9BN22mrreRvF5Mc6IZzsbZy0g7PJCPo5Y="
+        }
+      ]
+    },
+    {
+      "Route": "js/cookieConsent.js",
+      "AssetFile": "C:\\Development\\working folder\\restapos\\resta-api\\src\\Resta.Web\\wwwroot\\js\\cookieConsent.js",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "12058"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/javascript"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"xa/cMLL6de9BN22mrreRvF5Mc6IZzsbZy0g7PJCPo5Y=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 31 Jul 2026 12:11:25 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-xa/cMLL6de9BN22mrreRvF5Mc6IZzsbZy0g7PJCPo5Y="
+        }
+      ]
+    },
+    {
+      "Route": "js/siteNav.js",
+      "AssetFile": "C:\\Development\\working folder\\restapos\\resta-api\\src\\Resta.Web\\wwwroot\\js\\siteNav.js",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "508"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/javascript"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"xQRlQuXPKp369445roYVK59RPxdeRsnPay2Z8PgbV4s=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Mon, 15 Jun 2026 17:12:07 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-xQRlQuXPKp369445roYVK59RPxdeRsnPay2Z8PgbV4s="
+        }
+      ]
+    },
+    {
+      "Route": "js/siteNav.zavrw1ytrs.js",
+      "AssetFile": "C:\\Development\\working folder\\restapos\\resta-api\\src\\Resta.Web\\wwwroot\\js\\siteNav.js",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "508"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/javascript"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"xQRlQuXPKp369445roYVK59RPxdeRsnPay2Z8PgbV4s=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Mon, 15 Jun 2026 17:12:07 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "zavrw1ytrs"
+        },
+        {
+          "Name": "label",
+          "Value": "js/siteNav.js"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-xQRlQuXPKp369445roYVK59RPxdeRsnPay2Z8PgbV4s="
+        }
+      ]
+    },
+    {
+      "Route": "Resta.Web.bundle.scp.css",
+      "AssetFile": "C:\\Development\\working folder\\restapos\\resta-api\\src\\Resta.Web\\obj\\Debug\\net8.0\\scopedcss\\projectbundle\\Resta.Web.bundle.scp.css",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "500"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"o/ijTAucqrtLjJnwBPzQnAe8O5+2j44L25kjc+SAxuk=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 31 Jul 2026 12:12:13 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-o/ijTAucqrtLjJnwBPzQnAe8O5+2j44L25kjc+SAxuk="
+        }
+      ]
+    },
+    {
+      "Route": "Resta.Web.j4oqscn1zu.bundle.scp.css",
+      "AssetFile": "C:\\Development\\working folder\\restapos\\resta-api\\src\\Resta.Web\\obj\\Debug\\net8.0\\scopedcss\\projectbundle\\Resta.Web.bundle.scp.css",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "500"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"o/ijTAucqrtLjJnwBPzQnAe8O5+2j44L25kjc+SAxuk=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 31 Jul 2026 12:12:13 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "j4oqscn1zu"
+        },
+        {
+          "Name": "label",
+          "Value": "Resta.Web.bundle.scp.css"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-o/ijTAucqrtLjJnwBPzQnAe8O5+2j44L25kjc+SAxuk="
+        }
+      ]
+    },
+    {
+      "Route": "Resta.Web.j4oqscn1zu.styles.css",
+      "AssetFile": "C:\\Development\\working folder\\restapos\\resta-api\\src\\Resta.Web\\obj\\Debug\\net8.0\\scopedcss\\bundle\\Resta.Web.styles.css",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "500"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"o/ijTAucqrtLjJnwBPzQnAe8O5+2j44L25kjc+SAxuk=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 31 Jul 2026 12:12:13 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "j4oqscn1zu"
+        },
+        {
+          "Name": "label",
+          "Value": "Resta.Web.styles.css"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-o/ijTAucqrtLjJnwBPzQnAe8O5+2j44L25kjc+SAxuk="
+        }
+      ]
+    },
+    {
+      "Route": "Resta.Web.styles.css",
+      "AssetFile": "C:\\Development\\working folder\\restapos\\resta-api\\src\\Resta.Web\\obj\\Debug\\net8.0\\scopedcss\\bundle\\Resta.Web.styles.css",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "500"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/css"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"o/ijTAucqrtLjJnwBPzQnAe8O5+2j44L25kjc+SAxuk=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 31 Jul 2026 12:12:13 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-o/ijTAucqrtLjJnwBPzQnAe8O5+2j44L25kjc+SAxuk="
+        }
+      ]
+    },
+    {
+      "Route": "robots.5ccjyjdn01.txt",
+      "AssetFile": "C:\\Development\\working folder\\restapos\\resta-api\\src\\Resta.Web\\wwwroot\\robots.txt",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "162"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/plain"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"NeNemCWkwS5oY7MbGM9HoAjQaXaPu0bHqaJDc0AXB54=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 31 Jul 2026 12:10:57 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "max-age=31536000, immutable"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "fingerprint",
+          "Value": "5ccjyjdn01"
+        },
+        {
+          "Name": "label",
+          "Value": "robots.txt"
+        },
+        {
+          "Name": "integrity",
+          "Value": "sha256-NeNemCWkwS5oY7MbGM9HoAjQaXaPu0bHqaJDc0AXB54="
+        }
+      ]
+    },
+    {
+      "Route": "robots.txt",
+      "AssetFile": "C:\\Development\\working folder\\restapos\\resta-api\\src\\Resta.Web\\wwwroot\\robots.txt",
+      "Selectors": [],
+      "ResponseHeaders": [
+        {
+          "Name": "Accept-Ranges",
+          "Value": "bytes"
+        },
+        {
+          "Name": "Content-Length",
+          "Value": "162"
+        },
+        {
+          "Name": "Content-Type",
+          "Value": "text/plain"
+        },
+        {
+          "Name": "ETag",
+          "Value": "\"NeNemCWkwS5oY7MbGM9HoAjQaXaPu0bHqaJDc0AXB54=\""
+        },
+        {
+          "Name": "Last-Modified",
+          "Value": "Fri, 31 Jul 2026 12:10:57 GMT"
+        },
+        {
+          "Name": "Cache-Control",
+          "Value": "no-cache"
+        }
+      ],
+      "EndpointProperties": [
+        {
+          "Name": "integrity",
+          "Value": "sha256-NeNemCWkwS5oY7MbGM9HoAjQaXaPu0bHqaJDc0AXB54="
+        }
+      ]
+    }
+  ]
+}

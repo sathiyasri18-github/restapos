@@ -14,6 +14,7 @@ public static class DatabaseSeeder
         {
             logger.LogInformation("Database already seeded.");
             await EnsureMenusSeededAsync(context, logger, ct);
+            await EnsureCmsSiteContentAsync(context, logger, ct);
             return;
         }
 
@@ -71,6 +72,7 @@ public static class DatabaseSeeder
         logger.LogInformation("Database seeding completed.");
 
         await SeedMenusAsync(context, logger, ct);
+        await EnsureCmsSiteContentAsync(context, logger, ct);
     }
 
     private static async Task EnsureMenusSeededAsync(
@@ -84,6 +86,53 @@ public static class DatabaseSeeder
     private static async Task SeedMenusAsync(ApplicationDbContext context, ILogger logger, CancellationToken ct)
     {
         await MenuRouteSync.SyncAsync(context, logger, ct);
+    }
+
+    private static async Task EnsureCmsSiteContentAsync(
+        ApplicationDbContext context,
+        ILogger logger,
+        CancellationToken ct)
+    {
+        if (!await context.SiteMenuItems.AnyAsync(ct))
+        {
+            var menus = new[]
+            {
+                new Domain.Entities.Cms.SiteMenuItem { Title = "About Us / Our Story", Url = "/about", SortOrder = 10, IsActive = true },
+                new Domain.Entities.Cms.SiteMenuItem { Title = "Gallery", Url = "/gallery", SortOrder = 20, IsActive = true },
+                new Domain.Entities.Cms.SiteMenuItem { Title = "Events / Private Dining", Url = "/events", SortOrder = 30, IsActive = true },
+                new Domain.Entities.Cms.SiteMenuItem { Title = "Careers", Url = "/careers", SortOrder = 40, IsActive = true },
+                new Domain.Entities.Cms.SiteMenuItem { Title = "Menu", Url = "/menu", SortOrder = 50, IsActive = true },
+                new Domain.Entities.Cms.SiteMenuItem { Title = "Video Gallery", Url = "/videos", SortOrder = 60, IsActive = true },
+            };
+            context.SiteMenuItems.AddRange(menus);
+            await context.SaveChangesAsync(ct);
+            logger.LogInformation("Seeded default CMS site menu items.");
+        }
+
+        if (!await context.DynamicPages.AnyAsync(x => x.Slug == "careers", ct))
+        {
+            context.DynamicPages.Add(new Domain.Entities.Cms.DynamicPage
+            {
+                Title = "Careers",
+                Slug = "careers",
+                Content = """
+                    <h2>Join the Resta Team</h2>
+                    <p>We are looking for passionate people who love hospitality — from the kitchen to the dining room.</p>
+                    <h3>Open Roles</h3>
+                    <ul>
+                      <li>Line Cook</li>
+                      <li>Server / Waitstaff</li>
+                      <li>Host / Hostess</li>
+                    </ul>
+                    <p>Send your resume and a short note about yourself via our <a href="/contact">Contact</a> page.</p>
+                    """,
+                MetaDescription = "Career opportunities at Resta restaurant",
+                IsPublished = true,
+                IsActive = true
+            });
+            await context.SaveChangesAsync(ct);
+            logger.LogInformation("Seeded default Careers CMS page.");
+        }
     }
 
     private static async Task ClearAllTablesAsync(ApplicationDbContext context, CancellationToken ct)
