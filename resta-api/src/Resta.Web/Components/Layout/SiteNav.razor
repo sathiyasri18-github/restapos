@@ -1,0 +1,33 @@
+<div class="site-nav">
+    <input type="checkbox" id="site-nav-toggle" class="site-nav-check" aria-hidden="true" tabindex="-1" />
+    <label for="site-nav-toggle" class="nav-toggle" aria-label="Toggle navigation">&#9776;</label>
+    <nav class="main-nav">
+        @foreach (var item in Items)
+        {
+            @if (item.Children?.Count > 0)
+            {
+                <details class="nav-dropdown">
+                    <summary class="nav-dropdown-label">@item.Title</summary>
+                    <div class="nav-dropdown-menu">
+                        @foreach (var child in item.Children)
+                        {
+                            <a href="@child.Url"
+                               target="@(child.OpenInNewTab ? "_blank" : "_self")"
+                               rel="@(child.OpenInNewTab ? "noopener noreferrer" : null)">@child.Title</a>
+                        }
+                    </div>
+                </details>
+            }
+            else if (!string.IsNullOrEmpty(item.Url))
+            {
+                <a href="@item.Url"
+                   target="@(item.OpenInNewTab ? "_blank" : "_self")"
+                   rel="@(item.OpenInNewTab ? "noopener noreferrer" : null)">@item.Title</a>
+            }
+        }
+    </nav>
+</div>
+
+@code {
+    [Parameter] public IReadOnlyList<MenuItemDto> Items { get; set; } = [];
+}

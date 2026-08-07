@@ -1,0 +1,55 @@
+@page "/videos"
+@page "/video-gallery"
+@inject ApiService Api
+
+<SeoHead Title="Video Gallery"
+         Description="Watch Resta videos — kitchen moments, events, and dining experiences."
+         Keywords="Resta videos, restaurant videos, kitchen, events"
+         CanonicalPath="/videos" />
+
+<div class="page-header">
+    <div class="container">
+        <h1>Video Gallery</h1>
+        <p>Kitchen moments, events, and dining experiences</p>
+    </div>
+</div>
+
+<section class="section">
+    <div class="container video-grid">
+        @foreach (var video in _videos ?? [])
+        {
+            <div class="video-card">
+                @if (video.Source == VideoSource.YouTube && !string.IsNullOrEmpty(video.YouTubeId))
+                {
+                    <div class="video-embed">
+                        <iframe src="https://www.youtube.com/embed/@video.YouTubeId" title="@video.Title" allowfullscreen loading="lazy"></iframe>
+                    </div>
+                }
+                else
+                {
+                    <div class="video-thumb" style="background-image: url('@Media.Resolve(video.ThumbnailUrl ?? "/images/video-placeholder.jpg")')">
+                        @if (!string.IsNullOrEmpty(video.VideoUrl))
+                        {
+                            <a href="@Media.Resolve(video.VideoUrl)" target="_blank" class="play-btn">▶</a>
+                        }
+                    </div>
+                }
+                <h3>@video.Title</h3>
+                <p>@video.Description</p>
+                @if (!string.IsNullOrEmpty(video.Category))
+                {
+                    <span class="badge">@video.Category</span>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+@code {
+    private List<VideoDto>? _videos;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _videos = await Api.GetAsync<List<VideoDto>>("api/public/videos");
+    }
+}

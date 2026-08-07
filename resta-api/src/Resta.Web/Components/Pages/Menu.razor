@@ -1,0 +1,142 @@
+@page "/menu"
+@page "/menu/{Slug}"
+@page "/services"
+@page "/services/{Slug}"
+@inject ApiService Api
+
+@if (!string.IsNullOrEmpty(Slug) && _detail != null)
+{
+    <SeoHead Title="@(_detail.MetaTitle ?? _detail.Title)"
+             Description="@_detail.MetaDescription"
+             Keywords="@_detail.MetaKeywords"
+             Image="@(!string.IsNullOrEmpty(_detail.CoverImageUrl) ? Media.Resolve(_detail.CoverImageUrl) : null)"
+             CanonicalPath="@($"/menu/{_detail.Slug}")" />
+
+    <div class="page-header">
+        <div class="container">
+            <a href="/menu" class="back-link">← Full Menu</a>
+            <h1>@_detail.Title</h1>
+            @if (!string.IsNullOrEmpty(_detail.Subtitle))
+            {
+                <p>@_detail.Subtitle</p>
+            }
+        </div>
+    </div>
+
+    <section class="section">
+        <div class="container content-page">
+            @if (!string.IsNullOrEmpty(_detail.CoverImageUrl))
+            {
+                <img src="@Media.Resolve(_detail.CoverImageUrl)" alt="@_detail.Title" class="article-image" />
+            }
+            <div class="article-content">
+                @((MarkupString)_detail.Content)
+            </div>
+
+            @if (_detail.Images.Any())
+            {
+                <h2 class="section-title" style="margin-top: 3rem;">Photos</h2>
+                <div class="gallery-grid">
+                    @foreach (var img in _detail.Images)
+                    {
+                        <div class="gallery-item">
+                            <img src="@Media.Resolve(img.ImageUrl)" alt="@img.Title" loading="lazy" />
+                            @if (!string.IsNullOrEmpty(img.Caption))
+                            {
+                                <span>@img.Caption</span>
+                            }
+                            else
+                            {
+                                <span>@img.Title</span>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+
+            <div class="text-center mt-4">
+                <a href="/contact" class="btn btn-primary">Make a Reservation</a>
+                <a href="/events" class="btn btn-outline" style="margin-left: 1rem;">Private Dining</a>
+            </div>
+        </div>
+    </section>
+}
+else if (!string.IsNullOrEmpty(Slug))
+{
+    <div class="section"><div class="container"><p>Menu item not found.</p></div></div>
+}
+else
+{
+    <SeoHead Title="Menu"
+             Description="Explore Resta's menu — seasonal dishes, chef favorites, and signature plates."
+             Keywords="Resta menu, restaurant menu, seasonal dishes, chef favorites"
+             CanonicalPath="/menu" />
+
+    <div class="page-header">
+        <div class="container">
+            <h1>Menu</h1>
+            <p>Seasonal dishes and signature favorites from our kitchen</p>
+        </div>
+    </div>
+
+    <section class="section">
+        <div class="container">
+            @if (_loading)
+            {
+                <p class="loading">Loading menu...</p>
+            }
+            else if (_items.Count == 0)
+            {
+                <p class="loading">Menu items will appear here once published in the CMS.</p>
+            }
+            else
+            {
+                <div class="card-grid">
+                    @foreach (var item in _items)
+                    {
+                        <article class="service-card">
+                            <a href="/menu/@item.Slug" class="service-card-link">
+                                <div class="service-card-img" style="background-image: url('@Media.Resolve(item.CoverImageUrl ?? "/images/news-placeholder.jpg")')">
+                                    @if (item.IsFeatured)
+                                    {
+                                        <span class="service-badge">Chef's Pick</span>
+                                    }
+                                </div>
+                                <div class="service-card-body">
+                                    <h3>@item.Title</h3>
+                                    @if (!string.IsNullOrEmpty(item.Subtitle))
+                                    {
+                                        <p>@item.Subtitle</p>
+                                    }
+                                    <small>@item.ImageCount gallery images</small>
+                                </div>
+                            </a>
+                        </article>
+                    }
+                </div>
+            }
+        </div>
+    </section>
+}
+
+@code {
+    [Parameter] public string? Slug { get; set; }
+
+    private List<ServiceDto> _items = [];
+    private ServiceDetailDto? _detail;
+    private bool _loading = true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        _loading = true;
+        if (!string.IsNullOrEmpty(Slug))
+        {
+            _detail = await Api.GetAsync<ServiceDetailDto>($"api/public/services/{Slug}");
+        }
+        else
+        {
+            _items = (await Api.GetAsync<List<ServiceDto>>("api/public/services")) ?? [];
+        }
+        _loading = false;
+    }
+}

@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+Disallow: /privacy
+Disallow: /privacy-notice
+Disallow: /cookies
+Disallow: /cookie-notice
+
+Sitemap: https://resta.com/sitemap.xml

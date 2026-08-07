@@ -1,0 +1,51 @@
+@page "/cookies"
+@page "/cookie-notice"
+
+<SeoHead Title="Cookies Notice" CanonicalPath="/cookies" NoIndex="true" />
+<HeadContent>
+    <meta name="description" content="Resta cookies, mobile IDs, and other technologies notice." />
+</HeadContent>
+
+<div class="page-header">
+    <div class="container">
+        <h1>Cookies, Mobile IDs, and Other Technologies Notice</h1>
+        <p>How we use cookies and similar technologies on our website</p>
+    </div>
+</div>
+
+<section class="section">
+    <div class="container content-page legal-content">
+        <p><em>Last updated: @DateTime.Now.ToString("MMMM yyyy")</em></p>
+
+        <h2>What Are Technologies?</h2>
+        <p>
+            We use cookies, mobile IDs, pixels, and similar technologies (collectively, &ldquo;Technologies&rdquo;) to store or retrieve information on your browser or device.
+            Technologies help us operate the Website, understand usage, and deliver relevant content.
+        </p>
+
+        <h2>Categories of Technologies We Use</h2>
+
+        <h3>Essential Technologies</h3>
+        <p>Required for core site functionality, including security, network management, and accessibility. These cannot be disabled.</p>
+
+        <h3>Performance and Analytics Technologies</h3>
+        <p>Help us measure visitor traffic and page views so we can improve site performance. Data is aggregated and used for statistical purposes.</p>
+
+        <h3>Functional Technologies</h3>
+        <p>Enable enhanced features such as remembering preferences and embedded media playback.</p>
+
+        <h3>Targeting Technologies</h3>
+        <p>May be used to deliver relevant advertising and measure campaign effectiveness across websites.</p>
+
+        <h2>Managing Your Preferences</h2>
+        <p>
+            When you first visit our Website, you will see a cookie banner allowing you to accept all, reject all, or customize your choices.
+            You can change your preferences at any time by clicking
+            <button type="button" class="cookie-inline-link" onclick="restaCookieConsent.notifyOpenSettings()">Cookie Settings</button>
+            in the site footer.
+        </p>
+
+        <h2>More Information</h2>
+        <p>See our <a href="/privacy">Website Privacy Notice</a> for details on how we process personal information.</p>
+    </div>
+</section>

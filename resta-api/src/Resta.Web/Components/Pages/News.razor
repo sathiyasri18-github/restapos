@@ -1,0 +1,135 @@
+@page "/news"
+@page "/news/{Slug}"
+@inject ApiService Api
+@inject NavigationManager Nav
+
+@if (!string.IsNullOrEmpty(Slug))
+{
+    <SeoHead Title="@(_article?.Title ?? "News")"
+             Description="@(_article?.Summary ?? _article?.Title)"
+             Image="@(_article != null && !string.IsNullOrEmpty(_article.ImageUrl) ? Media.Resolve(_article.ImageUrl) : null)"
+             OgType="article"
+             JsonLd=@ArticleJsonLd />
+}
+else
+{
+    <SeoHead Title="News &amp; Updates"
+             Description="Latest news, events, and updates from Resta restaurant."
+             Keywords="Resta news, restaurant updates, events, announcements"
+             CanonicalPath="/news" />
+}
+
+@if (!string.IsNullOrEmpty(Slug))
+{
+    <div class="page-header">
+        <div class="container">
+            <a href="/news" class="back-link">← Back to News</a>
+            <h1>@(_article?.Title ?? "Loading...")</h1>
+            @if (_article != null)
+            {
+                <div class="article-meta">
+                    <span class="badge">@_article.Category</span>
+                    <span>@(_article.PublishedAt?.ToString("dd MMMM yyyy"))</span>
+                    @if (!string.IsNullOrEmpty(_article.Author)) { <span>By @_article.Author</span> }
+                </div>
+            }
+        </div>
+    </div>
+    <section class="section">
+        <div class="container content-page article-content">
+            @if (_article != null)
+            {
+                @if (!string.IsNullOrEmpty(_article.ImageUrl))
+                {
+                    <img src="@Media.Resolve(_article.ImageUrl)" alt="@_article.Title" class="article-image" />
+                }
+                @((MarkupString)_article.Content)
+            }
+        </div>
+    </section>
+}
+else
+{
+    <div class="page-header">
+        <div class="container">
+            <h1>News &amp; Updates</h1>
+            <p>What's happening at Resta</p>
+        </div>
+    </div>
+    <section class="section">
+        <div class="container">
+            <div class="filter-tabs">
+                <button class="@(category == null ? "active" : "")" @onclick="() => FilterNews(null)">All</button>
+                @foreach (NewsCategory cat in Enum.GetValues<NewsCategory>())
+                {
+                    <button class="@(category == cat ? "active" : "")" @onclick="() => FilterNews(cat)">@cat</button>
+                }
+            </div>
+            <div class="card-grid">
+                @foreach (var news in _newsList)
+                {
+                    <article class="news-card">
+                        <div class="news-card-img" style="background-image: url('@Media.Resolve(news.ImageUrl ?? "/images/news-placeholder.jpg")')"></div>
+                        <div class="news-card-body">
+                            <span class="badge">@news.Category</span>
+                            <h3><a href="/news/@news.Slug">@news.Title</a></h3>
+                            <p>@news.Summary</p>
+                            <small>@(news.PublishedAt?.ToString("dd MMM yyyy"))</small>
+                        </div>
+                    </article>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+@code {
+    [Parameter] public string? Slug { get; set; }
+
+    private NewsDetailDto? _article;
+    private List<NewsDto> _newsList = [];
+    private NewsCategory? category;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!string.IsNullOrEmpty(Slug))
+        {
+            _article = await Api.GetAsync<NewsDetailDto>($"api/public/news/{Slug}");
+        }
+        else
+        {
+            await LoadNews();
+        }
+    }
+
+    private async Task LoadNews()
+    {
+        var url = category.HasValue ? $"api/public/news?category={category}" : "api/public/news";
+        var result = await Api.GetAsync<PagedResult<NewsDto>>(url);
+        _newsList = result?.Items.ToList() ?? [];
+    }
+
+    private async Task FilterNews(NewsCategory? cat)
+    {
+        category = cat;
+        await LoadNews();
+    }
+
+    private string? ArticleJsonLd => _article == null ? null :
+        System.Text.Json.JsonSerializer.Serialize(new
+        {
+            __context = "https://schema.org",
+            __type = "NewsArticle",
+            headline = _article.Title,
+            description = _article.Summary ?? "",
+            datePublished = _article.PublishedAt?.ToString("yyyy-MM-ddTHH:mm:ssZ") ?? "",
+            author = new { __type = "Organization", name = _article.Author ?? "Resta" },
+            publisher = new
+            {
+                __type = "Organization",
+                name = "Resta",
+                logo = new { __type = "ImageObject", url = "https://resta.com/images/logo.png" }
+            }
+        }).Replace("\"__context\"", "\"@context\"")
+          .Replace("\"__type\"", "\"@type\"");
+}

@@ -1,0 +1,98 @@
+@page "/events"
+@page "/private-dining"
+@inject ApiService Api
+@inject NavigationManager Nav
+
+<SeoHead Title="@_pageTitle"
+         Description="Discover Resta events and private dining — celebrations, gatherings, and exclusive table experiences."
+         Keywords="Resta events, private dining, restaurant events, celebrations"
+         CanonicalPath="@_canonical" />
+
+<div class="page-header">
+    <div class="container">
+        <h1>@_pageTitle</h1>
+        <p>Celebrations, gatherings, and exclusive dining experiences</p>
+    </div>
+</div>
+
+<section class="section">
+    <div class="container content-page">
+        <div class="about-block">
+            <h2>Private Dining</h2>
+            <p>
+                Host intimate dinners, birthdays, corporate gatherings, and celebrations in our private dining space.
+                Our team will help craft a menu and atmosphere tailored to your occasion.
+            </p>
+            <a href="/contact" class="btn btn-primary">Enquire About Private Dining</a>
+        </div>
+    </div>
+</section>
+
+<section class="section bg-light">
+    <div class="container">
+        <h2 class="section-title">Upcoming Events</h2>
+        @if (_loading)
+        {
+            <p class="loading">Loading events...</p>
+        }
+        else if (_events.Count == 0)
+        {
+            <p class="loading">No upcoming events published yet. Check back soon.</p>
+        }
+        else
+        {
+            <div class="event-list">
+                @foreach (var evt in _events)
+                {
+                    <div class="event-item">
+                        <div class="event-date">
+                            <strong>@evt.StartDate.Day</strong>
+                            <span>@evt.StartDate.ToString("MMM")</span>
+                        </div>
+                        <div>
+                            <h3>@evt.Title</h3>
+                            @if (!string.IsNullOrEmpty(evt.Location))
+                            {
+                                <p>@evt.Location</p>
+                            }
+                            @if (!string.IsNullOrEmpty(evt.Description))
+                            {
+                                <p>@evt.Description</p>
+                            }
+                            <small>
+                                @evt.StartDate.ToString("dd MMM yyyy HH:mm")
+                                @if (evt.EndDate.HasValue)
+                                {
+                                    <text> – @evt.EndDate.Value.ToString("dd MMM yyyy HH:mm")</text>
+                                }
+                            </small>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        <div class="text-center mt-4">
+            <a href="/contact" class="btn btn-outline">Contact for Bookings</a>
+        </div>
+    </div>
+</section>
+
+@code {
+    private List<EventDto> _events = [];
+    private bool _loading = true;
+    private string _pageTitle = "Events / Private Dining";
+    private string _canonical = "/events";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var path = Nav.ToBaseRelativePath(Nav.Uri).TrimEnd('/');
+        if (path.Equals("private-dining", StringComparison.OrdinalIgnoreCase))
+        {
+            _pageTitle = "Private Dining";
+            _canonical = "/private-dining";
+        }
+
+        _events = (await Api.GetAsync<List<EventDto>>("api/public/events")) ?? [];
+        _loading = false;
+    }
+}

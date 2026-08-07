@@ -1,0 +1,79 @@
+@page "/about"
+@page "/our-story"
+@inject ApiService Api
+
+<SeoHead Title="About Us / Our Story"
+         Description="Learn about Resta — our kitchen, hospitality, and passion for seasonal dining."
+         Keywords="about Resta, our story, restaurant story, dining, hospitality"
+         CanonicalPath="/about" />
+
+<div class="page-header">
+    <div class="container">
+        <h1>About Us / Our Story</h1>
+        <p>Food, hospitality, and a place at the table</p>
+    </div>
+</div>
+
+<section class="section">
+    <div class="container content-page">
+        @if (_settings != null)
+        {
+            <div class="about-block">
+                <h2>Our Story</h2>
+                <p>@_settings.AboutContent</p>
+            </div>
+            <div class="about-grid">
+                <div class="about-card">
+                    <h3>Vision</h3>
+                    <p>@_settings.Vision</p>
+                </div>
+                <div class="about-card">
+                    <h3>Mission</h3>
+                    <p>@_settings.Mission</p>
+                </div>
+                <div class="about-card full-width">
+                    <h3>What We Believe</h3>
+                    @foreach (var obj in (_settings.Objectives ?? "").Split('\n', StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        <p>&#10003; @obj</p>
+                    }
+                </div>
+            </div>
+
+            <div class="about-block" style="margin-top: 3rem;">
+                <h2>What We Offer</h2>
+                <div class="about-grid">
+                    <div class="about-card">
+                        <h3>Seasonal Menu</h3>
+                        <p>Dishes that change with the seasons, crafted from fresh ingredients</p>
+                    </div>
+                    <div class="about-card">
+                        <h3>House Specialties</h3>
+                        <p>Signature plates and chef favorites guests return for</p>
+                    </div>
+                    <div class="about-card">
+                        <h3>Private Events</h3>
+                        <p>Tables and spaces for celebrations, gatherings, and group dining</p>
+                    </div>
+                    <div class="about-card">
+                        <h3>Warm Hospitality</h3>
+                        <p>Attentive service in a welcoming dining room</p>
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <p>Loading...</p>
+        }
+    </div>
+</section>
+
+@code {
+    private SiteSettingsDto? _settings;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _settings = await Api.GetAsync<SiteSettingsDto>("api/public/about");
+    }
+}

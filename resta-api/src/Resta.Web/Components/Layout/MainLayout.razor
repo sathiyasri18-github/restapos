@@ -1,0 +1,97 @@
+@inherits LayoutComponentBase
+@inject ApiService Api
+
+<div class="site-wrapper">
+    <header class="site-header">
+        <div class="header-top">
+            <div class="container header-top-inner">
+                <span>&#128222; @(_settings?.Phone ?? "+91 44 0000 0000")</span>
+                <span>&#9993; @(_settings?.Email ?? "info@resta.com")</span>
+                <span class="visitor-count">&#128101; Visitors: @(_visitorStats?.TotalVisitors ?? 0) | Views: @(_visitorStats?.TotalPageViews ?? 0)</span>
+            </div>
+        </div>
+        <div class="container header-main">
+            <a href="/" class="logo">
+                <div class="logo-icon">R</div>
+                <div>
+                    <strong>@(_settings?.AssociationName ?? "Resta")</strong>
+                    <small>@(_settings?.Tagline ?? "Restaurant")</small>
+                </div>
+            </a>
+            <SiteNav Items="_menuItems" />
+        </div>
+    </header>
+
+    <main class="site-main">
+        @Body
+    </main>
+
+    <footer class="site-footer">
+        <div class="container footer-grid">
+            <div>
+                <h4>@(_settings?.AssociationName ?? "Resta")</h4>
+                <p>@(_settings?.Tagline)</p>
+                <p>@(_settings?.Address)</p>
+            </div>
+            <div>
+                <h4>Quick Links</h4>
+                <a href="/about">About Us / Our Story</a>
+                <a href="/menu">Menu</a>
+                <a href="/gallery">Gallery</a>
+                <a href="/events">Events / Private Dining</a>
+                <a href="/contact">Contact</a>
+            </div>
+            <div>
+                <h4>Explore</h4>
+                <a href="/videos">Video Gallery</a>
+                <a href="/careers">Careers</a>
+                <a href="/events">Private Dining</a>
+                <a href="/contact">Reservations</a>
+            </div>
+            <div>
+                <h4>Contact</h4>
+                <p>&#128222; @(_settings?.Phone)</p>
+                <p>&#9993; @(_settings?.Email)</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div class="container">
+                <p>&copy; @DateTime.Now.Year Resta. All Rights Reserved.</p>
+                <p>
+                    Total Visitors: @(_visitorStats?.TotalVisitors ?? 0) | Page Views: @(_visitorStats?.TotalPageViews ?? 0)
+                    &nbsp;|&nbsp;
+                    <a href="/privacy">Privacy Notice</a>
+                    &nbsp;|&nbsp;
+                    <a href="/cookies">Cookies Notice</a>
+                    &nbsp;|&nbsp;
+                    <button type="button" class="footer-cookie-link" onclick="restaCookieConsent.notifyOpenSettings()">Cookie Settings</button>
+                </p>
+            </div>
+        </div>
+    </footer>
+</div>
+
+@code {
+    private static readonly List<MenuItemDto> DefaultMenus =
+    [
+        new(0, "About Us / Our Story", "/about", null, 10, false, []),
+        new(0, "Gallery", "/gallery", null, 20, false, []),
+        new(0, "Events / Private Dining", "/events", null, 30, false, []),
+        new(0, "Careers", "/careers", null, 40, false, []),
+        new(0, "Menu", "/menu", null, 50, false, []),
+        new(0, "Video Gallery", "/videos", null, 60, false, []),
+    ];
+
+    private SiteSettingsDto? _settings;
+    private VisitorStatsDto? _visitorStats;
+    private List<MenuItemDto> _menuItems = DefaultMenus;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _settings = await Api.GetAsync<SiteSettingsDto>("api/public/about");
+        var home = await Api.GetAsync<HomePageData>("api/public");
+        _visitorStats = home?.VisitorStats;
+        var apiMenus = await Api.GetAsync<List<MenuItemDto>>("api/public/menu");
+        _menuItems = apiMenus is { Count: > 0 } ? apiMenus : DefaultMenus;
+    }
+}

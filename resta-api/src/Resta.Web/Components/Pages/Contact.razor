@@ -1,0 +1,97 @@
+@page "/contact"
+@rendermode InteractiveServer
+@inject ApiService Api
+
+<SeoHead Title="Contact Us"
+         Description="Contact Resta for reservations, private events, or general inquiries."
+         Keywords="contact Resta, restaurant reservation, private events"
+         CanonicalPath="/contact" />
+
+<div class="page-header">
+    <div class="container">
+        <h1>Get In Touch</h1>
+        <p>Reservations, events, and questions — we're happy to help</p>
+    </div>
+</div>
+
+<section class="section">
+    <div class="container contact-grid">
+        <div class="contact-info">
+            <h2>Contact Information</h2>
+            <div class="info-item">
+                <strong>Resta</strong>
+                @if (_settings != null)
+                {
+                    <p>@_settings.Address</p>
+                }
+            </div>
+            @if (_settings != null)
+            {
+                <div class="info-item"><strong>Phone</strong><p>@_settings.Phone</p></div>
+                <div class="info-item"><strong>Email</strong><p>@_settings.Email</p></div>
+            }
+            <div class="map-placeholder">
+                <p>&#128205; Visit us for a memorable meal</p>
+            </div>
+        </div>
+
+        <div class="contact-form-wrap">
+            @if (_submitted)
+            {
+                <div class="alert alert-success">
+                    <h3>Message Sent!</h3>
+                    <p>Thank you for contacting Resta. We will respond shortly.</p>
+                </div>
+            }
+            else
+            {
+                <h2>Write to Us</h2>
+                <EditForm Model="_form" OnValidSubmit="Submit" class="form-card">
+                    <DataAnnotationsValidator />
+                    <div class="form-group">
+                        <label>Name *</label>
+                        <InputText @bind-Value="_form.Name" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label>Email *</label>
+                        <InputText @bind-Value="_form.Email" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label>Phone</label>
+                        <InputText @bind-Value="_form.Phone" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label>Subject *</label>
+                        <InputText @bind-Value="_form.Subject" class="form-control" />
+                    </div>
+                    <div class="form-group">
+                        <label>Message *</label>
+                        <InputTextArea @bind-Value="_form.Message" class="form-control" rows="5" />
+                    </div>
+                    <button type="submit" class="btn btn-primary" disabled="@_submitting">
+                        @(_submitting ? "Sending..." : "Send Message")
+                    </button>
+                </EditForm>
+            }
+        </div>
+    </div>
+</section>
+
+@code {
+    private SiteSettingsDto? _settings;
+    private ContactFormModel _form = new();
+    private bool _submitted, _submitting;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _settings = await Api.GetAsync<SiteSettingsDto>("api/public/contact");
+    }
+
+    private async Task Submit()
+    {
+        _submitting = true;
+        var request = new SubmitContactRequest(_form.Name, _form.Email, _form.Phone, _form.Subject, _form.Message);
+        _submitted = await Api.PostAsync("api/public/contact", request);
+        _submitting = false;
+    }
+}

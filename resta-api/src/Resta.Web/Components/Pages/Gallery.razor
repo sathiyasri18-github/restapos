@@ -1,0 +1,86 @@
+@page "/gallery"
+@page "/gallery/{AlbumId:int}"
+@page "/projects"
+@page "/projects/{AlbumId:int}"
+@inject ApiService Api
+@inject IJSRuntime JS
+
+<SeoHead Title="Gallery"
+         Description="Browse Resta's photo gallery — dining room, kitchen moments, dishes, and events."
+         Keywords="Resta gallery, restaurant photos, dining room, food photography"
+         CanonicalPath="/gallery" />
+
+@if (AlbumId > 0)
+{
+    <div class="page-header">
+        <div class="container">
+            <a href="/gallery" class="back-link">← Back to Gallery</a>
+            <h1>@(_detail?.Album?.Title ?? "Album")</h1>
+            <p>@_detail?.Album?.Description</p>
+        </div>
+    </div>
+    <section class="section">
+        <div class="container">
+            <div class="gallery-grid">
+                @foreach (var img in _detail?.Images ?? [])
+                {
+                    <div class="gallery-item" @onclick="() => OpenImage(Media.Resolve(img.ImageUrl))">
+                        <img src="@Media.Resolve(img.ImageUrl)" alt="@img.Title" loading="lazy" />
+                        <span>@img.Title</span>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+}
+else
+{
+    <div class="page-header">
+        <div class="container">
+            <h1>Gallery</h1>
+            <p>Moments from our dining room, kitchen, and events</p>
+        </div>
+    </div>
+    <section class="section">
+        <div class="container card-grid">
+            @foreach (var album in _albums ?? [])
+            {
+                <a href="/gallery/@album.Id" class="album-card">
+                    <div class="album-cover" style="background-image: url('@Media.Resolve(album.CoverImageUrl ?? "/images/gallery-placeholder.jpg")')">
+                        <span class="image-count">@album.ImageCount photos</span>
+                    </div>
+                    <div class="album-info">
+                        <h3>@album.Title</h3>
+                        <p>@album.Category</p>
+                        <small>@(album.EventDate?.ToString("dd MMM yyyy"))</small>
+                    </div>
+                </a>
+            }
+            @if (_albums?.Count == 0)
+            {
+                <p class="loading">Gallery albums will appear here once published in the CMS.</p>
+            }
+        </div>
+    </section>
+}
+
+@code {
+    [Parameter] public int AlbumId { get; set; }
+
+    private List<GalleryAlbumDto>? _albums;
+    private GalleryDetailData? _detail;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (AlbumId > 0)
+        {
+            _detail = await Api.GetAsync<GalleryDetailData>($"api/public/gallery/{AlbumId}");
+        }
+        else
+        {
+            _albums = await Api.GetAsync<List<GalleryAlbumDto>>("api/public/gallery") ?? [];
+        }
+    }
+
+    private async Task OpenImage(string url) => await JS.InvokeVoidAsync("open", url, "_blank");
+}

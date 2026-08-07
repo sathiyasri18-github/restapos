@@ -1,0 +1,51 @@
+@page "/careers"
+@inject ApiService Api
+
+<SeoHead Title="Careers"
+         Description="Join the Resta team — explore career opportunities in our kitchen and dining room."
+         Keywords="Resta careers, restaurant jobs, hospitality careers"
+         CanonicalPath="/careers" />
+
+<div class="page-header">
+    <div class="container">
+        <h1>@(_page?.Title ?? "Careers")</h1>
+        <p>Grow with us in the kitchen and on the floor</p>
+    </div>
+</div>
+
+<section class="section">
+    <div class="container content-page">
+        @if (_loading)
+        {
+            <p class="loading">Loading...</p>
+        }
+        else if (_page != null)
+        {
+            <div class="article-content">
+                @((MarkupString)_page.Content)
+            </div>
+        }
+        else
+        {
+            <div class="about-block">
+                <h2>Work With Resta</h2>
+                <p>
+                    We are always looking for passionate chefs, servers, and hospitality professionals.
+                    Send your resume to our team and tell us how you would like to contribute.
+                </p>
+                <a href="/contact" class="btn btn-primary">Get In Touch</a>
+            </div>
+        }
+    </div>
+</section>
+
+@code {
+    private DynamicPageDto? _page;
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _page = await Api.GetAsync<DynamicPageDto>("api/public/pages/careers");
+        _loading = false;
+    }
+}
