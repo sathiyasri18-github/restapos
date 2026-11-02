@@ -23,7 +23,7 @@ else
             {
                 var banner = _data.Banners[i];
                 <div class="carousel-slide @(_currentSlide == i ? "active" : "")">
-                    <div class="carousel-bg" style="background-image: linear-gradient(rgba(27,67,50,0.18), rgba(27,67,50,0.14)), url('@Media.Resolve(banner.ImageUrl)')"></div>
+                    <div class="carousel-bg" style="background-image: linear-gradient(rgba(20,20,20,0.55), rgba(20,20,20,0.45)), url('@Media.Resolve(banner.ImageUrl)')"></div>
                 </div>
             }
         }
@@ -33,7 +33,7 @@ else
             {
                 var slide = _slideshowImages[i];
                 <div class="carousel-slide @(_currentSlide == i ? "active" : "")">
-                    <div class="carousel-bg" style="background-image: linear-gradient(rgba(27,67,50,0.18), rgba(27,67,50,0.14)), url('@Media.Resolve(slide.ImageUrl)')"></div>
+                    <div class="carousel-bg" style="background-image: linear-gradient(rgba(20,20,20,0.55), rgba(20,20,20,0.45)), url('@Media.Resolve(slide.ImageUrl)')"></div>
                 </div>
             }
         }
@@ -48,25 +48,25 @@ else
             @if (_data.Banners.Count > 0)
             {
                 var banner = _data.Banners[_currentSlide];
-                <h1>@(string.IsNullOrWhiteSpace(banner.Title) ? "Welcome" : banner.Title)</h1>
-                <p>@(string.IsNullOrWhiteSpace(banner.Subtitle) ? (_data.Settings?.Tagline ?? "") : banner.Subtitle)</p>
-                @if (!string.IsNullOrEmpty(banner.LinkUrl))
-                {
-                    <a href="@banner.LinkUrl" class="btn btn-primary">Learn More</a>
-                }
+                <p class="hero-eyebrow">Welcome @(_data.Settings?.AssociationName ?? "Resta") Restaurant</p>
+                <h1>@(string.IsNullOrWhiteSpace(banner.Title) ? "Loves healthy food" : banner.Title)</h1>
+                <p>@(string.IsNullOrWhiteSpace(banner.Subtitle) ? (_data.Settings?.Tagline ?? "Seasonal cooking and warm hospitality.") : banner.Subtitle)</p>
+                <a href="@(string.IsNullOrEmpty(banner.LinkUrl) ? "/menu" : banner.LinkUrl)" class="btn btn-primary">Order now</a>
             }
             else if (_slideshowImages.Count > 0)
             {
                 var slide = _slideshowImages[_currentSlide];
+                <p class="hero-eyebrow">Welcome @(_data.Settings?.AssociationName ?? "Resta") Restaurant</p>
                 <h1>@slide.Title</h1>
                 <p>@(slide.Caption ?? _data.Settings?.Tagline)</p>
-                <a href="/about" class="btn btn-primary">About Us</a>
+                <a href="/menu" class="btn btn-primary">Order now</a>
             }
             else
             {
-                <h1>@(_data.Settings?.AssociationName ?? "Resta")</h1>
-                <p>@(_data.Settings?.Tagline ?? "Welcome to our table")</p>
-                <a href="/about" class="btn btn-primary">About Us</a>
+                <p class="hero-eyebrow">Welcome @(_data.Settings?.AssociationName ?? "Resta") Restaurant</p>
+                <h1>Loves healthy food</h1>
+                <p>@(_data.Settings?.Tagline ?? "Seasonal cooking, warm service, and memorable meals.")</p>
+                <a href="/menu" class="btn btn-primary">Order now</a>
             }
         </div>
 
@@ -86,117 +86,201 @@ else
         }
     </section>
 
-    <section class="section quick-actions">
-        <div class="container">
-            <div class="action-grid">
-                <a href="/menu" class="action-card">
-                    <span class="action-icon">&#127860;</span>
-                    <h3>Menu</h3>
-                    <p>Seasonal dishes and house favorites</p>
-                </a>
-                <a href="/gallery" class="action-card">
-                    <span class="action-icon">&#128247;</span>
-                    <h3>Gallery</h3>
-                    <p>A look inside our dining room and kitchen</p>
-                </a>
-                <a href="/events" class="action-card">
-                    <span class="action-icon">&#128197;</span>
-                    <h3>Events / Private Dining</h3>
-                    <p>Book a table or plan a private event</p>
-                </a>
-                <a href="/about" class="action-card">
-                    <span class="action-icon">&#127968;</span>
-                    <h3>About Us / Our Story</h3>
-                    <p>Our kitchen, hospitality, and story</p>
-                </a>
-                <a href="/videos" class="action-card">
-                    <span class="action-icon">&#127909;</span>
-                    <h3>Video Gallery</h3>
-                    <p>Kitchen moments and dining experiences</p>
-                </a>
-                <a href="/careers" class="action-card">
-                    <span class="action-icon">&#128188;</span>
-                    <h3>Careers</h3>
-                    <p>Join our kitchen and hospitality team</p>
-                </a>
-            </div>
-        </div>
-    </section>
-
     <section class="section">
-        <div class="container two-col">
+        <div class="container two-col reveal">
             <div>
-                <h2 class="section-title">About Resta</h2>
+                <span class="section-overline">Our story</span>
+                <h2 class="section-title">About @(_data.Settings?.AssociationName ?? "Resta")</h2>
                 <p class="intro-text">@(_data.Settings?.AboutContent ?? "Resta is a neighborhood restaurant focused on seasonal cooking, warm service, and memorable meals.")</p>
-                <a href="/about" class="btn btn-outline">Read More</a>
+                <a href="/about" class="btn btn-outline">Read more</a>
             </div>
-            <div class="stats-card">
-                <div class="stat"><strong>Fresh</strong><span>Seasonal Ingredients</span></div>
-                <div class="stat"><strong>Local</strong><span>Neighborhood Favorite</span></div>
-                <div class="stat"><strong>Warm</strong><span>Welcoming Hospitality</span></div>
-            </div>
+            @if (!string.IsNullOrEmpty(_aboutImageUrl))
+            {
+                <div class="about-visual" style="background-image: url('@Media.Resolve(_aboutImageUrl)')" role="img" aria-label="Restaurant ambiance"></div>
+            }
+            else
+            {
+                <div class="stats-card">
+                    <div class="stat"><strong>Fresh</strong><span>Seasonal Ingredients</span></div>
+                    <div class="stat"><strong>Local</strong><span>Neighborhood Favorite</span></div>
+                    <div class="stat"><strong>Warm</strong><span>Welcoming Hospitality</span></div>
+                </div>
+            }
         </div>
     </section>
 
-    <section class="section bg-light">
-        <div class="container">
-            <h2 class="section-title">From Our Menu</h2>
-            <div class="card-grid">
-                @foreach (var service in _services.Take(10))
-                {
-                    <article class="service-card">
-                        <a href="/menu/@service.Slug" class="service-card-link">
-                            <div class="service-card-img" style="background-image: url('@Media.Resolve(service.CoverImageUrl ?? "/images/news-placeholder.jpg")')">
-                                @if (service.IsFeatured)
+    @if (PopularDishes.Any())
+    {
+        <section class="section bg-light">
+            <div class="container">
+                <div class="section-header reveal">
+                    <span class="section-overline">Chef's selection</span>
+                    <h2 class="section-title">Our popular dishes</h2>
+                    <p class="section-intro">Signature plates our guests return for — crafted with seasonal produce and careful technique.</p>
+                </div>
+                <div class="dish-grid">
+                    @foreach (var dish in PopularDishes)
+                    {
+                        <a href="/menu/@dish.Slug" class="dish-card">
+                            <div class="dish-card-bg" style="background-image: url('@Media.Resolve(dish.CoverImageUrl ?? "/images/news-placeholder.jpg")')"></div>
+                            <div class="dish-card-body">
+                                <h3>@dish.Title</h3>
+                                @if (!string.IsNullOrEmpty(dish.Subtitle))
                                 {
-                                    <span class="service-badge">Chef's Pick</span>
-                                }
-                            </div>
-                            <div class="service-card-body">
-                                <h3>@service.Title</h3>
-                                @if (!string.IsNullOrEmpty(service.Subtitle))
-                                {
-                                    <p>@service.Subtitle</p>
+                                    <p>@dish.Subtitle</p>
                                 }
                             </div>
                         </a>
-                    </article>
-                }
+                    }
+                </div>
+                <div class="text-center mt-4">
+                    <a href="/menu" class="btn btn-primary">View full menu</a>
+                </div>
             </div>
-            <div class="text-center mt-4">
-                <a href="/menu" class="btn btn-primary">View Full Menu</a>
+        </section>
+    }
+
+    @if (_services.Any())
+    {
+        <section class="section">
+            <div class="container">
+                <div class="section-header reveal">
+                    <span class="section-overline">From the kitchen</span>
+                    <h2 class="section-title">Our food menu</h2>
+                    <p class="section-intro">Browse favorites from the board. Filter to see chef picks or the full list.</p>
+                </div>
+                <div class="filter-tabs">
+                    <button type="button" class="@(_menuFilter == "all" ? "active" : null)" @onclick='() => SetMenuFilter("all")'>All items</button>
+                    <button type="button" class="@(_menuFilter == "featured" ? "active" : null)" @onclick='() => SetMenuFilter("featured")'>Chef's picks</button>
+                </div>
+                <div class="menu-list">
+                    @foreach (var item in FilteredMenu)
+                    {
+                        <a href="/menu/@item.Slug" class="menu-list-item">
+                            <div class="menu-item-thumb" style="background-image: url('@Media.Resolve(item.CoverImageUrl ?? "/images/news-placeholder.jpg")')"></div>
+                            <div>
+                                <div class="menu-item-title">@item.Title</div>
+                                <div class="menu-item-meta">@(item.Subtitle ?? "House specialty")</div>
+                            </div>
+                            @if (item.IsFeatured)
+                            {
+                                <span class="menu-item-mark">Featured</span>
+                            }
+                        </a>
+                    }
+                </div>
+                <div class="text-center mt-4">
+                    <a href="/menu" class="btn btn-outline">Explore menu</a>
+                </div>
             </div>
-        </div>
+        </section>
+    }
+
+    @if (_albums.Any() || _slideshowImages.Any())
+    {
+        <section class="section bg-light">
+            <div class="container">
+                <div class="section-header reveal">
+                    <span class="section-overline">Moments</span>
+                    <h2 class="section-title">Our gallery</h2>
+                    <p class="section-intro">A look inside our dining room, kitchen, and plated dishes.</p>
+                </div>
+                <div class="gallery-strip">
+                    @if (_albums.Any())
+                    {
+                        @foreach (var album in _albums.Take(6))
+                        {
+                            <a href="/gallery/@album.Id" class="gallery-strip-item" style="background-image: url('@Media.Resolve(album.CoverImageUrl ?? "/images/news-placeholder.jpg")')">
+                                <span>@album.Title</span>
+                            </a>
+                        }
+                    }
+                    else
+                    {
+                        @foreach (var img in _slideshowImages.Take(6))
+                        {
+                            <a href="/gallery" class="gallery-strip-item" style="background-image: url('@Media.Resolve(img.ImageUrl)')">
+                                <span>@img.Title</span>
+                            </a>
+                        }
+                    }
+                </div>
+                <div class="text-center mt-4">
+                    <a href="/gallery" class="btn btn-primary">View gallery</a>
+                </div>
+            </div>
+        </section>
+    }
+
+    <section class="reserve-cta">
+        <span class="section-overline">Reservations</span>
+        <h2 class="section-title">Make a reservation</h2>
+        <p>Book a table for dinner, celebrations, or private dining. We will confirm your preferred time.</p>
+        <a href="/contact" class="btn btn-primary">Reserve a table</a>
     </section>
 
-    <section class="section">
-        <div class="container">
-            <h2 class="section-title">Latest News</h2>
-            <div class="card-grid">
-                @foreach (var news in _data.FeaturedNews)
-                {
-                    <article class="news-card">
-                        <div class="news-card-img" style="background-image: url('@Media.Resolve(news.ImageUrl ?? "/images/news-placeholder.jpg")')"></div>
-                        <div class="news-card-body">
-                            <span class="badge">@news.Category</span>
-                            <h3><a href="/news/@news.Slug">@news.Title</a></h3>
-                            <p>@news.Summary</p>
-                            <small>@(news.PublishedAt?.ToString("dd MMM yyyy"))</small>
-                        </div>
-                    </article>
-                }
+    @if (_data.FeaturedNews.Any())
+    {
+        <section class="section">
+            <div class="container">
+                <div class="section-header reveal">
+                    <span class="section-overline">Stories</span>
+                    <h2 class="section-title">Our blog</h2>
+                    <p class="section-intro">News from the kitchen, seasonal menus, and dining events.</p>
+                </div>
+                <div class="card-grid">
+                    @foreach (var news in _data.FeaturedNews.Take(4))
+                    {
+                        <article class="news-card">
+                            <div class="news-card-img" style="background-image: url('@Media.Resolve(news.ImageUrl ?? "/images/news-placeholder.jpg")')"></div>
+                            <div class="news-card-body">
+                                <span class="badge">@(news.PublishedAt?.ToString("dd MMM") ?? news.Category.ToString())</span>
+                                <h3><a href="/news/@news.Slug">@news.Title</a></h3>
+                                <p>@news.Summary</p>
+                            </div>
+                        </article>
+                    }
+                </div>
+                <div class="text-center mt-4">
+                    <a href="/news" class="btn btn-outline">View all news</a>
+                </div>
             </div>
-            <div class="text-center mt-4">
-                <a href="/news" class="btn btn-primary">View All News</a>
+        </section>
+    }
+
+    @if (HomePromo is not null)
+    {
+        <section class="section" style="padding-top: 0;">
+            <div class="container">
+                <div class="promo-banner">
+                    <div class="promo-banner-media" style="background-image: url('@Media.Resolve(HomePromo.ImageUrl)')"></div>
+                    <div class="promo-banner-body">
+                        <span class="section-overline">Special offer</span>
+                        <h2>@HomePromo.Title</h2>
+                        <p>Join us for a seasonal special — limited seating available.</p>
+                        @if (!string.IsNullOrEmpty(HomePromo.LinkUrl))
+                        {
+                            <a href="@HomePromo.LinkUrl" class="btn btn-primary">Order now</a>
+                        }
+                        else
+                        {
+                            <a href="/contact" class="btn btn-primary">Learn more</a>
+                        }
+                    </div>
+                </div>
             </div>
-        </div>
-    </section>
+        </section>
+    }
 
     @if (_data.UpcomingEvents.Any())
     {
         <section class="section bg-light">
             <div class="container">
-                <h2 class="section-title">Upcoming Events</h2>
+                <div class="section-header reveal">
+                    <span class="section-overline">Gatherings</span>
+                    <h2 class="section-title">Upcoming events</h2>
+                    <p class="section-intro">Private dining, tastings, and evenings worth saving.</p>
+                </div>
                 <div class="event-list">
                     @foreach (var evt in _data.UpcomingEvents)
                     {
@@ -213,7 +297,7 @@ else
                     }
                 </div>
                 <div class="text-center mt-4">
-                    <a href="/events" class="btn btn-primary">Events / Private Dining</a>
+                    <a href="/events" class="btn btn-primary">Events / private dining</a>
                 </div>
             </div>
         </section>
@@ -223,7 +307,9 @@ else
 @code {
     private HomePageData? _data;
     private List<GalleryImageDto> _slideshowImages = [];
+    private List<GalleryAlbumDto> _albums = [];
     private List<ServiceDto> _services = [];
+    private string _menuFilter = "all";
     private int _currentSlide;
     private Timer? _timer;
     private const int SlideIntervalMs = 6000;
@@ -231,10 +317,34 @@ else
     private int SlideCount =>
         _data?.Banners.Count > 0 ? _data.Banners.Count : _slideshowImages.Count;
 
+    private IEnumerable<ServiceDto> PopularDishes
+    {
+        get
+        {
+            var featured = _services.Where(s => s.IsFeatured).Take(6).ToList();
+            return featured.Count > 0 ? featured : _services.Take(6);
+        }
+    }
+
+    private IEnumerable<ServiceDto> FilteredMenu =>
+        _menuFilter == "featured"
+            ? _services.Where(s => s.IsFeatured).Take(8)
+            : _services.Take(8);
+
+    private AdvertisementDto? HomePromo =>
+        _data?.Advertisements.FirstOrDefault(a => a.Position == AdvertisementPosition.HomeBanner)
+        ?? _data?.Advertisements.FirstOrDefault();
+
+    private string? _aboutImageUrl =>
+        _albums.FirstOrDefault()?.CoverImageUrl
+        ?? _slideshowImages.FirstOrDefault()?.ImageUrl
+        ?? PopularDishes.FirstOrDefault()?.CoverImageUrl;
+
     protected override async Task OnInitializedAsync()
     {
         _data = await Api.GetAsync<HomePageData>("api/public");
         _slideshowImages = (await Api.GetAsync<List<GalleryImageDto>>("api/public/gallery/slideshow")) ?? [];
+        _albums = (await Api.GetAsync<List<GalleryAlbumDto>>("api/public/gallery")) ?? [];
         _services = _data?.Services ?? (await Api.GetAsync<List<ServiceDto>>("api/public/services?limit=10")) ?? [];
     }
 
@@ -242,6 +352,11 @@ else
     {
         if (firstRender && SlideCount > 1)
             StartTimer();
+    }
+
+    private void SetMenuFilter(string filter)
+    {
+        _menuFilter = filter;
     }
 
     private void StartTimer()

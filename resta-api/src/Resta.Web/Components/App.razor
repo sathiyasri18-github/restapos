@@ -10,29 +10,31 @@
     <base href="/" />
 
     <style>
-        :root{--primary:#1B4332;--primary-light:#2D6A4F;--accent:#C4A35A;--text:#1a1a1a;--text-muted:#5a5a5a;--on-primary-muted:#d8f3dc;--bg:#FAFAF8;--bg-light:#F0F0EC;--border:#e0e0d8;--shadow:0 4px 6px -1px rgba(0,0,0,.1);--radius:8px}
+        :root{--primary:#1a1a1a;--primary-light:#2c2c2c;--accent:#c6a16e;--text:#222;--text-muted:#6b6b6b;--on-primary-muted:rgba(255,255,255,.65);--bg:#f7f3ee;--bg-light:#efe9e1;--bg-dark:#141414;--border:#e2d9cf;--shadow:0 8px 28px rgba(0,0,0,.08);--radius:0;--header-height:78px}
         *{box-sizing:border-box;margin:0;padding:0}
-        body{font-family:system-ui,sans-serif;color:var(--text);line-height:1.6;background:var(--bg);overflow-x:clip}
-        .site-header{background:var(--bg);box-shadow:var(--shadow);position:sticky;top:0;z-index:100}
-        .header-top{background:var(--primary);color:#fff;font-size:.85rem;padding:.4rem 0}
-        .header-top-inner{display:flex;gap:2rem;flex-wrap:wrap}
-        .container{max-width:1200px;margin:0 auto;padding:0 1.5rem;width:100%;min-width:0}
-        .header-main{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;max-width:1200px;margin:0 auto}
-        .logo{display:flex;align-items:center;gap:.75rem;color:var(--text);text-decoration:none}
-        .logo-icon{background:var(--primary);color:#fff;width:48px;height:48px;border-radius:var(--radius);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.1rem}
-        .logo strong{display:block;font-size:1rem;line-height:1.2;font-family:'Fraunces',Georgia,serif}
-        .logo small{color:var(--text-muted);font-size:.75rem}
-        .nav-toggle{display:none;background:none;border:none;font-size:1.5rem;cursor:pointer;padding:.5rem;min-width:44px;min-height:44px}
-        .main-nav{display:flex;gap:.25rem;flex-wrap:wrap;align-items:center}
+        body{font-family:system-ui,sans-serif;color:var(--text);line-height:1.7;background:var(--bg);overflow-x:clip}
+        .site-header{background:var(--bg-dark);position:fixed;top:0;left:0;right:0;z-index:200}
+        .site-wrapper.is-home .site-header{background:transparent}
+        .header-top{color:rgba(255,255,255,.75);font-size:.75rem;padding:.45rem 0;border-bottom:1px solid rgba(255,255,255,.08)}
+        .header-top-inner{display:flex;gap:1.75rem;flex-wrap:wrap;justify-content:flex-end}
+        .container{max-width:1170px;margin:0 auto;padding:0 1.5rem;width:100%;min-width:0}
+        .header-main{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.5rem;max-width:1170px;margin:0 auto}
+        .logo{display:flex;align-items:center;gap:.85rem;color:#fff;text-decoration:none}
+        .logo-icon{color:var(--accent);font-weight:700;font-size:1.65rem;border-bottom:2px solid var(--accent);padding-bottom:2px}
+        .logo strong{display:block;font-size:1.35rem;line-height:1.15;color:#fff;text-transform:uppercase;letter-spacing:.06em}
+        .logo small{color:var(--accent);font-size:.7rem;text-transform:uppercase;letter-spacing:.16em}
+        .nav-toggle{display:none;background:none;border:none;font-size:1.5rem;cursor:pointer;padding:.5rem;min-width:44px;min-height:44px;color:#fff}
+        .main-nav{display:flex;gap:.15rem;flex-wrap:wrap;align-items:center}
         .site-nav-check{display:none}
-        .hero-carousel{position:relative;min-height:720px;height:min(88vh,920px);overflow:hidden;background:var(--primary)}
+        .hero-carousel{position:relative;min-height:100vh;height:100vh;overflow:hidden;background:var(--bg-dark)}
         .loading{text-align:center;padding:4rem;color:var(--text-muted)}
+        .site-wrapper:not(.is-home) .site-main{padding-top:calc(var(--header-height) + 1.75rem)}
         @@media(max-width:768px){
             .header-main{display:grid;grid-template-columns:1fr auto;align-items:center;gap:.5rem;position:relative}
             .site-nav{display:contents}
             .logo{grid-column:1;grid-row:1;min-width:0}
             .nav-toggle{display:flex;align-items:center;justify-content:center;grid-column:2;grid-row:1}
-            .main-nav{display:none;grid-column:1/-1;grid-row:2;background:var(--bg);flex-direction:column;padding:.5rem 0 1rem;box-shadow:var(--shadow);align-items:stretch;border-top:1px solid var(--border)}
+            .main-nav{display:none;grid-column:1/-1;grid-row:2;background:var(--bg-dark);flex-direction:column;padding:.5rem 0 1rem;align-items:stretch;border-top:1px solid rgba(255,255,255,.08)}
             .site-nav-check:checked~.main-nav{display:flex}
             .visitor-count{display:none}
         }
@@ -41,10 +43,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preload" as="style"
-          href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Source+Sans+3:wght@400;500;600;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Poppins:wght@400;500;600;700&display=swap"
           onload="this.rel='stylesheet'" />
     <noscript>
-        <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet" />
+        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet" />
     </noscript>
 
     <link rel="stylesheet" href="app.css" />

@@ -1,13 +1,15 @@
 @inherits LayoutComponentBase
+@implements IDisposable
 @inject ApiService Api
+@inject NavigationManager Nav
 
-<div class="site-wrapper">
-    <header class="site-header">
+<div class="site-wrapper @(IsHome ? "is-home" : null)">
+    <header class="site-header" id="site-header">
         <div class="header-top">
             <div class="container header-top-inner">
-                <span>&#128222; @(_settings?.Phone ?? "+91 44 0000 0000")</span>
-                <span>&#9993; @(_settings?.Email ?? "info@resta.com")</span>
-                <span class="visitor-count">&#128101; Visitors: @(_visitorStats?.TotalVisitors ?? 0) | Views: @(_visitorStats?.TotalPageViews ?? 0)</span>
+                <span>@(_settings?.Phone ?? "+91 44 0000 0000")</span>
+                <span>@(_settings?.Email ?? "info@resta.com")</span>
+                <span class="visitor-count">Visitors: @(_visitorStats?.TotalVisitors ?? 0)</span>
             </div>
         </div>
         <div class="container header-main">
@@ -29,37 +31,41 @@
     <footer class="site-footer">
         <div class="container footer-grid">
             <div>
-                <h4>@(_settings?.AssociationName ?? "Resta")</h4>
-                <p>@(_settings?.Tagline)</p>
-                <p>@(_settings?.Address)</p>
+                <h4>Contact us</h4>
+                <p>@(_settings?.Address ?? "Your address goes here.")</p>
+                <p>Email: @(_settings?.Email ?? "info@resta.com")</p>
+                <p>Phone: @(_settings?.Phone ?? "+91 44 0000 0000")</p>
             </div>
             <div>
-                <h4>Quick Links</h4>
-                <a href="/about">About Us / Our Story</a>
+                <h4>Open hours</h4>
+                <ul class="footer-hours">
+                    <li><span>Mon – Fri</span><span>8 AM – 10 PM</span></li>
+                    <li><span>Saturday</span><span>10 AM – 11 PM</span></li>
+                    <li><span>Sunday</span><span>10 AM – 9 PM</span></li>
+                </ul>
+            </div>
+            <div>
+                <h4>Quick links</h4>
+                <a href="/about">About Us</a>
                 <a href="/menu">Menu</a>
                 <a href="/gallery">Gallery</a>
-                <a href="/events">Events / Private Dining</a>
-                <a href="/contact">Contact</a>
-            </div>
-            <div>
-                <h4>Explore</h4>
-                <a href="/videos">Video Gallery</a>
-                <a href="/careers">Careers</a>
-                <a href="/events">Private Dining</a>
+                <a href="/events">Events</a>
                 <a href="/contact">Reservations</a>
+                <a href="/careers">Careers</a>
             </div>
             <div>
-                <h4>Contact</h4>
-                <p>&#128222; @(_settings?.Phone)</p>
-                <p>&#9993; @(_settings?.Email)</p>
+                <h4>Newsletter</h4>
+                <p>Stay updated with seasonal menus and special evenings.</p>
+                <form class="footer-newsletter" action="/contact" method="get">
+                    <input type="email" name="email" placeholder="Your email" aria-label="Email for newsletter" />
+                    <button type="submit">Submit</button>
+                </form>
             </div>
         </div>
         <div class="footer-bottom">
             <div class="container">
-                <p>&copy; @DateTime.Now.Year Resta. All Rights Reserved.</p>
+                <p>&copy; @DateTime.Now.Year @(_settings?.AssociationName ?? "Resta"). All Rights Reserved.</p>
                 <p>
-                    Total Visitors: @(_visitorStats?.TotalVisitors ?? 0) | Page Views: @(_visitorStats?.TotalPageViews ?? 0)
-                    &nbsp;|&nbsp;
                     <a href="/privacy">Privacy Notice</a>
                     &nbsp;|&nbsp;
                     <a href="/cookies">Cookies Notice</a>
@@ -74,24 +80,40 @@
 @code {
     private static readonly List<MenuItemDto> DefaultMenus =
     [
-        new(0, "About Us / Our Story", "/about", null, 10, false, []),
+        new(0, "About", "/about", null, 10, false, []),
         new(0, "Gallery", "/gallery", null, 20, false, []),
-        new(0, "Events / Private Dining", "/events", null, 30, false, []),
-        new(0, "Careers", "/careers", null, 40, false, []),
+        new(0, "Events", "/events", null, 30, false, []),
         new(0, "Menu", "/menu", null, 50, false, []),
-        new(0, "Video Gallery", "/videos", null, 60, false, []),
+        new(0, "Contact", "/contact", null, 70, false, []),
     ];
 
     private SiteSettingsDto? _settings;
     private VisitorStatsDto? _visitorStats;
     private List<MenuItemDto> _menuItems = DefaultMenus;
 
+    private bool IsHome
+    {
+        get
+        {
+            var path = Nav.ToBaseRelativePath(Nav.Uri);
+            var q = path.IndexOf('?', StringComparison.Ordinal);
+            if (q >= 0) path = path[..q];
+            return string.IsNullOrEmpty(path) || path == "/";
+        }
+    }
+
     protected override async Task OnInitializedAsync()
     {
+        Nav.LocationChanged += OnLocationChanged;
         _settings = await Api.GetAsync<SiteSettingsDto>("api/public/about");
         var home = await Api.GetAsync<HomePageData>("api/public");
         _visitorStats = home?.VisitorStats;
         var apiMenus = await Api.GetAsync<List<MenuItemDto>>("api/public/menu");
         _menuItems = apiMenus is { Count: > 0 } ? apiMenus : DefaultMenus;
     }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e) =>
+        InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Nav.LocationChanged -= OnLocationChanged;
 }

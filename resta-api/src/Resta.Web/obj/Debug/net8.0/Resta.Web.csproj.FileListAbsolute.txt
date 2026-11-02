@@ -32,3 +32,47 @@ C:\Development\working folder\restapos\resta-api\src\Resta.Web\obj\Debug\net8.0\
 C:\Development\working folder\restapos\resta-api\src\Resta.Web\obj\Debug\net8.0\Resta.Web.pdb
 C:\Development\working folder\restapos\resta-api\src\Resta.Web\obj\Debug\net8.0\Resta.Web.genruntimeconfig.cache
 C:\Development\working folder\restapos\resta-api\src\Resta.Web\obj\Debug\net8.0\ref\Resta.Web.dll
+C:\Development\restapos\resta-api\src\Resta.Web\bin\Debug\net8.0\appsettings.Development.json
+C:\Development\restapos\resta-api\src\Resta.Web\bin\Debug\net8.0\appsettings.json
+C:\Development\restapos\resta-api\src\Resta.Web\bin\Debug\net8.0\appsettings.Production.json
+C:\Development\restapos\resta-api\src\Resta.Web\bin\Debug\net8.0\web.config
+C:\Development\restapos\resta-api\src\Resta.Web\bin\Debug\net8.0\Resta.Web.staticwebassets.runtime.json
+C:\Development\restapos\resta-api\src\Resta.Web\bin\Debug\net8.0\Resta.Web.staticwebassets.endpoints.json
+C:\Development\restapos\resta-api\src\Resta.Web\bin\Debug\net8.0\Resta.Web.exe
+C:\Development\restapos\resta-api\src\Resta.Web\bin\Debug\net8.0\Resta.Web.deps.json
+C:\Development\restapos\resta-api\src\Resta.Web\bin\Debug\net8.0\Resta.Web.runtimeconfig.json
+C:\Development\restapos\resta-api\src\Resta.Web\bin\Debug\net8.0\Resta.Web.dll
+C:\Development\restapos\resta-api\src\Resta.Web\bin\Debug\net8.0\Resta.Web.pdb
+C:\Development\restapos\resta-api\src\Resta.Web\obj\Debug\net8.0\rpswa.dswa.cache.json
+C:\Development\restapos\resta-api\src\Resta.Web\obj\Debug\net8.0\Resta.Web.GeneratedMSBuildEditorConfig.editorconfig
+C:\Development\restapos\resta-api\src\Resta.Web\obj\Debug\net8.0\Resta.Web.AssemblyInfoInputs.cache
+C:\Development\restapos\resta-api\src\Resta.Web\obj\Debug\net8.0\Resta.Web.AssemblyInfo.cs
+C:\Development\restapos\resta-api\src\Resta.Web\obj\Debug\net8.0\Resta.Web.csproj.CoreCompileInputs.cache
+C:\Development\restapos\resta-api\src\Resta.Web\obj\Debug\net8.0\Resta.Web.MvcApplicationPartsAssemblyInfo.cache
+C:\Development\restapos\resta-api\src\Resta.Web\obj\Debug\net8.0\Resta.Web.sourcelink.json
+C:\Development\restapos\resta-api\src\Resta.Web\obj\Debug\net8.0\rjimswa.dswa.cache.json
+C:\Development\restapos\resta-api\src\Resta.Web\obj\Debug\net8.0\rjsmrazor.dswa.cache.json
+C:\Development\restapos\resta-api\src\Resta.Web\obj\Debug\net8.0\rjsmcshtml.dswa.cache.json
+C:\Development\restapos\resta-api\src\Resta.Web\obj\Debug\net8.0\scopedcss\Components\Layout\MainLayout.razor.rz.scp.css
+C:\Development\restapos\resta-api\src\Resta.Web\obj\Debug\net8.0\scopedcss\bundle\Resta.Web.styles.css
+C:\Development\restapos\resta-api\src\Resta.Web\obj\Debug\net8.0\scopedcss\projectbundle\Resta.Web.bundle.scp.css
+C:\Development\restapos\resta-api\src\Resta.Web\obj\Debug\net8.0\staticwebassets.build.json
+C:\Development\restapos\resta-api\src\Resta.Web\obj\Debug\net8.0\staticwebassets.build.json.cache
+C:\Development\restapos\resta-api\src\Resta.Web\obj\Debug\net8.0\staticwebassets.development.json
+C:\Development\restapos\resta-api\src\Resta.Web\obj\Debug\net8.0\staticwebassets.build.endpoints.json
+C:\Development\restapos\resta-api\src\Resta.Web\obj\Debug\net8.0\Resta.Web.dll
+C:\Development\restapos\resta-api\src\Resta.Web\obj\Debug\net8.0\refint\Resta.Web.dll
+C:\Development\restapos\resta-api\src\Resta.Web\obj\Debug\net8.0\Resta.Web.pdb
+C:\Development\restapos\resta-api\src\Resta.Web\obj\Debug\net8.0\Resta.Web.genruntimeconfig.cache
+C:\Development\restapos\resta-api\src\Resta.Web\obj\Debug\net8.0\ref\Resta.Web.dll
+c:\Development\restapos\resta-api\src\Resta.Web\bin\theme-check\web.config
+c:\Development\restapos\resta-api\src\Resta.Web\bin\theme-check\appsettings.Development.json
+c:\Development\restapos\resta-api\src\Resta.Web\bin\theme-check\appsettings.json
+c:\Development\restapos\resta-api\src\Resta.Web\bin\theme-check\appsettings.Production.json
+c:\Development\restapos\resta-api\src\Resta.Web\bin\theme-check\Resta.Web.staticwebassets.runtime.json
+c:\Development\restapos\resta-api\src\Resta.Web\bin\theme-check\Resta.Web.staticwebassets.endpoints.json
+c:\Development\restapos\resta-api\src\Resta.Web\bin\theme-check\Resta.Web.exe
+c:\Development\restapos\resta-api\src\Resta.Web\bin\theme-check\Resta.Web.deps.json
+c:\Development\restapos\resta-api\src\Resta.Web\bin\theme-check\Resta.Web.runtimeconfig.json
+c:\Development\restapos\resta-api\src\Resta.Web\bin\theme-check\Resta.Web.dll
+c:\Development\restapos\resta-api\src\Resta.Web\bin\theme-check\Resta.Web.pdb
